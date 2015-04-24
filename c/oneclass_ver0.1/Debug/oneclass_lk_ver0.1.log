@@ -1,0 +1,23 @@
+﻿빌드 시작: 2015-04-16 오후 11:31:50
+     1>2 노드의 "D:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\oneclass_lk_ver0.1.vcxproj" 프로젝트(Build 대상)입니다.
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _CRT_SECURE_NO_WARNINGS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt Main.c Oneclass.c Utility.c
+         Utility.c
+         Oneclass.c
+     1>d:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\oneclass.c(89): warning C4101: 'x' :참조되지 않은 지역 변수입니다.
+     1>d:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\oneclass.c(88): warning C4101: 'j' :참조되지 않은 지역 변수입니다.
+     1>d:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\oneclass.c(112): warning C4101: 'i' :참조되지 않은 지역 변수입니다.
+     1>d:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\oneclass.c(186): warning C4101: 'k' :참조되지 않은 지역 변수입니다.
+         Main.c
+     1>d:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\main.c(17): warning C4101: 'j' :참조되지 않은 지역 변수입니다.
+         코드를 생성하고 있습니다...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\Debug\oneclass_lk_ver0.1.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\Debug\oneclass_lk_ver0.1.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\Debug\oneclass_lk_ver0.1.lib" /MACHINE:X86 Debug\Main.obj
+         Debug\Oneclass.obj
+         Debug\Utility.obj
+         oneclass_lk_ver0.1.vcxproj -> D:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\Debug\oneclass_lk_ver0.1.exe
+     1>"D:\workspace\cpon\class_probability_output_network\c\oneclass_ver0.1\oneclass_lk_ver0.1.vcxproj" 프로젝트를 빌드했습니다(Build 대상).
+
+빌드했습니다.
+
+경과 시간: 00:00:00.39
