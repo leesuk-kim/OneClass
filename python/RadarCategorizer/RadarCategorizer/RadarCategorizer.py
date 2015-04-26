@@ -3,7 +3,9 @@ Radar signal Categorizer
 version 1.0
 Designed by leesuk kim(aka. LK)
 '''
-
+CATLIST_INDEX_NAME = 0
+CATLIST_INDEX_TRAIN = 1
+CATLIST_INDEX_TEST = 2
 class RadarCategorizer : 
     '''
     rader categorizer
@@ -20,7 +22,14 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
         self._CtrdLenMax = 1
         self.isCentroid = True
         pass
-    def appendRawRow(self, row) : 
+
+    TESTDATA_SOURCE = 'train'
+    '''
+    if train, take testdata from train data with training ratio
+    else if test, take testdata from test data
+    '''
+
+    def appendTrainRow(self, row) : 
         '''
         append Raw row
         '''
@@ -35,22 +44,16 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
         else : 
             cat[1].append(seq)
         pass
-    
-    def appendRaw(self, matrix) : 
+    def appendTrain(self, matrix) : 
         try : 
-            self.appendRaw(matrix[x] for x in range(len(matrix)))
+            self.appendTrain(matrix[x] for x in range(len(matrix)))
         except TypeError : 
             print 'please input a vector.'
             pass
         pass
 
-    def getRaw(self) : 
-        str = ''
-        for cat in self._CategoryList : 
-            str += '[category name : %s]\n' % cat[0]
-            for i, catRaw in enumerate(cat[1]) : 
-                str += '[%d]%lf\n'%(i, catRaw[0])
-        return str
+    def getCategory(self) : 
+        return self._CategoryList
     
     def setTrainingRatio(self, ratio) : 
         if ratio > 99 : 
@@ -61,14 +64,22 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
     def getTrainingRatio(self) : 
         return self._TrainingRatio
 
-    def setCentriodMax(self, max) : 
-        self._CtrdLenMax= max
-        pass
+    def train(self) : 
+        print 'train'
+        if self.TESTDATA_SOURCE is 'train' : 
+            self._ClsSpaceList = []
+            print 'fsda;kgnsglksnagslk'
+            #split data
+            for cat in self._CategoryList : 
+                datalen = len(cat[CATLIST_INDEX_TRAIN])
+                trlen = int(datalen * 0.90)
+                trainlist = cat[CATLIST_INDEX_TRAIN][:trlen]
+                testlist = cat[CATLIST_INDEX_TRAIN][trlen:]
+                cat.pop(CATLIST_INDEX_TRAIN)
+                #cat.append(trainlist)
+                #cat.append(testlist)
+                cat.append(RadarCategorizer.RadarCategory(cat[CATLIST_INDEX_NAME], trainlist, testlist))
 
-    def train(self, useCentroid = True, linear_discrimininant = False) : 
-        self.isCentroid = useCentroid
-        #set centroid
-        if self.isCentroid : 
             pass
         pass
 
@@ -79,9 +90,10 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
         '''
         radar category
         '''
-        def __init__(self, name) : 
+        def __init__(self, name, traindata, testdata) : 
             self._Name = name
-            self._Raw = []
+            self._TrainList = traindata
+            self._TestList = testdata
             self._Beta_a = 0.
             self._Beta_b = 0.
             self._CentroidList = []
@@ -91,18 +103,6 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             self._BetaDist_B = []
 
             pass
-
-        def setRawRow(self, row) : 
-            self._Raw.extend([row])
-
-        def setRaw(self, matrix) : 
-            self.setRawRow(row for row in matrix )
-
-        def getTrainingData(self, ratio) : 
-            return self._Raw[:round(0.01 * ratio * len(self._Raw))]
-
-        def getTestData(self, ratio) : 
-            return self._Raw[round(0.01 * ratio * len(self._Raw)):]
 
         class CategoryCentroid : 
             pass
@@ -123,11 +123,11 @@ if __name__ == '__main__' :
                 except ValueError : 
                     pass
                 row.extend([attr])
-            obj.appendRawRow(row)
+            obj.appendTrainRow(row)
 
+    
     obj.setTrainingRatio(90)
-    obj.setCentriodMax()
     obj.train()
     obj.test()
-    print obj.getRaw()
+    print obj.getCategory()
     pass
