@@ -374,7 +374,6 @@ void closeDatabase(OneClass_t *db)
 		free(fld->vMean);
 		free(fld->vEgien);
 		free(fld->vProjMean);
-//		for (j = 0; j < ds; j++)
 		for (j = 0; j < cs;free(fld->S[j++]))
 			for (h = 0; h < ds; free(fld->S[j][h++]));
 		free(fld->S);

@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-import scipy.stats as stats
 import numpy as np
 
 class CM : 
@@ -55,7 +54,6 @@ class CM :
                 origin.append([float(s[4]), float(s[8]), float(s[10])])#FREQ, dTOA, PW
         
             self.originData.append(origin)
-
         pass
 
     def setRawData(self) : 
@@ -63,15 +61,6 @@ class CM :
         set Rawdata - 13 dimension (12 dim + 1 clsname)
         '''
         if not self.appendable : 
-            ##calculate via numpy and scipy
-            #for sample in self.originData : 
-            #    rawRow = [self.name]
-            #    trsp = np.array(sample).transpose()
-            #    for col in trsp : 
-            #        rawRow.extend([np.mean(col)])
-            #        rawRow.extend([stats.tvar(col)])
-            #        rawRow.extend([stats.skew(col)])
-            #        rawRow.extend([stats.kurtosis(col)])
 
             #calculate via my shape
             for i in range(CM.ORI_SAMPLE_LEN) :
@@ -203,27 +192,28 @@ if __name__ == "__main__" :
             os.path.join(dirname, subdirname)
             #print(os.path.join(dirname, subdirname))
 
-        if 'ep' in dirname :
-            clsname = dirname.split('\\') 
-            cm = CM(clsname[-1])
-            # print path to all filenames in subdirname.
-            for filename in filenames:
-                if '.txt' in filename and not '%' in filename:
-                    os.path.join(dirname, filename)
-                    #print os.path.join(dirname, filename)
-                    dlist = []
-                    file = open(dirname + '\\' + filename, 'r')
-                    file.readline(), file.readline(), file.readline()
-                    lines = file.readlines()
-                    for line in lines : 
-                        dlist.append(line)
-                    cm.appendData(dlist)
-                    #cm.appendData(dlist, dlist.count)
-            cm.closeClass()
-            #data = cm.getMean()
-            #print data
-            clist.append(cm)
-            print 'append %s' % clsname[-1]
+        if 'data' in dirname :
+            if filenames : 
+                clsname = dirname.split('\\')
+                cm = CM('_'.join(clsname[2:]))
+                # print path to all filenames in subdirname.
+                for filename in filenames:
+                    if '.txt' in filename and not '%' in filename:
+                        os.path.join(dirname, filename)
+                        #print os.path.join(dirname, filename)
+                        dlist = []
+                        file = open(dirname + '\\' + filename, 'r')
+                        file.readline(), file.readline(), file.readline()
+                        lines = file.readlines()
+                        for line in lines : 
+                            dlist.append(line)
+                        cm.appendData(dlist)
+                        #cm.appendData(dlist, dlist.count)
+                cm.closeClass()
+                #data = cm.getMean()
+                #print data
+                clist.append(cm)
+                print 'append %s' % cm.getName()
 
     #feature-scaling
     setFeatureScaling(clist)
