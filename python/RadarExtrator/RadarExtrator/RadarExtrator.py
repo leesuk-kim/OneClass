@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import numpy as np
+import scipy.stats as stats
 
 class CM : 
     ORI_FREQ = 0
@@ -81,6 +82,22 @@ class CM :
     def setOriginStatistics(self) :         
         if not self.appendable : 
             dimlen = CM.ORI_DIM_LEN
+            
+            ##get raw data using numpy and scipy.stats
+            ##one sample set in one sample category
+            #npar = np.array(self.originData)
+            #rawNpar = []
+            ##arrange : 3dim mean - 3dim var - 3dim skew - 3dim kurto
+            #for npvt in npar : 
+            #    temp = [np.mean(npvt, axis = 0), 
+            #            np.var(npvt, axis = 0, ddof = 1), 
+            #            stats.skew(npvt, axis = 0), 
+            #            stats.kurtosis(npvt, axis = 0)]
+                
+            #    rawNpar.append(temp)
+            #    pass
+            ##last line for getting raw data using numpy and scipy.stats
+            
 
             for sample in self.originData : 
                 #get mean
@@ -114,7 +131,7 @@ class CM :
                 dimSkew = [0. for m in range(dimlen)]
                 dimKurto = [0. for m in range(dimlen)]
                 for i in range(dimlen) : 
-                    for sprow in range(sprLen) : 
+                    for sprow in range(sprLen) :
                         dimSkew[i] += dimDev[sprow][i] ** 3
                         dimKurto[i] += dimDev[sprow][i] ** 4
                     dimSkew[i] /= sprLen * (dimVar[i] ** 1.5)
@@ -208,9 +225,7 @@ if __name__ == "__main__" :
                         for line in lines : 
                             dlist.append(line)
                         cm.appendData(dlist)
-                        #cm.appendData(dlist, dlist.count)
                 cm.closeClass()
-                #data = cm.getMean()
                 #print data
                 clist.append(cm)
                 print 'append %s' % cm.getName()

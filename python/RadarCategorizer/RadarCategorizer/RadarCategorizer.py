@@ -4,6 +4,11 @@ version 1.0
 Designed by leesuk kim(aka. LK)
 '''
 import numpy as np
+import numpy.linalg as npla
+import scipy.stats as stats
+import matplotlib.pyplot as pyp
+import matplotlib.mlab as mlab
+import os
 
 CATArr_INDEX_NAME = 0
 CATArr_INDEX_TRAIN = 1
@@ -105,26 +110,63 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             self._Name = name
             self._TrainArr = np.array(traindata)
             self._TestArr = np.array(testdata)
-            self._Beta_a = 0.
-            self._Beta_b = 0.
             self._CentroidArr = []
-            self._Pdf = []
-            self._fsPdf = []
-            self._BetaDist_A = []
-            self._BetaDist_B = []
-            self.ctrdArr = []
             pass
 
         def setCentroid(self) : 
             '''
             get centroid
+            in Radar Categorizer, we take ONLY ONE centroid.
             '''
             self._trMean = self._TrainArr.mean(axis=0)
             self._trVar = self._TrainArr.var(axis=0, ddof=1)
-            self._CentroidArr#####
+            self._CentroidArr = []
+            self._CentroidArr.append(RadarCategorizer.RadarCategory.CategoryCentroid(self._trMean, self))
             pass
 
+        def getTrainData(self) : 
+            return self._TrainArr
+        def getTestData(self) : 
+            return self._TestArr
+
         class CategoryCentroid : 
+            def __init__(self, ctrd_pos, rCat) : 
+                self._Pos = ctrd_pos
+                self._Category = rCat
+                #for x in rCat.getTrainData() : 
+                #    #y = np.append([ctrd_pos], [x], axis = 0)
+                #    a = npla.norm(ctrd_pos - x) 
+                self._trNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTrainData()]
+                self._ttNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTestData()]
+                self._trNorm_mean = np.mean(self._trNorm)
+                self._trNorm_var = np.var(self._trNorm, ddof = 1)
+
+                ####DRAW CDF about "self._trNorm"
+                fig, ax = pyp.subplots(1, 1)
+                n, bins, patches = ax.hist(self._trNorm, bins = 30, cumulative = True, facecolor='green', alpha=0.5, rwidth = 0.3)
+                #n, bins, patches = pyp.hist(self._trNorm, bins = 30, cumulative = True, facecolor='green', alpha=0.5, rwidth = 0.3)
+                fig.suptitle(rCat._Name + ' CDF')
+                #pyp.title(rCat._Name + ' CDF')
+                ax.set_ylim([0, 100])
+                #pyp.ylim(0, 100)
+                #pyp.show()
+                path = os.path.join(os.path.dirname(__file__), 'CDF')
+                fn = 'CDF_' + rCat._Name + '.png'
+                fig.savefig(os.path.join(path, fn))
+                pyp.close()
+                self.setBetaParams()
+                #get beta
+                pass
+
+            def setBetaParams(self) :
+                self._BetaShape_a = 0.
+                self._BetaShape_b = 0.
+
+
+                pass
+
+            def setPDF(self) : 
+                pass
             pass
         pass
     pass
