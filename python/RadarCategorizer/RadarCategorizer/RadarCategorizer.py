@@ -5,7 +5,8 @@ Designed by leesuk kim(aka. LK)
 '''
 import numpy as np
 import numpy.linalg as npla
-import scipy.stats as stats
+from scipy.stats import beta
+import scipy.stats as scistats
 import matplotlib.pyplot as pyp
 import matplotlib.mlab as mlab
 import os
@@ -133,18 +134,22 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             def __init__(self, ctrd_pos, rCat) : 
                 self._Pos = ctrd_pos
                 self._Category = rCat
-                #for x in rCat.getTrainData() : 
-                #    #y = np.append([ctrd_pos], [x], axis = 0)
-                #    a = npla.norm(ctrd_pos - x) 
-                self._trNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTrainData()]
+                trNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTrainData()]
                 self._ttNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTestData()]
-                self._trNorm_mean = np.mean(self._trNorm)
-                self._trNorm_var = np.var(self._trNorm, ddof = 1)
+                trNorm_mean = np.mean(trNorm)
+                trNorm_var = np.var(trNorm, ddof = 1)
+                featureScaling = trNorm
+                featureScaling.sort()
+                trNorm_fs = [(x - featureScaling[0]) / (featureScaling[-1] - featureScaling[0]) for x  in featureScaling]
+                trNorm_fs_mean = np.mean(trNorm_fs)
+                trNorm_fs_var = np.var(trNorm_fs, ddof = 1)
+                trNorm_fs_Beta_a = trNorm_fs_mean ** 2 * (1 - trNorm_fs_mean) / trNorm_fs_var - trNorm_fs_mean
+                trNorm_fs_Beta_b = trNorm_fs_Beta_a * (1 - trNorm_fs_mean) / trNorm_fs_mean
 
-                ####DRAW CDF about "self._trNorm"
+                ####DRAW CDF about "trNorm"
                 fig, ax = pyp.subplots(1, 1)
-                n, bins, patches = ax.hist(self._trNorm, bins = 30, cumulative = True, facecolor='green', alpha=0.5, rwidth = 0.3)
-                #n, bins, patches = pyp.hist(self._trNorm, bins = 30, cumulative = True, facecolor='green', alpha=0.5, rwidth = 0.3)
+                n, bins, patches = ax.hist(trNorm, bins = 100, cumulative = True, facecolor='green', alpha=0.5, rwidth = 0.3)
+                #n, bins, patches = pyp.hist(trNorm, bins = 30, cumulative = True, facecolor='green', alpha=0.5, rwidth = 0.3)
                 fig.suptitle(rCat._Name + ' CDF')
                 #pyp.title(rCat._Name + ' CDF')
                 ax.set_ylim([0, 100])
@@ -153,19 +158,25 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
                 path = os.path.join(os.path.dirname(__file__), 'CDF')
                 fn = 'CDF_' + rCat._Name + '.png'
                 fig.savefig(os.path.join(path, fn))
-                pyp.close()
-                self.setBetaParams()
-                #get beta
+                pyp.close(fig)
+                #DRAW BETA PDF
+                fig, ax = pyp.subplots(1, 1)
+                x = np.linspace(beta.ppf(0.01, trNorm_fs_Beta_a, trNorm_fs_Beta_b), beta.ppf(0.99, trNorm_fs_Beta_a, trNorm_fs_Beta_b), 100)
+                rv = beta(trNorm_fs_Beta_a, trNorm_fs_Beta_b)
+                fig.suptitle(rCat._Name + ' beta PDF')
+                ax.plot(x, rv.pdf(x), 'k-', label='frozen pdf')
+                ax.plot(x, rv.cdf(x), 'r--', label = 'beta CDF')
+                ax.legend(loc = 'best')
+                path = os.path.join(os.path.dirname(__file__), 'beta')
+                fn = 'beta_' + rCat._Name + '.png'
+                fig.savefig(os.path.join(path, fn))
+                #pyp.show()
+                pyp.close(fig)
                 pass
 
-            def setBetaParams(self) :
-                self._BetaShape_a = 0.
-                self._BetaShape_b = 0.
-
-
+            def fwCDF(self) : 
                 pass
-
-            def setPDF(self) : 
+            def fwBeta(self) : 
                 pass
             pass
         pass
