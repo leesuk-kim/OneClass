@@ -22,6 +22,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="lkplot.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RadarCategorizer.py" />
   </ItemGroup>
   <PropertyGroup>

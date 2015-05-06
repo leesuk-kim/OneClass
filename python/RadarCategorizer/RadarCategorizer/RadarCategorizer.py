@@ -7,9 +7,7 @@ import numpy as np
 import numpy.linalg as npla
 from scipy.stats import beta
 import scipy.stats as scistats
-import matplotlib.pyplot as pyp
-import matplotlib.mlab as mlab
-import os
+import lkplot as lkp
 
 CATArr_INDEX_NAME = 0
 CATArr_INDEX_TRAIN = 1
@@ -134,50 +132,24 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             def __init__(self, ctrd_pos, rCat) : 
                 self._Pos = ctrd_pos
                 self._Category = rCat
-                trNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTrainData()]
-                self._ttNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTestData()]
-                trNorm_mean = np.mean(trNorm)
-                trNorm_var = np.var(trNorm, ddof = 1)
+                self._trNorm = trNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTrainData()]
+                self._ttNorm = ttNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTestData()]
+                self._trNorm_mean = trNorm_mean = np.mean(trNorm)
+                self._trNorm_var = trNorm_var = np.var(trNorm, ddof = 1)
                 featureScaling = trNorm
                 featureScaling.sort()
-                trNorm_fs = [(x - featureScaling[0]) / (featureScaling[-1] - featureScaling[0]) for x  in featureScaling]
-                trNorm_fs_mean = np.mean(trNorm_fs)
-                trNorm_fs_var = np.var(trNorm_fs, ddof = 1)
-                trNorm_fs_Beta_a = trNorm_fs_mean ** 2 * (1 - trNorm_fs_mean) / trNorm_fs_var - trNorm_fs_mean
-                trNorm_fs_Beta_b = trNorm_fs_Beta_a * (1 - trNorm_fs_mean) / trNorm_fs_mean
+                self._trNorm_fs = trNorm_fs = [(x - featureScaling[0]) / (featureScaling[-1] - featureScaling[0]) for x  in featureScaling]
+                self._trNorm_fs_mean = trNorm_fs_mean = np.mean(trNorm_fs)
+                self._trNorm_fs_var = trNorm_fs_var = np.var(trNorm_fs, ddof = 1)
+                self._trNorm_fs_betaA = trNorm_fs_Beta_a = trNorm_fs_mean ** 2 * ((1 - trNorm_fs_mean) / trNorm_fs_var - 1 / trNorm_fs_mean)
+                self._trNorm_fs_betaB = trNorm_fs_Beta_b = trNorm_fs_Beta_a * (1 - trNorm_fs_mean) / trNorm_fs_mean
 
-                ####DRAW CDF about "trNorm"
-                fig, ax = pyp.subplots(1, 1)
-                n, bins, patches = ax.hist(trNorm, bins = 100, cumulative = True, facecolor='green', alpha=0.5, rwidth = 0.3)
-                #n, bins, patches = pyp.hist(trNorm, bins = 30, cumulative = True, facecolor='green', alpha=0.5, rwidth = 0.3)
-                fig.suptitle(rCat._Name + ' CDF')
-                #pyp.title(rCat._Name + ' CDF')
-                ax.set_ylim([0, 100])
-                #pyp.ylim(0, 100)
-                #pyp.show()
-                path = os.path.join(os.path.dirname(__file__), 'CDF')
-                fn = 'CDF_' + rCat._Name + '.png'
-                fig.savefig(os.path.join(path, fn))
-                pyp.close(fig)
-                #DRAW BETA PDF
-                fig, ax = pyp.subplots(1, 1)
-                x = np.linspace(beta.ppf(0.01, trNorm_fs_Beta_a, trNorm_fs_Beta_b), beta.ppf(0.99, trNorm_fs_Beta_a, trNorm_fs_Beta_b), 100)
-                rv = beta(trNorm_fs_Beta_a, trNorm_fs_Beta_b)
-                fig.suptitle(rCat._Name + ' beta PDF')
-                ax.plot(x, rv.pdf(x), 'k-', label='frozen pdf')
-                ax.plot(x, rv.cdf(x), 'r--', label = 'beta CDF')
-                ax.legend(loc = 'best')
-                path = os.path.join(os.path.dirname(__file__), 'beta')
-                fn = 'beta_' + rCat._Name + '.png'
-                fig.savefig(os.path.join(path, fn))
-                #pyp.show()
-                pyp.close(fig)
+                lkp.plotPDF(trNorm_fs, rCat._Name)
+                lkp.plotCDF(trNorm_fs, rCat._Name)
+                lkp.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
+                lkp.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
                 pass
 
-            def fwCDF(self) : 
-                pass
-            def fwBeta(self) : 
-                pass
             pass
         pass
     pass
