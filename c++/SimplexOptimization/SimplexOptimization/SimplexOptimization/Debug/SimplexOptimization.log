@@ -1,9 +1,41 @@
-﻿빌드 시작: 2015-04-24 오후 10:30:11
-     1>2 노드의 "D:\workspace\cpon\class_probability_output_network\c++\SimplexOptimization\SimplexOptimization\SimplexOptimization\SimplexOptimization.vcxproj" 프로젝트(Build 대상)입니다.
-     1>Link:
-         SimplexOptimization.vcxproj -> D:\workspace\cpon\class_probability_output_network\c++\SimplexOptimization\SimplexOptimization\Debug\SimplexOptimization.exe
-     1>"D:\workspace\cpon\class_probability_output_network\c++\SimplexOptimization\SimplexOptimization\SimplexOptimization\SimplexOptimization.vcxproj" 프로젝트를 빌드했습니다(Build 대상).
+﻿빌드 시작: 2015-05-04 오후 11:36:45
+     1>2 노드의 "D:\workspace\OneClass\c++\SimplexOptimization\SimplexOptimization\SimplexOptimization\SimplexOptimization.vcxproj" 프로젝트(Build 대상)입니다.
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt fitBeta.cpp main.cpp
+         main.cpp
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\main.cpp(69): warning C4244: '인수' : 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\simplex.h(100): warning C4018: '<' : signed 또는 unsigned가 일치하지 않습니다.
+                 d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\main.cpp(67) : 컴파일 중인 함수 템플릿 인스턴스화 'std::vector<double,std::allocator<_Ty>> BT::Simplex<double,Rosenbrock>(OP,std::vector<_Ty,std::allocator<_Ty>>,D,std::vector<std::vector<_Ty,std::allocator<_Ty>>,std::allocator<std::vector<_Ty,std::allocator<_Ty>>>>,int)'에 대한 참조를 확인하십시오.
+                 with
+                 [
+                     _Ty=double
+         ,            OP=Rosenbrock
+         ,            D=double
+                 ]
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\simplex.h(111): warning C4018: '<' : signed 또는 unsigned가 일치하지 않습니다.
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\simplex.h(118): warning C4018: '<' : signed 또는 unsigned가 일치하지 않습니다.
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\simplex.h(168): warning C4018: '<' : signed 또는 unsigned가 일치하지 않습니다.
+         fitBeta.cpp
+     1>c:\boost\include\boost-1_58\boost\format\alt_sstream_impl.hpp : warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\fitbeta.cpp(161): warning C4244: '인수' : 'time_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\simplex.h(100): warning C4018: '<' : signed 또는 unsigned가 일치하지 않습니다.
+                 d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\fitbeta.cpp(50) : 컴파일 중인 함수 템플릿 인스턴스화 'std::vector<double,std::allocator<_Ty>> BT::Simplex<double,double(__cdecl *)(std::vector<_Ty,std::allocator<_Ty>>)>(OP,std::vector<_Ty,std::allocator<_Ty>>,D,std::vector<std::vector<_Ty,std::allocator<_Ty>>,std::allocator<std::vector<_Ty,std::allocator<_Ty>>>>,int)'에 대한 참조를 확인하십시오.
+                 with
+                 [
+                     _Ty=double
+         ,            OP=double (__cdecl *)(std::vector<double,std::allocator<double>>)
+         ,            D=double
+                 ]
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\simplex.h(111): warning C4018: '<' : signed 또는 unsigned가 일치하지 않습니다.
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\simplex.h(118): warning C4018: '<' : signed 또는 unsigned가 일치하지 않습니다.
+     1>d:\workspace\oneclass\c++\simplexoptimization\simplexoptimization\simplexoptimization\simplex.h(168): warning C4018: '<' : signed 또는 unsigned가 일치하지 않습니다.
+         코드를 생성하고 있습니다...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\workspace\OneClass\c++\SimplexOptimization\SimplexOptimization\Debug\SimplexOptimization.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\workspace\OneClass\c++\SimplexOptimization\SimplexOptimization\Debug\SimplexOptimization.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\workspace\OneClass\c++\SimplexOptimization\SimplexOptimization\Debug\SimplexOptimization.lib" /MACHINE:X86 Debug\fitBeta.obj
+         Debug\main.obj
+         SimplexOptimization.vcxproj -> D:\workspace\OneClass\c++\SimplexOptimization\SimplexOptimization\Debug\SimplexOptimization.exe
+     1>"D:\workspace\OneClass\c++\SimplexOptimization\SimplexOptimization\SimplexOptimization\SimplexOptimization.vcxproj" 프로젝트를 빌드했습니다(Build 대상).
 
 빌드했습니다.
 
-경과 시간: 00:00:00.25
+경과 시간: 00:00:03.64

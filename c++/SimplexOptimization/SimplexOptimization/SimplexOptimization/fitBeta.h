@@ -9,7 +9,9 @@
 
 using namespace std;
 using namespace boost::math;
-
+/*fitting beta distribution
+find fitting beta distribution using empirical beta.
+*/
 class fitBeta{
 public:
 	int sampleSize = 0;

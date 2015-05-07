@@ -150,6 +150,7 @@ void fitBeta::checkParameter(const char* filePath, vector<double> params){
 //	free(sampleData);
 }
 
+/*DEPRECATED?*/
 void fitBeta::doFitting(const char* filePath){
 	int i;
 	double* elementResult = (double*)calloc(6, sizeof(double));

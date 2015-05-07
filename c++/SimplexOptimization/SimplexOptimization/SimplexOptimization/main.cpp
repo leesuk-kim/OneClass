@@ -32,7 +32,7 @@ void printcon(const Con& c){
 
 class Rosenbrock{
 public:
-	double  operator()(vector<double> x){
+	double operator()(vector<double> x){
 		return 100 * pow(x[1] - pow(x[0], 2), 2) + pow(1 - x[0], 2);
 	}
 };
@@ -69,4 +69,6 @@ int main(){
 	printcon(Simplex(rosenbrock, init, 1e-7, simplex, 1E5)); cout << endl;
 	cout << "Polynomial function achieves minimum at:" << endl;
 	printcon(Simplex(polynomial_fun, init, 1e-7, simplex));  cout << endl;
+
+	return 0;
 }
