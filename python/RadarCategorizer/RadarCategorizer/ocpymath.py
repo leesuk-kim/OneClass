@@ -5,7 +5,7 @@ def stdscrdistance(arrx, arry, arrdev) :
     '''
     devMax ,devMin = max(arrdev), min(arrdev)
     devran = devMax - devMin
-    fsdev = arrdev#[(dev - devMin) / (devMax - devMin) for dev in arrdev]
+    fsdev = [(dev - devMin) / (devMax - devMin) for dev in arrdev]#arrdev
 
     d = 0.
 
