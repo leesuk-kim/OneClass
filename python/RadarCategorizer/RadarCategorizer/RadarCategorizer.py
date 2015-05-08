@@ -9,6 +9,7 @@ from scipy.stats import beta
 import scipy.stats as scistats
 import lkplot as lkp
 import math
+import ocpymath
 
 CATArr_INDEX_NAME = 0
 CATArr_INDEX_TRAIN = 1
@@ -113,8 +114,8 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
                 minnorm = 1. * self.CAT_DIM
                 minname = 'name'
                 for ctrd in ctrdmap : 
-                    euclidean = npla.norm(vlpos-ctrd[0]._Pos)
-                    print '%s\t%s\t%lf'% (cat[CATArr_INDEX_NAME], ctrd[0]._Category._Name, euclidean)
+                    euclidean = ocpymath.stdscrdistance(vlpos, ctrd[0]._Pos, ctrd[0]._Category.getDev())#npla.norm(vlpos-ctrd[0]._Pos)
+                    #print '%s\t%s\t%lf'% (cat[CATArr_INDEX_NAME], ctrd[0]._Category._Name, euclidean)
                     if minnorm > euclidean : 
                         minnorm = euclidean
                         minname = ctrd[0]._Category._Name
@@ -126,7 +127,7 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
                     subres[1] += 1
                 resname.append([cat[CATArr_INDEX_NAME], minname])
             res.append(subres)
-        pass
+        return res, resname
 
     class RadarCategory : 
         '''
@@ -136,18 +137,43 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             self._Name = name
             self._TrainArr = np.array(traindata)
             self._TestArr = np.array(testdata)
+            self._trMean = self._TrainArr.mean(axis=0)
+            self._trVar = self._TrainArr.var(axis=0, ddof=1)
+            self._trDev = self._TrainArr.std(axis=0, ddof=1)
             self._CentroidArr = []
+            self._KernelSize = 1
+            self._dim = len(testdata[0])
+            pass
+
+        def getMean(self) : 
+            return self._trMean
+        def getVar(self) : 
+            return self._trVar
+        def getDev(self) : 
+            return self._trDev
+
+        def setKernelSize(self, size) : 
+            self._KernelSize = size
             pass
 
         def setCentroid(self) : 
             '''
-            get centroid
+            set centroid
+            get Centroid position and set that pos. on each kernels
             in Radar Categorizer, we take ONLY ONE centroid.
             '''
-            self._trMean = self._TrainArr.mean(axis=0)
-            self._trVar = self._TrainArr.var(axis=0, ddof=1)
+            self.initCtrdPos()
+            self._kernelPos = []
+
             self._CentroidArr = []
-            self._CentroidArr.append(RadarCategorizer.RadarCategory.CategoryKernel(self._trMean, self))
+            dis = ocpymath.stdscrdistance(self._trMean, self._TrainArr[0], self._trDev)
+
+            for knl in range(self._KernelSize) : 
+                self._CentroidArr.append(RadarCategorizer.RadarCategory.CategoryKernel(self._trMean, self))
+            pass
+
+        def initCtrdPos(self) : 
+            pos = []
             pass
 
         def getTrainData(self) : 
@@ -241,6 +267,9 @@ if __name__ == '__main__' :
     
     obj.setTrainingRatio(50)
     obj.train()
-    obj.test()
-    print obj.getCategory()
+    res, resname = obj.test()
+    for ult in res : 
+        print ult
+    for ultname in resname : 
+        print ultname
     pass
