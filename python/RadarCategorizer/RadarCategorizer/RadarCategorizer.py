@@ -101,6 +101,7 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
     def test(self) : 
         res = []
         mares = []
+        maresname = []
         ctrdmap = []
         for cat in self._CategoryArr : 
             ctrdmap.append(cat[CATArr_INDEX_CAT].getCentroidList())
@@ -134,9 +135,15 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
                 else : 
                     subres[1] += 1
 
-                mares.append([cat[CATArr_INDEX_NAME], maxmaname, maxma])
+                if cat[CATArr_INDEX_NAME] is maxmaname : 
+                    submares[0] += 1
+                else : 
+                    submares[1] += 1
+
+                maresname.append([cat[CATArr_INDEX_NAME], maxmaname, maxma])
                 resname.append([cat[CATArr_INDEX_NAME], minname])
             res.append(subres)
+            mares.append(submares)
         return res, resname
 
     class RadarCategory : 
