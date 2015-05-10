@@ -100,6 +100,7 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
 
     def test(self) : 
         res = []
+        mares = []
         ctrdmap = []
         for cat in self._CategoryArr : 
             ctrdmap.append(cat[CATArr_INDEX_CAT].getCentroidList())
@@ -110,8 +111,11 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             mycls = 1. * self.CAT_DIM
 
             subres = [0, 0]
+            submares = [0, 0]
             for vlpos in vldata : 
                 minnorm = 1. * self.CAT_DIM
+                maxma = 2. * self.CAT_DIM
+                maxmaname = 'name'
                 minname = 'name'
                 for ctrd in ctrdmap : 
                     euclidean = ocpymath.stdscrdistance(vlpos, ctrd[0]._Pos, ctrd[0]._Category.getDev())#npla.norm(vlpos-ctrd[0]._Pos)
@@ -119,12 +123,18 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
                     if minnorm > euclidean : 
                         minnorm = euclidean
                         minname = ctrd[0]._Category._Name
-                        
+
+                    matchacc = ocpymath.getMatchAccuracy(vlpos, ctrd[0]._Pos, ctrd[0]._Category.getDev())
+                    if maxma > matchacc : 
+                        maxma = matchacc
+                        maxmaname = ctrd[0]._Category._Name
                 
                 if cat[CATArr_INDEX_NAME] is minname : 
                     subres[0] += 1
                 else : 
                     subres[1] += 1
+
+                mares.append([cat[CATArr_INDEX_NAME], maxmaname, maxma])
                 resname.append([cat[CATArr_INDEX_NAME], minname])
             res.append(subres)
         return res, resname
