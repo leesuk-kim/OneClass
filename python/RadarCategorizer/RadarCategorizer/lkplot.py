@@ -69,8 +69,8 @@ def plotKStest(y, y_emp, betacdf, a, b, pvalue, dataname = 'noname', bins = 100)
 
     fig.suptitle(dataname + ' beta CDF')
     ax.set_title(r'$\alpha = {}, \beta = {}, p-value = {}$'.format(a, b, pvalue))
-    ax.plot(y, betacdf, 'k-', label = 'hptsCDF')
-    ax.plot(y, y_emp, 'r--', label = 'empCDF')
+    ax.plot(y, betacdf, 'k-', label = 'hypoCDF')
+    ax.plot(y, y_emp, 'r--', label = 'empiCDF')
     ax.legend(loc = 4)
     path = os.path.join(os.path.dirname(__file__), 'KStest')
     fn = 'KStest_' + dataname + '.png'

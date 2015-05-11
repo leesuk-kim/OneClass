@@ -166,7 +166,6 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             self._kernelPos = []
 
             self._CentroidArr = []
-            dis = ocpymath.stdscrdistance(self._trMean, self._TrainArr[0], self._trDev)
 
             for knl in range(self._KernelSize) : 
                 self._CentroidArr.append(RadarCategorizer.RadarCategory.CategoryKernel(self._trMean, self))
@@ -189,26 +188,26 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             def __init__(self, ctrd_pos, rCat) : 
                 self._Pos = ctrd_pos
                 self._Category = rCat
-                #self._trNorm = trNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTrainData()]
-                #self._lentr = lentr = len(trNorm)
-                #self._trNorm_mean = trNorm_mean = np.mean(trNorm)
-                #self._trNorm_var = trNorm_var = np.var(trNorm, ddof = 1)
-                #featureScaling = trNorm
-                #fsmax, fsmin = max(featureScaling), min(featureScaling)
-                #featureScaling.sort()
-                #self._trNorm_fs = trNorm_fs = [(x - fsmin) / (fsmax - fsmin) for x  in featureScaling]
-                #
-                #y_pval, y_d, y_sigma, y_beta_a, y_beta_b , ecdf = self.getKernel()
-                #y = self.setKernel(y_sigma)
-                ##ecdf = [float(x) / float(lentr) for x in range(1, lentr + 1)]
-                #betaCDF = beta.cdf(y, y_beta_a, y_beta_b)
-                #betaPDF = beta.pdf(y, y_beta_a, y_beta_b)
-                #
-                ##lkp.plotPDF(y, rCat._Name)
-                ##lkp.plotCDF(y, rCat._Name)
-                #lkp.plotKStest(y, ecdf, betaCDF, y_beta_a, y_beta_b, y_pval, rCat._Name)
-                ##lkp.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
-                ##lkp.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
+                self._trNorm = trNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTrainData()]
+                self._lentr = lentr = len(trNorm)
+                self._trNorm_mean = trNorm_mean = np.mean(trNorm)
+                self._trNorm_var = trNorm_var = np.var(trNorm, ddof = 1)
+                featureScaling = trNorm
+                fsmax, fsmin = max(featureScaling), min(featureScaling)
+                featureScaling.sort()
+                self._trNorm_fs = trNorm_fs = [(x - fsmin) / (fsmax - fsmin) for x  in featureScaling]
+                
+                y_pval, y_d, y_sigma, y_beta_a, y_beta_b , ecdf, betacdf = self.getKernel()
+                y = self.setKernel(y_sigma)
+                #ecdf = [float(x) / float(lentr) for x in range(1, lentr + 1)]
+                betaCDF = beta.cdf(y, y_beta_a, y_beta_b)
+                betaPDF = beta.pdf(y, y_beta_a, y_beta_b)
+                
+                #lkp.plotPDF(y, rCat._Name)
+                #lkp.plotCDF(y, rCat._Name)
+                lkp.plotKStest(y, ecdf, betaCDF, y_beta_a, y_beta_b, y_pval, rCat._Name)
+                #lkp.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
+                #lkp.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
                 pass
 
             def setKernel(self, sigma) :
@@ -217,7 +216,7 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
 
             def getKernel(self) : 
                 sigma_cddt = [2 ** (i - 4) for i in range(7)]
-                nmnt = [0., 0., 0., 0., 0., 0.]
+                nmnt = [0., 0., 0., 0., 0., 0., 0.]
                 trlen = len(self._trNorm)
 
                 for sigma in sigma_cddt : 
@@ -234,11 +233,12 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
                     ymax, ymin = max(y), min(y)
                     ecdf = [float(x) / float(trlen) for x in range(1, trlen + 1)]
                     #WHAT IS 'CALLABLE'???
-                    d, pval = scistats.ks_2samp(ecdf, betacdf)
-                    #lkp.plotKStest(y, betacdf, bafit, bbfit)
+                    #d, pval = scistats.ks_2samp(ecdf, betacdf)
+                    d, pval = scistats.kstest(ecdf, lambda cdf : betacdf)
 
                     if nmnt[0] < pval : 
-                        nmnt = [pval, d, sigma, bafit, bbfit, ecdf]
+                        nmnt = [pval, d, sigma, bafit, bbfit, ecdf, betacdf]
+                lkp.plotKStest(y, nmnt[5], nmnt[6], nmnt[3], nmnt[4], nmnt[0], self._Category._Name)
 
                 return nmnt
 
