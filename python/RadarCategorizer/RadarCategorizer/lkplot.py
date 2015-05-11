@@ -78,3 +78,32 @@ def plotKStest(y, y_emp, betacdf, a, b, pvalue, dataname = 'noname', bins = 100)
     #pyp.show()
     pyp.close(fig)
     pass
+
+def plotOaR(name, onedstc, restdstc) : 
+    '''
+    plot One-Against-Rest
+    '''
+    fig, ax = pyp.subplots(1, 1)
+    fig.suptitle(name + ' OAR')
+
+    cnk = []
+    for i in range(len(onedstc)) : 
+        cnk.append(restdstc[i * 50 : (i + 1) * 50])
+
+    ax.plot([x for x in range(len(onedstc))], onedstc, ' o')
+    #for rest in restdstc : 
+    #    ax.plot([0], [rest], 'k.')
+    for res in cnk : 
+        ax.plot([x for x in range(len(onedstc))], res, 'k+')
+
+    ax.set_ylim(-1, max(onedstc) * 1.1)
+    ax.set_xlim(-1, len(onedstc))
+    ax.set_xticks(numpy.arange(0, len(onedstc), 1))
+    
+    pyp.grid()
+    #pyp.show()
+    path = os.path.join(os.path.dirname(__file__), 'OAR')
+    fn = 'OAR_' + name + '.png'
+    fig.savefig(os.path.join(path, fn))
+    pyp.close(fig)
+    pass

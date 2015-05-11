@@ -15,28 +15,26 @@ CATArr_INDEX_NAME = 0
 CATArr_INDEX_TRAIN = 1
 CATArr_INDEX_TEST = 2
 CATArr_INDEX_CAT = 1
-class RadarCategorizer : 
+class cpclassipy : 
     '''
-    rader categorizer
+    Class Probability ClassiPier
     '''
-    def __init__(self, ) : 
+    def __init__(self) : 
         self._CategoryArr = []
         '''raw matrix'''
-        self._CatLen = 0
-        self._TrainingRatio = 90
+        self._ClsVol = 0
+        self._KnVol = 2
+        self.VALID_SRC = 'train'
         self._CatDim = 1
+        self._TrRatio = 90
         '''
 training ratio is the ratio for how many data would be taken to training data.
 this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on raw data
         '''
-        self.isCentroid = True
         pass
 
-    TESTDATA_SOURCE = 'train'
-    '''
-    if train, take testdata from train data with training ratio
-    else if test, take testdata from test data
-    '''
+    def getCategory(self) : 
+        return self._CategoryArr
 
     def appendTrainRow(self, row) : 
         '''
@@ -49,59 +47,83 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
         if not cat : 
             print 'create new category : %s' % name
             self._CategoryArr.append([name, [seq]])
-            self._CatLen += 1
+            self._ClsVol += 1
         else : 
             cat[1].append(seq)
-        pass
+
     def appendTrain(self, matrix) : 
         try : 
-            self.appendTrain(matrix[x] for x in range(len(matrix)))
+            self.appendTrainRow(matrix[x] for x in range(len(matrix)))
         except TypeError : 
             print 'please input a vector.'
-            pass
+
         pass
 
-    def getCategory(self) : 
-        return self._CategoryArr
+    def appendValidRow(self, row) : 
+        #append test data
+        pass
+    def appendValid(self, matrix) : 
+        try : 
+            self.appendValidRow(matrix[x] for x in range(len(matrix)))
+        except TypeError : 
+            print 'please input a vector.'
+
+        pass
     
-    def setTrainingRatio(self, ratio) : 
-        if ratio > 99 : 
-            print 'wring range. 1 to 99 integer only.'
+    def setTrRatio(self, ratio) : 
+        '''put percentage in parameter.
+        i.e. 90% --> 90, 50%-->50, 20.2% -> 20.2
+        '''
+        if ratio >= 100 or ratio <= 0 : 
+            print 'wrong range. availlable from >0 to <100 .'
         else : 
-            self._TrainingRatio = ratio
-        pass
-    def getTrainingRatio(self) : 
-        return self._TrainingRatio
+            self._TrRatio = ratio
 
-    def setCtrdLen(self, len) : 
-        self._ctrdLen = len
+    def getTrRatio(self) : 
+        return self._TrRatio
+
+    def setKnVol(self, knvol) : 
+        '''if it has fixed number of kernel, then put number in.
+        '''
+        self._KnVol = knvol
+    
+    VALID_SRC = 'train'
+    def setValidSrc(self, src = 'test') : 
+        '''
+    if train, take testdata from train data with training ratio
+    if 'test', take testdata from test data
+        '''
+        VALID_SRC = src
+    def getValidSrc(self) : 
+        return VALID_SRC
 
     CAT_DIM = 0
+
+    def getCategory(self, idx) : 
+        return self._CategoryArr[idx]
+
     def train(self) : 
         print 'train'
         
-        RadarCategorizer.CAT_DIM = len(self._CategoryArr[0][CATArr_INDEX_TRAIN][0])
+        CAT_DIM = len(self.getCategory(0)[CATArr_INDEX_TRAIN][0])
         
-        if self.TESTDATA_SOURCE is 'train' : 
+        if self.VALID_SRC is 'train' : 
             #split data and batch on cls space
             for cat in self._CategoryArr : 
                 datalen = len(cat[CATArr_INDEX_TRAIN])
-                trlen = int(datalen * self._TrainingRatio * 0.01)
+                trlen = int(datalen * self._TrRatio * 0.01)
                 trainArr = cat[CATArr_INDEX_TRAIN][:trlen]
                 testArr = cat[CATArr_INDEX_TRAIN][trlen:]
                 cat.pop(CATArr_INDEX_TRAIN)
-                cat.append(RadarCategorizer.RadarCategory(cat[CATArr_INDEX_NAME], trainArr, testArr))
+                cat.append(cpclassipy.clsobj(cat[CATArr_INDEX_NAME], trainArr, testArr, self._KnVol))
 
             #set Centroid
             for cat in self._CategoryArr : 
-                cat[CATArr_INDEX_CAT].setCentroid()
-            pass
+                cat[CATArr_INDEX_CAT].setKernel()
         pass
 
     def test(self) : 
         res = []
-        mares = []
-        maresname = []
         ctrdmap = []
         for cat in self._CategoryArr : 
             ctrdmap.append(cat[CATArr_INDEX_CAT].getCentroidList())
@@ -110,47 +132,43 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
         for cat in self._CategoryArr : 
             vldata = cat[CATArr_INDEX_CAT].getValidData()
             mycls = 1. * self.CAT_DIM
+            resdstc, dstc = [], []
 
             subres = [0, 0]
-            submares = [0, 0]
             for vlpos in vldata : 
                 minnorm = 1. * self.CAT_DIM
-                maxma = 2. * self.CAT_DIM
-                maxmaname = 'name'
                 minname = 'name'
+
                 for ctrd in ctrdmap : 
-                    euclidean = ocpymath.stdscrdistance(vlpos, ctrd[0]._Pos, ctrd[0]._Category.getDev())#npla.norm(vlpos-ctrd[0]._Pos)
+                    euclidean = ocpymath.getPairwiseDistances(vlpos, ctrd[0]._Pos, ctrd[0]._Category.getVar())#npla.norm(vlpos-ctrd[0]._Pos)
+                    #dstc.append(euclidean)
                     #print '%s\t%s\t%lf'% (cat[CATArr_INDEX_NAME], ctrd[0]._Category._Name, euclidean)
                     if minnorm > euclidean : 
                         minnorm = euclidean
                         minname = ctrd[0]._Category._Name
 
-                    matchacc = ocpymath.getMatchAccuracy(vlpos, ctrd[0]._Pos, ctrd[0]._Category.getDev())
-                    if maxma > matchacc : 
-                        maxma = matchacc
-                        maxmaname = ctrd[0]._Category._Name
+                    if cat[CATArr_INDEX_NAME] is ctrd[0]._Category.getName() : 
+                        dstc.append(euclidean)
+                    else : 
+                        resdstc.append(euclidean)
+
                 
                 if cat[CATArr_INDEX_NAME] is minname : 
                     subres[0] += 1
                 else : 
                     subres[1] += 1
-
-                if cat[CATArr_INDEX_NAME] is maxmaname : 
-                    submares[0] += 1
-                else : 
-                    submares[1] += 1
-
-                maresname.append([cat[CATArr_INDEX_NAME], maxmaname, maxma])
+                        
                 resname.append([cat[CATArr_INDEX_NAME], minname])
+            lkp.plotOaR(cat[CATArr_INDEX_NAME], dstc, resdstc)
+
             res.append(subres)
-            mares.append(submares)
         return res, resname
 
-    class RadarCategory : 
+    class clsobj : 
         '''
         radar category
         '''
-        def __init__(self, name, traindata, testdata) : 
+        def __init__(self, name, traindata, testdata, knvol) : 
             self._Name = name
             self._TrainArr = np.array(traindata)
             self._TestArr = np.array(testdata)
@@ -158,10 +176,12 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             self._trVar = self._TrainArr.var(axis=0, ddof=1)
             self._trDev = self._TrainArr.std(axis=0, ddof=1)
             self._CentroidArr = []
-            self._KernelSize = 1
+            self._KernelSize = knvol
             self._dim = len(testdata[0])
             pass
 
+        def getName(self):
+            return self._Name
         def getMean(self) : 
             return self._trMean
         def getVar(self) : 
@@ -173,7 +193,7 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             self._KernelSize = size
             pass
 
-        def setCentroid(self) : 
+        def setKernel(self) : 
             '''
             set centroid
             get Centroid position and set that pos. on each kernels
@@ -185,7 +205,7 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
             self._CentroidArr = []
 
             for knl in range(self._KernelSize) : 
-                self._CentroidArr.append(RadarCategorizer.RadarCategory.CategoryKernel(self._trMean, self))
+                self._CentroidArr.append(cpclassipy.clsobj.krnl(self._trMean, self))
             pass
 
         def initCtrdPos(self) : 
@@ -201,28 +221,29 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
         def getCentroidList(self) : 
             return self._CentroidArr
 
-        class CategoryKernel : 
+        class krnl : 
             def __init__(self, ctrd_pos, rCat) : 
                 self._Pos = ctrd_pos
                 self._Category = rCat
                 self._trNorm = trNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTrainData()]
-                self._lentr = lentr = len(trNorm)
-                self._trNorm_mean = trNorm_mean = np.mean(trNorm)
-                self._trNorm_var = trNorm_var = np.var(trNorm, ddof = 1)
-                featureScaling = trNorm
-                fsmax, fsmin = max(featureScaling), min(featureScaling)
-                featureScaling.sort()
-                self._trNorm_fs = trNorm_fs = [(x - fsmin) / (fsmax - fsmin) for x  in featureScaling]
+                #NOT YET...
+                #self._lentr = lentr = len(trNorm)
+                #self._trNorm_mean = trNorm_mean = np.mean(trNorm)
+                #self._trNorm_var = trNorm_var = np.var(trNorm, ddof = 1)
+                #featureScaling = trNorm
+                #fsmax, fsmin = max(featureScaling), min(featureScaling)
+                #featureScaling.sort()
+                #self._trNorm_fs = trNorm_fs = [(x - fsmin) / (fsmax - fsmin) for x  in featureScaling]
                 
-                y_pval, y_d, y_sigma, y_beta_a, y_beta_b , ecdf, betacdf = self.getKernel()
-                y = self.setKernel(y_sigma)
+                #y_pval, y_d, y_sigma, y_beta_a, y_beta_b , ecdf, betacdf = self.getKernel()
+                #y = self.setKernel(y_sigma)
                 #ecdf = [float(x) / float(lentr) for x in range(1, lentr + 1)]
-                betaCDF = beta.cdf(y, y_beta_a, y_beta_b)
-                betaPDF = beta.pdf(y, y_beta_a, y_beta_b)
+                #betaCDF = beta.cdf(y, y_beta_a, y_beta_b)
+                #betaPDF = beta.pdf(y, y_beta_a, y_beta_b)
                 
                 #lkp.plotPDF(y, rCat._Name)
                 #lkp.plotCDF(y, rCat._Name)
-                lkp.plotKStest(y, ecdf, betaCDF, y_beta_a, y_beta_b, y_pval, rCat._Name)
+                #lkp.plotKStest(y, ecdf, betaCDF, y_beta_a, y_beta_b, y_pval, rCat._Name)
                 #lkp.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
                 #lkp.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
                 pass
@@ -267,8 +288,7 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
 
 
 if __name__ == '__main__' : 
-    obj = RadarCategorizer()
-
+    obj = cpclassipy()
     with open('merge.csv') as f : 
         for line in f.readlines() : 
             line = line.split(',')
@@ -282,7 +302,7 @@ if __name__ == '__main__' :
             obj.appendTrainRow(row)
 
     
-    obj.setTrainingRatio(50)
+    obj.setTrRatio(50)
     obj.train()
     res, resname = obj.test()
     for ult in res : 
