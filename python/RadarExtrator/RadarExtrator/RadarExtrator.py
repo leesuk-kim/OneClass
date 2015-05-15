@@ -14,7 +14,7 @@ class CM :
     STAT_VAR = 1
     STAT_SKW = 2
     STAT_KTS = 3
-    RAW_DIM = 13
+    RAW_DIM = 13 + 12
     RAW_DIM_NONAME = RAW_DIM - 1
 
     def __init__(self, classname): 
@@ -52,7 +52,7 @@ class CM :
             for d in dlist : 
                 s = re.sub(' +', ' ', d)#change 1 more whitespaces to a whitespace in the string d
                 s = s[1:].split(' ')
-                origin.append([float(s[4]), float(s[8]), float(s[10])])#FREQ, dTOA, PW
+                origin.append([float(s[4]), float(s[8]), float(s[10])])#FREQ, TOA, PW
         
             self.originData.append(origin)
         pass
@@ -71,10 +71,18 @@ class CM :
                 #temp = [self.originMean[i], self.originVar[i], self.originSkew[i], self.originKurto[i]]
                 for m in range(CM.ORI_DIM_LEN) : 
                     k = m + 1
-                    rawRow[4 * k - 3] = self.originMean[i][m]
-                    rawRow[4 * k - 2] = self.originVar[i][m]
-                    rawRow[4 * k - 1] = self.originSkew[i][m]
-                    rawRow[4 * k] = self.originKurto[i][m]
+                    rawRow[4 * k - 7] = self.originMean[i][m]
+                    rawRow[4 * k - 6] = self.originVar[i][m]
+                    rawRow[4 * k - 5] = self.originSkew[i][m]
+                    rawRow[4 * k - 4] = self.originKurto[i][m]
+                    rawRow[4 * k - 3] = self.originDIfMean[i][m]
+                    rawRow[4 * k - 2] = self.originDIfVar[i][m]
+                    rawRow[4 * k - 1] = self.originDIfSkew[i][m]
+                    rawRow[4 * k] = self.originDIfKurto[i][m]
+                    #rawRow[4 * k - 3] = self.originMean[i][m]
+                    #rawRow[4 * k - 2] = self.originVar[i][m]
+                    #rawRow[4 * k - 1] = self.originSkew[i][m]
+                    #rawRow[4 * k] = self.originKurto[i][m]
 
                 self.rawdata.append(rawRow)
         pass
