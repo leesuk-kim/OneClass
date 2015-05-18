@@ -2,7 +2,8 @@
 import re
 import sys
 import numpy as np
-import scipy.stats as stats
+#import scipy.stats as stats
+import math
 
 class raex : 
     ORI_FREQ = 0
@@ -57,36 +58,36 @@ class raex :
             self.srclist.append(srcbfr)
         pass
 
-    def setRawData(self) : 
-        '''
-        set Rawdata - 13 dimension (12 dim + 1 clsname)
-        '''
-        if not self.appendable : 
+    #def setRawData(self) : 
+    #    '''
+    #    set Rawdata - 13 dimension (12 dim + 1 clsname)
+    #    '''
+    #    if not self.appendable : 
 
-            #calculate via my shape
-            for i in range(raex.ORI_SAMPLE_LEN) :
-                rawRow = [self.name]
-                rawRow.extend([0. for x in range(raex.RAW_DIM_NONAME)])
+    #        #calculate via my shape
+    #        for i in range(raex.ORI_SAMPLE_LEN) :
+    #            rawRow = [self.name]
+    #            rawRow.extend([0. for x in range(raex.RAW_DIM_NONAME)])
                 
-                for m in range(raex.ORI_DIM_LEN) : 
-                    k = m + 1
-                    rawRow[4 * k - 7] = self.originMean[i][m]
-                    rawRow[4 * k - 6] = self.originVar[i][m]
-                    rawRow[4 * k - 5] = self.originSkew[i][m]
-                    rawRow[4 * k - 4] = self.originKurto[i][m]
-                    rawRow[4 * k - 3] = self.originDIfMean[i][m]
-                    rawRow[4 * k - 2] = self.originDIfVar[i][m]
-                    rawRow[4 * k - 1] = self.originDIfSkew[i][m]
-                    rawRow[4 * k] = self.originDIfKurto[i][m]
-                    #rawRow[4 * k - 3] = self.originMean[i][m]
-                    #rawRow[4 * k - 2] = self.originVar[i][m]
-                    #rawRow[4 * k - 1] = self.originSkew[i][m]
-                    #rawRow[4 * k] = self.originKurto[i][m]
+    #            for m in range(raex.ORI_DIM_LEN) : 
+    #                k = m + 1
+    #                rawRow[4 * k - 7] = self.originMean[i][m]
+    #                rawRow[4 * k - 6] = self.originVar[i][m]
+    #                rawRow[4 * k - 5] = self.originSkew[i][m]
+    #                rawRow[4 * k - 4] = self.originKurto[i][m]
+    #                rawRow[4 * k - 3] = self.originDIfMean[i][m]
+    #                rawRow[4 * k - 2] = self.originDIfVar[i][m]
+    #                rawRow[4 * k - 1] = self.originDIfSkew[i][m]
+    #                rawRow[4 * k] = self.originDIfKurto[i][m]
+    #                #rawRow[4 * k - 3] = self.originMean[i][m]
+    #                #rawRow[4 * k - 2] = self.originVar[i][m]
+    #                #rawRow[4 * k - 1] = self.originSkew[i][m]
+    #                #rawRow[4 * k] = self.originKurto[i][m]
 
-                self.rawdata.append(rawRow)
-        pass
+    #            self.rawdata.append(rawRow)
+    #    pass
     
-    def setOriginStatistics(self) :         
+    def setOriginStatistics(self) :
         if not self.appendable : 
             dimlen = raex.ORI_DIM_LEN
 
@@ -160,26 +161,30 @@ class raex :
     def getName(self) : 
         return self.name
 
+    def setRaw(self) : 
+        raw = []
+        for splist in self.srclist : 
+            features = []
+            for dim in splist : 
+                features.extend(statfeatures(dim))
+            raw.append(features)
+
+        self.rawdata = raw
+
+    def appenddiff(self) : 
+        for splist in self.srclist : 
+            pass
+        pass
+
     def close(self) : 
         self.appendable = False;
-        self.setDTOA()
-        self.setOriginStatistics()
-        self.setRawData()
+        #self.setDTOA()
+        for i, v in enumerate(self.srclist) : 
+            self.srclist[i] = zip(*v)#transpose matrix!!!!!!
+
+        self.setRaw()
+        self.appenddiff(self.srclist)
     pass
-
-def diff(list, zindex = False) : 
-    '''
-    difference sequencial values in the list
-    if zindex is false, it start index of n+1 and return list whose size is n-1
-    if zindex is true, it start index of n and return list whose size is n
-    '''
-    sub = list[0 if zindex else 1:]
-    if zindex :
-        list.insert(0, 0)
-    list = list[:-1]
-    dif = [x2 - x1 for (x1, x2) in zip(list, sub)]
-
-    return dif
 
 def setFeatureScaling(cls) : 
     minList = [sys.float_info.max for i in range(raex.RAW_DIM_NONAME)]
@@ -205,3 +210,50 @@ def setFeatureScaling(cls) :
                 sp = (samplebook[k][idx] - minList[i]) / denom[i]
                 cls[j].replaceRawData(k, idx, sp)
     pass
+
+def diff(list, zindex = False) : 
+    '''difference sequencial values in the list
+    param:
+    list - like array or list.
+    zindex - boolean for start at zero or one.
+    if zindex is false, it start index of n+1 and return list whose size is n-1
+    if zindex is true, it start index of n and return list whose size is n
+    '''
+    sub = list[0 if zindex else 1:]
+    if zindex :
+        list.insert(0, 0)
+    list = list[:-1]
+    dif = [x2 - x1 for (x1, x2) in zip(list, sub)]
+
+    return dif
+
+def statfeatures(list, moments = 'mvsk') : 
+    '''
+    moment - m/v/s/k. passive is mv.
+    if mv, it returns m and v, or if mvk, it returns m, v, and k.
+    '''
+    sflist = []
+    ll = float(len(list))
+    lls = ll - 1
+    dll,  dlls = 1 / ll, 1 / lls
+
+    if 'm' in moments: 
+        m = sum(list) / ll
+        sflist.append(m)
+        
+    if 'v' in moments : 
+        v = sum([dlls * (x - m) ** 2 for x in list])
+        sflist.append(v)
+
+    if 's' in moments : 
+        m3 = (dll * sum([dlls * (x - m) ** 3 for x in list])) 
+        b1 = m3 / (v ** 1.5)
+        sflist.append(b1)
+
+    if 'k' in moments : 
+        vsquare = (sum([dlls * (x - m) ** 2 for x in list])) ** 2
+        m4 = (dll * sum([dlls * (x - m) ** 4 for x in list]))
+        g2 = m4 / vsquare - 3
+        sflist.append(g2)
+
+    return sflist
