@@ -1,3 +1,4 @@
+import sys
 import os
 from raexpy import raex
 
@@ -30,15 +31,14 @@ if __name__ == "__main__" :
                 rrelist.append(rre)
                 print 'append %s' % rre.getName()
 
-    #feature-scaling
-    setFeatureScaling(rrelist)
     #export Data
     with open('merge.csv', 'wb') as fm : 
         for c in rrelist : 
             with open(c.getName() + '.csv', 'wb') as f : 
                 for data in c.getRawData() : 
-                    f.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n'%(data[0], repr(data[1]), repr(data[2]), repr(data[3]), repr(data[4]), repr(data[5]), repr(data[6]), repr(data[7]), repr(data[8]), repr(data[9]), repr(data[10]), repr(data[11]), repr(data[12])))
-                    fm.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n'%(data[0], repr(data[1]), repr(data[2]), repr(data[3]), repr(data[4]), repr(data[5]), repr(data[6]), repr(data[7]), repr(data[8]), repr(data[9]), repr(data[10]), repr(data[11]), repr(data[12])))
-                    pass
-                print 'file write : ' + c.getName() + '.csv'
+                    dlen = len(data) - 1
+                    for i, val in enumerate(data) : 
+                        f.write('%s%c' % (repr(val), ',' if dlen != i else '\n'))
+                        fm.write('%s%c' % (repr(val), ',' if dlen != i else '\n'))
 
+                print 'file write : ' + c.getName() + '.csv'
