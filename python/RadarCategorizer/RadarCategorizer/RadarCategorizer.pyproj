@@ -22,6 +22,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="cppy.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lkplot.py">
       <SubType>Code</SubType>
     </Compile>
