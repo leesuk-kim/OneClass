@@ -18,117 +18,109 @@ CATArr_INDEX_CAT = 1
 
 class cpon : 
     '''
-    Class Probability ClassiPier
+    Class Probability Output Network
     '''
-    def __init__(self) : 
+    def __init__(self, fold = 2) : 
         self._CategoryArr = []
         '''raw matrix'''
         self._ClsVol = 0
-        self._KnVol = 2
-        self.VALID_SRC = 'train'
         self._CatDim = 1
-        self.cslist = []
-        self._TrRatio = 90
-        self._KnGrow = True
-        '''
-training ratio is the ratio for how many data would be taken to training data.
-this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on raw data
-        '''
+        self._cslist = []
+        self._fmax = fold
+        self._kmax = 1
         pass
 
     def getcslist(self) : 
-        return self._CategoryArr
+        return self._cslist
 
-    #def appendTrainRow(self, row) : 
-    #    '''
-    #    append Raw row
-    #    '''
-    #    name = row[0]
-    #    seq = row[1:]
-
-    #    cat = next((rrow for i, rrow in enumerate(self._CategoryArr) if name in rrow), False)
-    #    if not cat : 
-    #        print 'create new category : %s' % name
-    #        self._CategoryArr.append([name, [seq]])
-    #        self._ClsVol += 1
-    #    else : 
-    #        cat[1].append(seq)
-
-    #def appendTrain(self, matrix) : 
-    #    try : 
-    #        self.appendTrainRow(matrix[x] for x in range(len(matrix)))
-    #    except TypeError : 
-    #        print 'please input a vector.'
-
-    #    pass
-
-    #def appendValidRow(self, row) : 
-    #    #append test data
-    #    pass
-    #def appendValid(self, matrix) : 
-    #    try : 
-    #        self.appendValidRow(matrix[x] for x in range(len(matrix)))
-    #    except TypeError : 
-    #        print 'please input a vector.'
-
-    #    pass
-    
-    def setTrRatio(self, ratio) : 
-        '''put percentage in parameter.
-        i.e. 90% --> 0.9, 50%-->0.5, 20.2% -> 0.202
+    def csfactory(self, name = None, tmat = []) : 
         '''
-        if ratio <0 or ratio > 1 : 
-            print 'wrong range. availlable from >0 to <=1.'
+        class space factory
+        setting kernel volume from this class
+        '''
+        cs = cspace(name, tmat, self._fmax)
+        return cs
+
+    def registcs(self, cs) : 
+        self._cslist.append(cs)
+
+    def appendTrainRow(self, row) : 
+        '''
+        append Raw row
+        '''
+        name = row[0]
+        seq = row[1:]
+
+        cat = next((rrow for i, rrow in enumerate(self._CategoryArr) if name in rrow), False)
+        if not cat : 
+            print 'create new category : %s' % name
+            self._CategoryArr.append([name, [seq]])
+            self._ClsVol += 1
         else : 
-            self._TrRatio = ratio
+            cat[1].append(seq)
 
-    def getTrRatio(self) : 
-        return self._TrRatio
+    def appendTrain(self, matrix) : 
+        try : 
+            self.appendTrainRow(matrix[x] for x in range(len(matrix)))
+        except TypeError : 
+            print 'please input a vector.'
 
-    def setKnVol(self, knvol, isgrow = False) : 
+        pass
+
+    def appendValidRow(self, row) : 
+        #append test data
+        pass
+    def appendValid(self, matrix) : 
+        try : 
+            self.appendValidRow(matrix[x] for x in range(len(matrix)))
+        except TypeError : 
+            print 'please input a vector.'
+
+        pass
+
+    def setFold(self, fold) : 
+        self._fmax = fold
+        
+    def getKnVol(self):
+        return self._kmax
+    def setKnVol(self, knvol) : 
         '''if it has fixed number of kernel, then put number in.
         if grow is true, it makes kernel volmes most effective.
         '''
-        self._KnVol = knvol
-        self._KnGrow = isgrow
-
-    def getKnVol(self):
-        return self._KnVol
-    
-    VALID_SRC = 'train'
-    def setValidSrc(self, src = 'test') : 
-        '''
-    if train, take testdata from train data with training ratio
-    if 'test', take testdata from test data
-        '''
-        VALID_SRC = src
-    def getValidSrc(self) : 
-        return VALID_SRC
-
-    CAT_DIM = 0
+        self._kmax = knvol
 
     def getcslist(self, idx) : 
-        return self._CategoryArr[idx]
+        return self._cslist[idx]
 
-    def train(self) : 
-        print 'train'
-        
-        CAT_DIM = len(self.getcslist(0)[CATArr_INDEX_TRAIN][0])
-        
-        if self.VALID_SRC is 'train' : 
-            #split data and batch on cls space
-            for cat in self._CategoryArr : 
-                datalen = len(cat[CATArr_INDEX_TRAIN])
-                trlen = int(datalen * self._TrRatio)
-                trainArr = cat[CATArr_INDEX_TRAIN][:trlen]
-                testArr = cat[CATArr_INDEX_TRAIN][trlen:]
-                cat.pop(CATArr_INDEX_TRAIN)
-                cat.append(cpon.cspace(cat[CATArr_INDEX_NAME], trainArr, testArr, self._KnVol))
+    def Learn(self) : 
+        print 'learning'
 
-            #set Centroid
-            for cat in self._CategoryArr : 
-                cat[CATArr_INDEX_CAT].setKernel()
-        pass
+        fsblist = []
+        for fold in range(self._fmax) : 
+            print 'fold#%d' % fold
+            for cs in self._cslist : 
+                cs.onFolding(fold)
+                cs.onTraining()
+                
+            foldsb = self.onTesting()
+            fsblist.append(scoreing(foldsb))
+        return fsblist
+
+    def onTesting(self) : 
+        '''
+        test on each fold
+        return ditance on each norm for each kernel
+        '''
+        dmlist = []
+        for tcs in self._cslist : 
+            dmap = []
+            for vcs in self._cslist : 
+                kn = vcs.getKernels()
+                dlist = tcs.onTesting(kn)
+                dmap.append(dlist)
+            dmlist.append(dmap)
+            
+        return dmlist
 
     def test(self) : 
         res = []
@@ -171,23 +163,6 @@ this variable has range 1 to 99. 99 means size of training = 99%, test = 1% on r
 
             res.append(subres)
         return res, resname
-
-    def csfactory(self, name = None, tmat = [], vmat = []) : 
-        '''
-        class space factory
-        '''
-        tml, vml = len(tmat), len(vmat)
-        if vml == 0 : 
-            ratio = int(tml * self.getTrRatio())
-            vmat = tmat[ratio:]
-            tmat = tmat[:ratio]
-
-        cs = cspace(name, tmat, vmat, self._KnVol)
-
-        return cs
-
-    def appendcs(self, cs) : 
-        self.cslist.append(cs)
     pass
 
 
@@ -195,29 +170,73 @@ class cspace :
     '''
     radar category
     '''
-    def __init__(self, name, traindata, validdata, knvol = 1) : 
+    def __init__(self, name, features, foldmax, knvol = 1) : 
         self._Name = name
-        self._TrainArr = np.array(traindata)
-        self._ValidArr = np.array(validdata)
-        self._trMean = self._TrainArr.mean(axis=0)
-        self._trVar = self._TrainArr.var(axis=0, ddof=1)
-        self._trDev = self._TrainArr.std(axis=0, ddof=1)
-        self._CentroidArr = []
+        self._FeatureList = features
+        self._FeatureVol = len(features)
+        self._FoldValidVol = int(float(self._FeatureVol) / float(foldmax))
+        self._foldTrainVol = self._FeatureVol - self._FoldValidVol
+        #self._trMean = self._TrainArr.mean(axis=0)
+        #self._trVar = self._TrainArr.var(axis=0, ddof=1)
+        #self._trDev = self._TrainArr.std(axis=0, ddof=1)
+        #self._CentroidArr = []
         self._KernelSize = knvol
         pass
 
     def getName(self):
         return self._Name
-    def getMean(self) : 
-        return self._trMean
-    def getVar(self) : 
-        return self._trVar
-    def getDev(self) : 
-        return self._trDev
 
-    def setKernelSize(self, size) : 
-        self._KernelSize = size
+    def onFolding(self, cnt) : 
+        '''
+        method on folding
+        set training data and valid data
+        '''
+        self._Fold = cnt
+        self._kslist = []
+        aindex = cnt * self._FoldValidVol
+        bindex = aindex + self._FoldValidVol
+        trdata = self._FeatureList[:aindex] + self._FeatureList[bindex:]
+        vadata = self._FeatureList[aindex : bindex]
+        
+        trtr = zip(*trdata)
+        mean, var, dev = [], [], []
+        for trtrrow in trtr : 
+            m = reduce(lambda x, y: x + y, trtrrow) / len(trtrrow)
+            mean.append(m)
+            v = 0
+            for row in trtrrow : 
+                v += (row - m) ** 2
+                v /= self._foldTrainVol - 1
+            var.append(v)
+            dev.append(v ** 0.5)
+
+        self._mean = mean
+        self._var = var
+        self._dev = dev
+        self._trdata = trdata
+        self._vadata = vadata
         pass
+
+    def onTraining(self) : 
+        #positioning kernel position for kernel size 1
+        #if you want to set more kernel, you take method 'dalken(data allocate on kernel)'
+        kpos = self._mean
+        self._kslist.append(kspace(kpos, self._trdata))
+        pass
+
+    def onTesting(self, tck) : 
+        '''
+        test on target class kernel
+        '''
+        score = []
+        for vd in self._vadata : 
+            dlist = []
+            for kernel in tck : 
+                d = getNorm(vd, kernel.getMean(), kernel.getVar())
+                dlist.append(d)
+            score.append(dlist)
+            pass
+        return score
 
     def setKernel(self) : 
         '''
@@ -226,7 +245,6 @@ class cspace :
         in Radar Categorizer, we take ONLY ONE centroid.
         '''
         self.initCtrdPos()
-        self._kernelPos = []
 
         self._CentroidArr = []
 
@@ -238,23 +256,42 @@ class cspace :
         pos = []
         pass
 
+    def getMean(self) : 
+        return self._mean
+    def getVar(self) : 
+        return self._var
+    def getDev(self) : 
+        return self._dev
+
     def getTrainData(self) : 
-        return self._TrainArr
+        return self.trdata
 
     def getValidData(self) : 
-        return self._ValidArr
+        return self._vadata
 
-    def getCentroidList(self) : 
-        return self._CentroidArr
-
-
+    def getKernels(self) : 
+        return self._kslist
     pass
 
 class kspace : 
-    def __init__(self, ctrd_pos, rCat) : 
+    def __init__(self, ctrd_pos, trd) : 
         self._Pos = ctrd_pos
-        self._Category = rCat
-        self._trNorm = trNorm = [npla.norm(ctrd_pos - x) for x in rCat.getTrainData()]
+        #self._Category = scs
+        ###get statistics : mean and variance
+        self._data = np.array(trd)
+        datatr = np.array(zip(*trd))
+        mean, var = [], []
+        for dtr in datatr : 
+            m = dtr.mean()
+            v = dtr.var(ddof = 1)
+            mean.append(m)
+            var.append(v)
+         ###get statistics ends
+        normlist = [getNorm(row, mean, var) for row in trd]
+        self._mean = mean
+        self._var = var
+        self._normlist = normlist
+        #self._trNorm = trNorm = [npla.norm(ctrd_pos - x) for x in self._data]
         #NOT YET...
         #self._lentr = lentr = len(trNorm)
         #self._trNorm_mean = trNorm_mean = np.mean(trNorm)
@@ -276,6 +313,10 @@ class kspace :
         #lkp.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
         #lkp.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
         pass
+    def getMean(self) : 
+        return self._mean
+    def getVar(self) : 
+        return self._var
 
     def setKernel(self, sigma) :
         y = [math.exp(-1 * (x ** 2) / (2 * sigma ** 2)) for x in self._trNorm]
@@ -312,3 +353,23 @@ class kspace :
     def getCentroid(self) : 
         return self._Pos
     pass
+
+def getNorm(row, mean, var) : 
+    d = 0.
+    d = reduce(lambda x, y : x + y , [(i - m) ** 2 / v for i, m, v in zip(row, mean, var)])
+    #for i, m, v in zip(row, mean, var) : 
+    #    d += (i - m) ** 2 / v
+    return d ** 0.5
+
+def scoreing(distancemap) : 
+    sb = []
+    map = [zip(*tcmap) for tcmap in distancemap]
+    for eclist in map : 
+        ecsb = []
+        for klist in eclist : 
+            v = reduce(lambda x, y : x if x < y else y, min(klist))
+            i = klist.index(v)
+            ecsb.append(i)
+        sb.append(ecsb)
+        pass
+    return sb
