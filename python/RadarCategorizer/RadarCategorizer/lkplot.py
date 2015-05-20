@@ -107,3 +107,25 @@ def plotOaR(name, onedstc, restdstc) :
     fig.savefig(os.path.join(path, fn))
     pyp.close(fig)
     pass
+
+def plotoar(name, map, idx) : 
+    
+    fig, ax = pyp.subplots(1, 1)
+    fig.suptitle(name + ' OAR')
+    xaxis = range(len(map[0]))
+
+    for i, submap in enumerate(map) : 
+        klist = zip(*submap)
+        for k in klist : 
+            ax.plot(xaxis, k, 'k+' if i == idx else 'k.')
+
+    ax.set_ylim(-1, 20.)
+    ax.set_xlim(-1, len(xaxis) + 1)
+    
+    pyp.grid()
+    #pyp.show()
+    path = os.path.join(os.path.dirname(__file__), 'OAR')
+    fn = 'OAR_' + name + '.png'
+    fig.savefig(os.path.join(path, fn))
+    pyp.close(fig)
+    pass

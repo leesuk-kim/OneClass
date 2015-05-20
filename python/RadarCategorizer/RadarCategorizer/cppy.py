@@ -10,6 +10,7 @@ import scipy.stats as scistats
 import lkplot as lkp
 import math
 import ocpymath
+from sklearn import svm
 
 CATArr_INDEX_NAME = 0
 CATArr_INDEX_TRAIN = 1
@@ -102,25 +103,65 @@ class cpon :
                 cs.onFolding(fold)
                 cs.onTraining()
                 
-            foldsb = self.onTesting()
-            fsblist.append(scoreing(foldsb))
+            foldsb = self.onTesting(fold)
+            fsblist.append(scoring(foldsb))
         return fsblist
 
-    def onTesting(self) : 
+    def onTesting(self, fold) : 
         '''
         test on each fold
         return ditance on each norm for each kernel
         '''
         dmlist = []
-        for tcs in self._cslist : 
+        for i, tcs in enumerate(self._cslist) : 
             dmap = []
             for vcs in self._cslist : 
                 kn = vcs.getKernels()
                 dlist = tcs.onTesting(kn)
                 dmap.append(dlist)
             dmlist.append(dmap)
+            fn = '#%d%s' % (fold + 1, tcs.getName())
+            lkp.plotoar(fn, dmap, i)
             
         return dmlist
+
+    def learnSVM(self) : 
+        print 'learning SVM'
+
+        fsblist = []
+        for fold in range(self._fmax) : 
+            self._svm = svm.LinearSVC()
+            print 'fold#%d' % fold
+
+            fitdatalist = []
+            fitnamelist = []
+            for cs in self._cslist : 
+                cs.onFolding(fold)
+                fdlist = cs.getTrainData()
+                csn = cs.getName()
+                fnlist = [csn for td in fdlist]
+                fitdatalist.extend(fdlist)
+                fitnamelist.extend(fnlist)
+
+            self._svm.fit(fitdatalist, fitnamelist)
+            foldsb = self.onSVMTesting(fold)
+            fsblist.append(foldsb)
+        return fsblist
+        
+        pass
+
+    def onSVMTesting(self, fold) : 
+        plist = []
+        for i, tcs in enumerate(self._cslist) : 
+            for vd in tcs.getValidData() : 
+                pred = self._svm.predict(vd)
+                plist.append([tcs.getName(), pred[0]])
+            #acc = self._svm.score(tcs.getValidData(), [tcs.getName() for x in tcs.getValidData()])
+            pass
+            #fn = 'svm#%d%s' % (fold + 1, tcs.getName())
+            #lkp.plotoar(fn, dmap, i)
+        
+        return plist
 
     def test(self) : 
         res = []
@@ -221,22 +262,22 @@ class cspace :
         #positioning kernel position for kernel size 1
         #if you want to set more kernel, you take method 'dalken(data allocate on kernel)'
         kpos = self._mean
-        self._kslist.append(kspace(kpos, self._trdata))
+        self._kslist.append(kspace(kpos, self._trdata, self._Name))
         pass
 
     def onTesting(self, tck) : 
         '''
         test on target class kernel
         '''
-        score = []
+        dmap = []
         for vd in self._vadata : 
             dlist = []
             for kernel in tck : 
                 d = getNorm(vd, kernel.getMean(), kernel.getVar())
                 dlist.append(d)
-            score.append(dlist)
+            dmap.append(dlist)
             pass
-        return score
+        return dmap
 
     def setKernel(self) : 
         '''
@@ -264,7 +305,7 @@ class cspace :
         return self._dev
 
     def getTrainData(self) : 
-        return self.trdata
+        return self._trdata
 
     def getValidData(self) : 
         return self._vadata
@@ -274,10 +315,11 @@ class cspace :
     pass
 
 class kspace : 
-    def __init__(self, ctrd_pos, trd) : 
+    def __init__(self, ctrd_pos, trd, name='noname') : 
         self._Pos = ctrd_pos
         #self._Category = scs
         ###get statistics : mean and variance
+        self._name = name
         self._data = np.array(trd)
         datatr = np.array(zip(*trd))
         mean, var = [], []
@@ -317,6 +359,8 @@ class kspace :
         return self._mean
     def getVar(self) : 
         return self._var
+    def getName(self) :
+        return self._name
 
     def setKernel(self, sigma) :
         y = [math.exp(-1 * (x ** 2) / (2 * sigma ** 2)) for x in self._trNorm]
@@ -361,7 +405,7 @@ def getNorm(row, mean, var) :
     #    d += (i - m) ** 2 / v
     return d ** 0.5
 
-def scoreing(distancemap) : 
+def scoring(distancemap) : 
     sb = []
     map = [zip(*tcmap) for tcmap in distancemap]
     for eclist in map : 
