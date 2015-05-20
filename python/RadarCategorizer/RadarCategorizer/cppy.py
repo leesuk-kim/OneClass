@@ -11,6 +11,8 @@ import lkplot as lkp
 import math
 import ocpymath
 from sklearn import svm
+from sklearn import metrics
+
 
 CATArr_INDEX_NAME = 0
 CATArr_INDEX_TRAIN = 1
@@ -143,8 +145,8 @@ class cpon :
                 fitdatalist.extend(fdlist)
                 fitnamelist.extend(fnlist)
 
-            self._svm.fit(fitdatalist, fitnamelist)
-            foldsb = self.onSVMTesting(fold)
+            self._svm.fit(fitdatalist, fitnamelist)#training
+            foldsb = self.onSVMTesting(fold)#testing
             fsblist.append(foldsb)
         return fsblist
         
