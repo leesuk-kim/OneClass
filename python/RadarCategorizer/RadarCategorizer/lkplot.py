@@ -129,3 +129,28 @@ def plotoar(name, map, idx) :
     fig.savefig(os.path.join(path, fn))
     pyp.close(fig)
     pass
+import cppy
+def printCtrdMap(cslist, fold) : 
+
+    ctrdmap = [[0. for y in cslist] for x in cslist]
+    for i, acs in enumerate(cslist) : 
+        for j, bcs in enumerate(cslist) : 
+            d = 0.
+            d = cppy.getNorm(bcs.getKernels()[0].getCentroid(), acs.getMean(), acs.getVar())
+            ctrdmap[i][j] = d
+    
+    path = os.path.join(os.path.dirname(__file__), 'ctrdmap')
+    fn = 'cm_%02d.csv' % (fold)
+    import csv
+    with open(os.path.join(path, fn), 'wb') as f : 
+        cw = csv.writer(f, delimiter=',', quoting=csv.QUOTE_MINIMAL)
+        tags = [cs.getName() for cs in cslist]
+        tags.insert(0, '')
+        cw.writerow(tags)
+        tags.pop(0)
+        for idx, cnt in enumerate(zip(tags, ctrdmap)) : 
+            row = cnt[1]
+
+            row.insert(0, cnt[0])
+            cw.writerow(row)
+    pass

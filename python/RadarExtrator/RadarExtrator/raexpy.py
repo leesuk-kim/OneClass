@@ -51,7 +51,7 @@ class raex :
         for splist in self.srclist :
             diflist = [] 
             for idx, dim in enumerate(splist) : 
-                dfrc = diff(dim, zindex = False if idx != 1 else True)
+                dfrc = diff(dim)
                 diflist.append(dfrc)
             splist.extend(diflist)
             pass
@@ -62,6 +62,11 @@ class raex :
 
         for i, v in enumerate(self.srclist) : 
             self.srclist[i] = zip(*v)#transpose matrix!!!!!!
+
+        for i, toa in enumerate(self.srclist) : 
+            dtoa = diff(toa[1], zindex=True)
+            toa.pop(1)
+            toa.insert(1, dtoa)
 
         self.appenddiff()
         self.setRaw()

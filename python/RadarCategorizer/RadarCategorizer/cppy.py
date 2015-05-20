@@ -104,6 +104,7 @@ class cpon :
             for cs in self._cslist : 
                 cs.onFolding(fold)
                 cs.onTraining()
+            lkp.printCtrdMap(self._cslist, fold)
                 
             foldsb = self.onTesting(fold)
             fsblist.append(scoring(foldsb))
