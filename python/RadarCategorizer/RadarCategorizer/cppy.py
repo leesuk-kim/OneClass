@@ -9,7 +9,6 @@ import numpy.linalg as npla
 from scipy.stats import beta
 import scipy.stats as scistats
 import lkpy as lkep
-from lkpy import lkexporter as lep
 import math
 from sklearn import svm
 from sklearn import metrics
@@ -25,9 +24,8 @@ class cpon :
     Class Probability Output Network
     '''
     
-    def __init__(self, fold = 2) : 
+    def __init__(self, fold = 2, srcdir='') : 
         self._TimeStamp = '%d' % int(time.time())
-        a = lep(self._TimeStamp)
         self._CategoryArr = []
         '''raw matrix'''
         self._ClsVol = 0
@@ -35,10 +33,14 @@ class cpon :
         self._cslist = []
         self._fmax = fold
         self._kmax = 1
+        self._cslist = []
+        self._ctrdmap = []
+        '''
+        a map consist of distance between each centroid of class
+        '''
+        self._clfboard = []
+        self._srcdir = srcdir
         pass
-
-    def getcslist(self) : 
-        return self._cslist
 
     def csfactory(self, name = None, tmat = []) : 
         '''
@@ -87,6 +89,9 @@ class cpon :
 
     def setFold(self, fold) : 
         self._fmax = fold
+
+    def getcsnames(self) : 
+        return [cs._Name for cs in self._cslist]
         
     def getKnVol(self):
         return self._kmax
@@ -101,17 +106,21 @@ class cpon :
 
     def Learn(self) : 
         print 'learning'
-
         fsblist = []
         for fold in range(self._fmax) : 
             print 'fold#%d' % fold
+
             for cs in self._cslist : 
                 cs.onFolding(fold)
                 cs.onTraining()
-            lkep.printCtrdMap(self._cslist, fold, self._LogPath)
-                
-            foldsb = self.onTesting(fold)
-            fsblist.append(scoring(foldsb))
+
+            fctrdmap = mapctrd(self._cslist, self._fmax)
+            self._ctrdmap.append(fctrdmap)
+
+            #lkep.printCtrdMap(self._cslist, fold, self._LogPath)
+            foldsb = boardclf(scoreclf(self.onTesting(fold)))
+            fsblist.append(foldsb)
+        self._clfboard = fsblist
         return fsblist
 
     def onTesting(self, fold) : 
@@ -128,7 +137,7 @@ class cpon :
                 dmap.append(dlist)
             dmlist.append(dmap)
             fn = '#%d%s' % (fold + 1, tcs.getName())
-            lkep.plotoar(fn, dmap, i, self._LogPath)
+            #lkep.plotoar(fn, dmap, i, self._LogPath)
             
         return dmlist
 
@@ -412,9 +421,8 @@ def getNorm(row, mean, var) :
     #    d += (i - m) ** 2 / v
     return d ** 0.5
 
-def scoring(distancemap) : 
-    sb = []
-    map = [zip(*tcmap) for tcmap in distancemap]
+def scoreclf(distancemap) : 
+    sb, map = [], [zip(*tcmap) for tcmap in distancemap]
     for eclist in map : 
         ecsb = []
         for klist in eclist : 
@@ -424,6 +432,14 @@ def scoring(distancemap) :
         sb.append(ecsb)
         pass
     return sb
+
+def boardclf(clfscrlist) : 
+    board = [[0 for y in clfscrlist] for x in clfscrlist]
+    for i, tgcs in enumerate(clfscrlist) : 
+        for cs in tgcs : 
+            board[i][cs] += 1
+            pass
+    return board
 
 def getPairwiseDistances(arrx, arry, arrvar) : 
     '''
@@ -445,3 +461,15 @@ def getPairwiseDistances(arrx, arry, arrvar) :
         d += dev != 0 and fs * ((x - y) ** 2) / dev or 0
 
     return d ** 0.5
+
+def mapctrd(cslist, fold) : 
+    '''
+    calculate and list classes of centroids
+    works in the fold
+    '''
+    map = [[0. for y in cslist] for x in cslist]
+    for i, acs in enumerate(cslist) : 
+        for j, bcs in enumerate(cslist) : 
+            map[i][j] = getNorm(bcs.getKernels()[0].getCentroid(), acs.getMean(), acs.getVar())
+ 
+    return map

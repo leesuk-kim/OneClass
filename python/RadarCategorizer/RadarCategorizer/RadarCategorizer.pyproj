@@ -28,9 +28,6 @@
     <Compile Include="lkpy.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ocpymath.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="RadarCategorizer.py" />
   </ItemGroup>
   <PropertyGroup>

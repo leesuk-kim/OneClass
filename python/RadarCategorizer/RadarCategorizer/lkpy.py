@@ -1,66 +1,63 @@
+import os, csv, numpy
 import matplotlib.pyplot as pyp
 from scipy.stats import beta
-import numpy
-import os
 import cppy
-import csv
 
 class lkexporter : 
-    def __init__(self, ts) : 
-        self._timestamp = ts
+    def __init__(self, cpon) : 
+        self._cpon = cpon
+        self._timestamp = cpon._TimeStamp
         self._rtdir = os.path.dirname(__file__) + '\\log'
-        self._logpath = os.path.join(self._rtdir, ts)
-        
+        self._logpath = os.path.join(self._rtdir, self._timestamp)
         pass
 
     def genffn(self, dirname, fext, fold) : 
         '''generate filename with fold counter after checking directory
         '''
-        dn = os.path.join(self._logpath, dirname)
-
+        #\\log\\{srcname}{timestamp}
+        logpath = self._logpath[:-10] + self._cpon._srcdir + self._logpath[-10:]
+        dn = os.path.join(logpath, dirname)
         if not os.path.exists(dn) : 
             os.makedirs(dn)
         
         return os.path.join(dn, '%s#%02d.%s' % (self._timestamp, fold, fext))
 
-    def csvctrdmap(self, cslist, fold) :
-        #if you want to general design, put this fxxking codes out anywhere
-        #this class only works to exporting
-        ctrdmap = [[0. for y in cslist] for x in cslist]
-        for i, acs in enumerate(cslist) : 
-            for j, bcs in enumefsrate(cslist) : 
-                d = 0.
-                d = cppy.getNorm(bcs.getKernels()[0].getCentroid(), acs.getMean(), acs.getVar())
-                ctrdmap[i][j] = d
-        #fxxking code include this line
-    
-        fn = self.genffn('ctrdmap', 'csv', fold)
-        with open(fn, 'wb') as f : 
-            cw = csv.writer(f, delimiter=',')
-            tags = [cs.getName() for cs in cslist]
-            tags.insert(0, '')
-            cw.writerow(tags)
-            tags.pop(0)
-            for idx, cnt in enumerate(zip(tags, ctrdmap)) : 
-                row = cnt[1]
+    def csvctrdmap(self) :
+        ctrdmap, csnames = self._cpon._ctrdmap, self._cpon.getcsnames()
+        header = csnames[:]
+        header.insert(0,'')
+        for fl, map in enumerate(ctrdmap) :
+            fn = self.genffn('ctrdmap', 'csv', fl)
+            with open(fn, 'wb') as f : 
+                cw = csv.writer(f, delimiter=',')
+                cw.writerow(header)
+                for row, tag in zip(map, csnames) : 
+                    row.insert(0, tag)
+                    cw.writerow(row)
+        print 'export ctrdmap complete'
 
-                row.insert(0, cnt[0])
-                cw.writerow(row)
-        pass
-
-    def pngoargraph(self) : 
-        pass
-
-    def csvscrboard(self) : 
-        pass
-
-    def csvclflist(self) : 
-        pass
+    def csvclfboard(self) : 
+        clfboard, csnames = self._cpon._clfboard, self._cpon.getcsnames()
+        header = csnames[:]
+        header.insert(0,'')
+        for fl, map in enumerate(clfboard) : 
+            fn = self.genffn('clfboard', 'csv', fl)
+            with open(fn, 'wb') as f : 
+                cw = csv.writer(f, delimiter = ',')
+                cw.writerow(header)
+                for row, tag in zip(map, csnames) : 
+                    row.insert(0, tag)
+                    cw.writerow(row)
+        print 'export clfboard complete'
 
     def xlsxclfdtcmap(self) : 
         '''
         export classification distance map with xlsx extension
         '''
+        pass
+
+    def pngoargraph(self) : 
+        pass
 
 def plotPDF(vec_x, figname = 'noname', plotnum = 20) : 
     '''bons-fold PDF plot(histogram)'''
@@ -192,33 +189,3 @@ def plotoar(name, map, idx, logpath) :
     fig.savefig(os.path.join(path, fn))
     pyp.close(fig)
     pass
-
-def printCtrdMap(cslist, fold, logpath) : 
-
-    ctrdmap = [[0. for y in cslist] for x in cslist]
-    for i, acs in enumerate(cslist) : 
-        for j, bcs in enumerate(cslist) : 
-            d = 0.
-            d = ocpy.getNorm(bcs.getKernels()[0].getCentroid(), acs.getMean(), acs.getVar())
-            ctrdmap[i][j] = d
-    
-    with open(genPath(logpath, 'ctrdmap', 'cm_%02d.csv' % fold), 'wb') as f : 
-        cw = csv.writer(f, delimiter=',', quoting=csv.QUOTE_MINIMAL)
-        tags = [cs.getName() for cs in cslist]
-        tags.insert(0, '')
-        cw.writerow(tags)
-        tags.pop(0)
-        for idx, cnt in enumerate(zip(tags, ctrdmap)) : 
-            row = cnt[1]
-
-            row.insert(0, cnt[0])
-            cw.writerow(row)
-    pass
-
-def genPath(logpath, dirname, filename) : 
-    path = os.path.join(logpath, dirname)
-
-    if not os.path.exists(path) :
-        os.makedirs(path)
-    path = os.path.join(path, filename)
-    return path
