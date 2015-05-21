@@ -1,11 +1,17 @@
-import os
+ import os
 from cppy import cpon
 from cppy import cspace
+<<<<<<< HEAD
 import cppy
 
+=======
+import time
+>>>>>>> 2b7a7fb044088df9153b047d538c770c0742c3f6
 if __name__ == '__main__' : 
     trainer = cpon(10)
 
+    #for dirpath, dirnames, filenames in os.walk('.\data12') : 
+    #for dirpath, dirnames, filenames in os.walk('.\data24') : 
     for dirpath, dirnames, filenames in os.walk('.\data') : 
         for filename in filenames : 
             filepath = os.path.join(dirpath, filename)
@@ -51,7 +57,10 @@ if __name__ == '__main__' :
                 for j, d in enumerate(row) : 
                     f.write('%02d%c' %(d, ',' if len(row) - j != 1 else '\n'))
             pass
+<<<<<<< HEAD
                 
+=======
+>>>>>>> 2b7a7fb044088df9153b047d538c770c0742c3f6
 
     #report = trainer.learnSVM()
     pass
