@@ -2,6 +2,65 @@ import matplotlib.pyplot as pyp
 from scipy.stats import beta
 import numpy
 import os
+import cppy
+import csv
+
+class lkexporter : 
+    def __init__(self, ts) : 
+        self._timestamp = ts
+        self._rtdir = os.path.dirname(__file__) + '\\log'
+        self._logpath = os.path.join(self._rtdir, ts)
+        
+        pass
+
+    def genffn(self, dirname, fext, fold) : 
+        '''generate filename with fold counter after checking directory
+        '''
+        dn = os.path.join(self._logpath, dirname)
+
+        if not os.path.exists(dn) : 
+            os.makedirs(dn)
+        
+        return os.path.join(dn, '%s#%02d.%s' % (self._timestamp, fold, fext))
+
+    def csvctrdmap(self, cslist, fold) :
+        #if you want to general design, put this fxxking codes out anywhere
+        #this class only works to exporting
+        ctrdmap = [[0. for y in cslist] for x in cslist]
+        for i, acs in enumerate(cslist) : 
+            for j, bcs in enumefsrate(cslist) : 
+                d = 0.
+                d = cppy.getNorm(bcs.getKernels()[0].getCentroid(), acs.getMean(), acs.getVar())
+                ctrdmap[i][j] = d
+        #fxxking code include this line
+    
+        fn = self.genffn('ctrdmap', 'csv', fold)
+        with open(fn, 'wb') as f : 
+            cw = csv.writer(f, delimiter=',')
+            tags = [cs.getName() for cs in cslist]
+            tags.insert(0, '')
+            cw.writerow(tags)
+            tags.pop(0)
+            for idx, cnt in enumerate(zip(tags, ctrdmap)) : 
+                row = cnt[1]
+
+                row.insert(0, cnt[0])
+                cw.writerow(row)
+        pass
+
+    def pngoargraph(self) : 
+        pass
+
+    def csvscrboard(self) : 
+        pass
+
+    def csvclflist(self) : 
+        pass
+
+    def xlsxclfdtcmap(self) : 
+        '''
+        export classification distance map with xlsx extension
+        '''
 
 def plotPDF(vec_x, figname = 'noname', plotnum = 20) : 
     '''bons-fold PDF plot(histogram)'''
@@ -103,12 +162,14 @@ def plotOaR(name, onedstc, restdstc) :
     pyp.grid()
     #pyp.show()
     path = os.path.join(os.path.dirname(__file__), 'OAR')
+    if not os.path.exists(path) : 
+        os.makedirs(path)
     fn = 'OAR_' + name + '.png'
     fig.savefig(os.path.join(path, fn))
     pyp.close(fig)
     pass
 
-def plotoar(name, map, idx) : 
+def plotoar(name, map, idx, logpath) : 
     
     fig, ax = pyp.subplots(1, 1)
     fig.suptitle(name + ' OAR')
@@ -125,24 +186,23 @@ def plotoar(name, map, idx) :
     pyp.grid()
     #pyp.show()
     path = os.path.join(os.path.dirname(__file__), 'OAR')
+    if not os.path.exists(path) : 
+        os.makedirs(path)
     fn = 'OAR_' + name + '.png'
     fig.savefig(os.path.join(path, fn))
     pyp.close(fig)
     pass
-import cppy
-def printCtrdMap(cslist, fold) : 
+
+def printCtrdMap(cslist, fold, logpath) : 
 
     ctrdmap = [[0. for y in cslist] for x in cslist]
     for i, acs in enumerate(cslist) : 
         for j, bcs in enumerate(cslist) : 
             d = 0.
-            d = cppy.getNorm(bcs.getKernels()[0].getCentroid(), acs.getMean(), acs.getVar())
+            d = ocpy.getNorm(bcs.getKernels()[0].getCentroid(), acs.getMean(), acs.getVar())
             ctrdmap[i][j] = d
     
-    path = os.path.join(os.path.dirname(__file__), 'ctrdmap')
-    fn = 'cm_%02d.csv' % (fold)
-    import csv
-    with open(os.path.join(path, fn), 'wb') as f : 
+    with open(genPath(logpath, 'ctrdmap', 'cm_%02d.csv' % fold), 'wb') as f : 
         cw = csv.writer(f, delimiter=',', quoting=csv.QUOTE_MINIMAL)
         tags = [cs.getName() for cs in cslist]
         tags.insert(0, '')
@@ -154,3 +214,11 @@ def printCtrdMap(cslist, fold) :
             row.insert(0, cnt[0])
             cw.writerow(row)
     pass
+
+def genPath(logpath, dirname, filename) : 
+    path = os.path.join(logpath, dirname)
+
+    if not os.path.exists(path) :
+        os.makedirs(path)
+    path = os.path.join(path, filename)
+    return path

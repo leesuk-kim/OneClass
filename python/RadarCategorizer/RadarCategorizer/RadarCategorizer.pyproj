@@ -25,7 +25,7 @@
     <Compile Include="cppy.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="lkplot.py">
+    <Compile Include="lkpy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ocpymath.py">

@@ -8,9 +8,9 @@ import numpy as np
 import numpy.linalg as npla
 from scipy.stats import beta
 import scipy.stats as scistats
-import lkplot as lkp
+import lkpy as lkep
+from lkpy import lkexporter as lep
 import math
-import ocpymath
 from sklearn import svm
 from sklearn import metrics
 
@@ -24,8 +24,10 @@ class cpon :
     '''
     Class Probability Output Network
     '''
+    
     def __init__(self, fold = 2) : 
-        self._TimeStamp = int(time.time())
+        self._TimeStamp = '%d' % int(time.time())
+        a = lep(self._TimeStamp)
         self._CategoryArr = []
         '''raw matrix'''
         self._ClsVol = 0
@@ -106,7 +108,7 @@ class cpon :
             for cs in self._cslist : 
                 cs.onFolding(fold)
                 cs.onTraining()
-            lkp.printCtrdMap(self._cslist, fold)
+            lkep.printCtrdMap(self._cslist, fold, self._LogPath)
                 
             foldsb = self.onTesting(fold)
             fsblist.append(scoring(foldsb))
@@ -126,7 +128,7 @@ class cpon :
                 dmap.append(dlist)
             dmlist.append(dmap)
             fn = '#%d%s' % (fold + 1, tcs.getName())
-            lkp.plotoar(fn, dmap, i)
+            lkep.plotoar(fn, dmap, i, self._LogPath)
             
         return dmlist
 
@@ -164,7 +166,7 @@ class cpon :
             #acc = self._svm.score(tcs.getValidData(), [tcs.getName() for x in tcs.getValidData()])
             pass
             #fn = 'svm#%d%s' % (fold + 1, tcs.getName())
-            #lkp.plotoar(fn, dmap, i)
+            #lkep.plotoar(fn, dmap, i)
         
         return plist
 
@@ -186,7 +188,7 @@ class cpon :
                 minname = 'name'
 
                 for ctrd in ctrdmap : 
-                    euclidean = ocpymath.getPairwiseDistances(vlpos, ctrd[0]._Pos, ctrd[0]._Category.getVar())#npla.norm(vlpos-ctrd[0]._Pos)
+                    euclidean = getPairwiseDistances(vlpos, ctrd[0]._Pos, ctrd[0]._Category.getVar())#npla.norm(vlpos-ctrd[0]._Pos)
                     #dstc.append(euclidean)
                     #print '%s\t%s\t%lf'% (cat[CATArr_INDEX_NAME], ctrd[0]._Category._Name, euclidean)
                     if minnorm > euclidean : 
@@ -205,7 +207,7 @@ class cpon :
                     subres[1] += 1
                         
                 resname.append([cat[CATArr_INDEX_NAME], minname])
-            lkp.plotOaR(cat[CATArr_INDEX_NAME], dstc, resdstc)
+            lkep.plotOaR(cat[CATArr_INDEX_NAME], dstc, resdstc, self._LogPath)
 
             res.append(subres)
         return res, resname
@@ -354,11 +356,11 @@ class kspace :
         #betaCDF = beta.cdf(y, y_beta_a, y_beta_b)
         #betaPDF = beta.pdf(y, y_beta_a, y_beta_b)
                 
-        #lkp.plotPDF(y, rCat._Name)
-        #lkp.plotCDF(y, rCat._Name)
-        #lkp.plotKStest(y, ecdf, betaCDF, y_beta_a, y_beta_b, y_pval, rCat._Name)
-        #lkp.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
-        #lkp.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
+        #lkep.plotPDF(y, rCat._Name)
+        #lkep.plotCDF(y, rCat._Name)
+        #lkep.plotKStest(y, ecdf, betaCDF, y_beta_a, y_beta_b, y_pval, rCat._Name)
+        #lkep.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
+        #lkep.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
         pass
     def getMean(self) : 
         return self._mean
@@ -395,7 +397,7 @@ class kspace :
 
             if nmnt[0] < pval : 
                 nmnt = [pval, d, sigma, bafit, bbfit, ecdf, betacdf]
-        lkp.plotKStest(y, nmnt[5], nmnt[6], nmnt[3], nmnt[4], nmnt[0], self._Category._Name)
+        lkep.plotKStest(y, nmnt[5], nmnt[6], nmnt[3], nmnt[4], nmnt[0], self._Category._Name)
 
         return nmnt
 
@@ -422,3 +424,24 @@ def scoring(distancemap) :
         sb.append(ecsb)
         pass
     return sb
+
+def getPairwiseDistances(arrx, arry, arrvar) : 
+    '''
+    Pairwise Distance
+    each array MUST have same length.
+    this method uses standard deviation on feature scaling
+    '''
+    devMax ,devMin = max(arrvar), min(arrvar)
+    devran = devMax - devMin
+    fsvar = [1 - (dev - devMin) / devran for dev in arrvar]#arrvar
+
+    d = 0.
+
+    param = []
+    for i in range(len(fsvar)) : 
+        param.append([arrx[i], arry[i], arrvar[i], fsvar[i]])
+    
+    for (x, y, dev, fs) in param :
+        d += dev != 0 and fs * ((x - y) ** 2) / dev or 0
+
+    return d ** 0.5

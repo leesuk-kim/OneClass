@@ -1,15 +1,19 @@
- import os
+import os
+import time
 from cppy import cpon
 from cppy import cspace
-<<<<<<< HEAD
-import cppy
 
-=======
-import time
->>>>>>> 2b7a7fb044088df9153b047d538c770c0742c3f6
 if __name__ == '__main__' : 
     trainer = cpon(10)
 
+    path = os.path.join(os.path.dirname(__file__), 'log')
+    
+    if not os.path.exists(path) : 
+        os.makedirs(path)
+    path = os.path.join(path, trainer._TimeStamp)
+    os.makedirs(path)
+    trainer._LogPath = path
+    
     #for dirpath, dirnames, filenames in os.walk('.\data12') : 
     #for dirpath, dirnames, filenames in os.walk('.\data24') : 
     for dirpath, dirnames, filenames in os.walk('.\data') : 
@@ -18,7 +22,7 @@ if __name__ == '__main__' :
 
             with open(filepath) as src : 
                 name = filename[:-4]
-                print 'upload ' + name
+                print 'load ' + name
                 srcdata = []
                 for line in src.readlines() : 
                     line = line.split(',')
@@ -29,20 +33,22 @@ if __name__ == '__main__' :
             trainer.registcs(cs)
 
     report = trainer.Learn()
-    
-    path = os.path.join(os.path.dirname(__file__), 'report')
+
+    path = os.path.join(trainer._LogPath, 'clf')
+    os.makedirs(path)
     for idx, fold in enumerate(report) : 
-        fn = 'raw#%02d.csv' % idx
+        fn = '%s#%02d.csv' % (trainer._TimeStamp, idx)
         with open(os.path.join(path, fn), 'w') as f : 
             f.write('target,expect\n')
             for tci, tc in enumerate(fold) : 
                 dl = len(tc)
                 for i, data in enumerate(tc) : 
                     f.write('ep%02d,ep%02d\n'%(tci+1, data+1))
-
-    path = os.path.join(os.path.dirname(__file__), 'report')
+                    
+    path = os.path.join(trainer._LogPath, 'scoreboard')
+    os.makedirs(path)
     for idx, fold in enumerate(report) : 
-        fn = 'board#%02d.csv' % idx
+        fn = '%s#%02d.csv' % (trainer._TimeStamp, idx)
         fl = len(fold)
         board = [[0 for y in range(fl)] for x in range(fl)]
         for i, ec in enumerate(fold) : 
@@ -57,10 +63,6 @@ if __name__ == '__main__' :
                 for j, d in enumerate(row) : 
                     f.write('%02d%c' %(d, ',' if len(row) - j != 1 else '\n'))
             pass
-<<<<<<< HEAD
-                
-=======
->>>>>>> 2b7a7fb044088df9153b047d538c770c0742c3f6
 
     #report = trainer.learnSVM()
     pass
