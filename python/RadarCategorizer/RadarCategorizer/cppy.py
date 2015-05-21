@@ -3,6 +3,7 @@ Radar signal Categorizer
 version 1.0
 Designed by leesuk kim(aka. LK)
 '''
+import time
 import numpy as np
 import numpy.linalg as npla
 from scipy.stats import beta
@@ -24,6 +25,7 @@ class cpon :
     Class Probability Output Network
     '''
     def __init__(self, fold = 2) : 
+        self._TimeStamp = int(time.time())
         self._CategoryArr = []
         '''raw matrix'''
         self._ClsVol = 0
