@@ -1,0 +1,292 @@
+
+%%%%%%%%%%%%%%%%%%%%%%% file typeinst.tex %%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This is the LaTeX source for the instructions to authors using
+% the LaTeX document class 'llncs.cls' for contributions to
+% the Lecture Notes in Computer Sciences series.x
+% http://www.springer.com/lncs       Springer Heidelberg 2006/05/04
+%
+% It may be used as a template for your own input - copy it
+% to a new file with a new name and use it as the basis
+% for your article.
+%
+% NB: the document class 'llncs' has its own and detailed documentation, see
+% ftp://ftp.springer.de/data/pubftp/pub/tex/latex/llncs/latex2e/llncsdoc.pdf
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\documentclass[runningheads,a4paper]{llncs}
+
+\usepackage{amssymb}
+\setcounter{tocdepth}{3}
+\usepackage{graphicx}
+\usepackage{amsmath,ulem,epsfig,subfig,tabularx}
+
+\graphicspath{{./pdf/}{./jpeg/}}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.png,.JPG}
+
+%\usepackage{makecell}
+\usepackage{multirow}
+
+\usepackage{url}
+\urldef{\mailsa}\path|leesuktimelygood@gmail.com|
+\urldef{\mailsb}\path|rmkil@skku.edu|
+\urldef{\mailsc}\path|churlhee.jo@lignex1.com|
+\newcommand{\keywords}[1]{\par\addvspace\baselineskip
+\noindent\keywordname\enspace\ignorespaces#1}
+
+\renewcommand\baselinestretch{1.0}
+
+\begin{document}
+
+\mainmatter  % start of an individual contribution
+
+% first the title is needed
+\title{Radar Pattern Classification Based on\protect\\
+         Class Probability Output Networks}
+
+% a short form should be given in case it is too long for the running head
+\titlerunning{Lecture Notes in Computer Science: Authors' Instructions}
+
+% the name(s) of the author(s) follow(s) next
+%
+% NB: Chinese authors should write their first names(s) in front of
+% their surnames. This ensures that the names appear correctly in
+% the running heads and the author index.
+%
+\author{Lee-Suk Kim$^1$, Rhee Man Kil$^{1*}$, and Churl-Hee Cho$^2$}
+%
+\authorrunning{Lecture Notes in Computer Science: Authors' Instructions}
+% (feature abused for this document to repeat the title also on left hand pages)
+
+% the affiliations are given next; don't give your e-mail address
+% unless you accept that it will be published
+\institute{$^1$College of Information and Communication Engineering, Sungkyunkwan Univesity\\
+2066, Seobu-ro, Jangan-gu, Suwon, Gyeonggi-do, 440-746, Korea\\
+$^2$Electronic Warfare R\&D Laboratory, LIGNex1 Co., Ltd.\\
+333, Pangyo-ro, Bundang-gu, Seongnam-City, Gyeonggi-do, 463-400, Korea\\
+\mailsa, \mailsb, \mailsc}
+%\url{http://www.springer.com/lncs}}
+
+%
+% NB: a more complex sample for affiliations and the mapping to the
+% corresponding authors can be found in the file "llncs.dem"
+% (search for the string "\mainmatter" where a contribution starts).
+% "llncs.dem" accompanies the document class "llncs.cls".
+%
+
+\titlerunning{Radar Pattern Identification}
+\authorrunning{L. Kim, R. Kil, and C. Cho}
+
+\maketitle
+
+\begin{abstract}
+Modern aircrafts and ships are equipped with radars emitting specific patterns of electromagnetic signals. 
+The radar antennas are detecting these patterns which are required to identify
+the types of emitters. A conventional way of emitter identification is to categorize the radar patterns according to the sequences of
+frequencies, time of arrivals, and pulse widiths of emitting signals by human experts. In this respect, this paper propose a method of
+classifying the radar patterns automatically using the network of calculating the $p$-values of testing hypotheses of the types of emitters
+referred to as the class probability output network (CPON). Through the simulation for radar pattern classification, the effectiveness of
+the proposed approach has been demonstrated.
+
+
+\keywords{radar pattern, classification, one class, class probability, Beta distribution}
+\end{abstract}
+
+\section{Introduction}
+
+In modern days, radars are essential devices to detect objects such as aircrafts or ships. For detecting objects emitting specific patterns of
+electromagnetic signals, the detected signal patterns should be analysed and categorized according to the types of emitters. In the conventional
+approach of emitter identification, the key features of radar patterns such as the sequeneces of frequencies, time of arrivals, and pulse widths are used
+to extract the emitter parameters and these parameters are compared with tabulated emitter parameters. However, this process usually requires high
+computational complexity and needs to be verified by human experts. In this respect, an approach of automatic classification of
+radar patterns is proposed to obtain the conditional class probabiliy for the given radar pattern.
+
+There are various ways of implementing pattern classifiers. The most popular way is using the discriminant function whose value
+indicates the degree of confidence for the classification; that is, the decision of classification is made by selecting the class that
+has the greatest discriminant value. In this direction, the support vector machines (SVMs) \cite{cit:Vp} are widely used in many
+classification problems because they provide reliable performances by maximizing the margin between the postive and negative classes.
+However, more natural way of representing the degree of confidence for classification is using the conditional class probability for
+the given pattern. In this context, the class probability output network (CPON) in which
+the conditional class probability is estimated using the beta distribution parameters, was proposed.  This method is implemented on the top of
+a classifier; that is, many-to-one nonlinear function such as the linear combination of kernel functions. Then, the classifier's output
+is identified by beta distribution parameters and the output of CPON; that is, the conditional class rpobability for the given pattern
+is calculacted from the cumulative distribution function (CDF) of beta distribution parameters. 
+In this computation, the output of CPON represents the $p$-value of testing a certain class. For the final decision of classification,
+the class which has the maximum conditional class probability is selected.
+As a result, the suggested CPON method is able to provide consistent improvement of classification
+performances for the classifiers using discriminant functions alone. For the detailed descriptions of CPONs and CPON applications,
+refer to \cite{cit:PK,cit:HKH}. In this approach, the selected features of radar patterns are used as the input to the classifier of many-to-one mapping nonlinear
+function and the output distribution is identified by beta distribution parameters to obtain the $p$-value of testing the type of emitters.
+As a result, the proposed method provides the $p$-values of testing hypotheses of the types of emitters and
+also provides comparable performances with (or better performances than) human experts.
+
+The rest of this paper is organized as follows: in section 2, the probrm of radar classifiation is described, section 3 presents
+the method of radar pattern classification using the CPON, section 4 shows simulation results for radar pattern classification, and finally, section 6 presents the conclusion.
+
+
+
+\section{Radar Pattern Classification}
+
+- process of extracting radar patterns
+
+- key features of radar patterns
+
+- selected features: mean, variance, skewness, kurtosis
+
+
+
+\newpage
+\section{Class Probability Output Networks for Emitter Identification}
+
+In many classification problems, it is desirable that the output of a classifier represents the conditional class probability.
+For the conditional class probability, the distribution of classifier's output can be well approximated by the beta distribution under
+the assumption that the output of classifier lies within a finite range and the distribution of classifier's output is unimodal; that is,
+the distribution has one modal value with the greatest frequency. This assumption is quite reasonable for many cases of classification problems
+with the proper selection of kernel parameters of a classifier.
+Here, we consider the following discriminant function $y$ as the classifier's output for the input pattern $\bf x$:
+\begin{equation}
+\hat{y}({\bf x})=\sum_{i=1}^m w_i\phi_i({\bf x}|\theta),
+\label{y_hat}
+\end{equation}
+where $m$ represents the number of kernels and $w_i$, $\phi_i$, and $\theta$ represent the ith weight, the ith kernel function,
+and the kernel parameter, respectively.  Furthermore, the beta distribution represents the conjugate prior of the binomial distribution; that is,
+in our case, the conditional class probability in binary classification problems.
+In this context, we consider the following Beta probability density function (PDF) of a random variable $Y$ as the normalized classifier's output:
+\begin{equation}
+f_Y(y|a,b)={1\over{B(a,b)}}y^{a-1}(1-y)^{b-1}, \;\;\; 0\le y\le 1,
+\end{equation}
+where $a$ and $b$ represents the parameters of beta distribution, and $B(a,b)$ represents a Beta function defined by
+\begin{equation}
+B(a,b)=\int_0^1 y^{a-1}(1-y)^{b-1}dy.
+\end{equation}
+Here, we assume that the classifier's output value; that is, $\hat{y}$ is normalized between 0 and 1.
+One of the advantages of the Beta distribution is that the distribution parameters can be easily guessed from the mean $E[Y]$
+and variance $Var(Y)$ as follows:
+\begin{equation}
+a=E[Y]\left( {{E[Y](1-E[Y])}\over{Var(Y)}}-1\right)
+\end{equation}
+and	
+\begin{equation}
+b=(1-E[Y])\left( {{E[Y](1-E[Y])}\over{Var(Y)}}-1\right).
+\end{equation}
+Although this moment matching (MM) method is simple, these estimators usually don't provide accurate estimations especially for smaller number of data.
+In such cases, the maximum likelihood estimation (MLE) or the simplex method for searching parameters \cite{ } can be used for 
+more accurate estimation of Beta parameters. If the data distribution follows a Beta distribution and the optimal Beta parameters are obtained, 
+the ideal cumulative distribution function (CDF) values of the data $u=F_Y(y)$ follow an uniform distribution; that is,
+\begin{equation}
+f_U(u)={{f_Y(y)}\over{|dF_Y/dy|}}={{f_Y(y)}\over{|f_Y(y)|}}=1.
+\end{equation}
+To check whether the data distribution fits with the proposed Beta distribution,
+the Kolmogorov-Smirinov (K-S) test \cite{cit:RS} of data distribution can be considered as follows:
+\begin{itemize}
+\item First, determine the distance  $D_n$ between the empirical and ideal CDF values:
+\begin{equation}
+D_n = {\rm sup}_u|F_U^*(u)-F_U(u)|,
+\end{equation}
+where $F_U^*(u)$ and $F_U(u)$ represent the empirical and theoretical CDFs of $u=F_Y(y)$; that is,
+the CDF values of the normalized output of a classifier. In this case, $F_U(u)=u$ since
+the data $u=F_Y(y)$ follow an uniform distribution if the data $y$ follows the presumed (or ideal) Beta distribution.
+\item Determine the $p$-value of testing the hypothesis of Beta distribution:
+\begin{equation}
+\mbox{$p$-value}=P(D_n\ge t/\sqrt{n})=1-H(t),
+\label{p_val}
+\end{equation}		
+where $t=\sqrt{n} d_n$ (the value of a random variable $D_n$) and the CDF of the K-S statistic $H(t)$ is given by
+\begin{equation}
+H(t)={{\sqrt{2\pi}}\over t}\sum_{i=1}^\infty e^{-(2i-1)^2\pi^2/(8t^2)}.
+\end{equation}
+\item Make a decision of accepting the hypothesis of beta distribution $H_0$ using
+the p-value according to the level of significance $\delta$:\\
+accept $H_0$, if $\mbox{p-value}\ge \delta$ ; reject $H_0$, otherwise.
+\end{itemize}
+In the construction of CPON for radar pattern recognition, first, the centroids as the representative of the radar pattern data are obtained 
+in the feature space by the clustering algorithm such as the learning vector quantization (LVQ) method \cite{ }. 
+Then, the kernel functions are located at the positions of centroids and
+linearly combined as the form of (\ref{y_hat}). The output of (\ref{y_hat}) is normalized between 0 and 1 using the linear scale and 
+the normalized classifier's output distribution is approximated by the Beta distribution parameters.
+In this training of classifiers, the Beta distribution parameters as well as the kernel parameters are adjusted
+in such a way that the classifier's output distributions become closer to the ideal Beta distributions. 
+The algorithm of constructing the CPON for radar pattern classification is described as follows:
+\begin{description}
+\item[Step 1.] For the features of radar patterns, centroids are determined by the clustering algorithm such as the LVQ method.
+  In this application, one centroid is assigned to a specific emitter. For more complicated distributions in the feature space, more than one
+  centroids can be assigned.
+\item[Step 2.] Then, the kernel functions are assigned to the centroids.
+\item[Step 3.] Determine the classifier's output for each kernel function and normalized between 0 and 1 using the linear scale.
+\item[Step 4.] The distribution of classifier's normalized output is identified by Beta distribution parameters. In this estimation of
+  Beta parameters, the kernel parameters such as the kernel widths are adjusted in such a way of maximizing the $p$-value of (\ref{p_val}).
+  For the detailed description of estimating parameters, refer to \cite{cit:PK}.
+\end{description}
+
+After the CPON is trained, the classification for an unknown pattern can be determined by the beta distribution for each class.
+First, for the unknown pattern, the normalized output $y$ for the classifier is computed.
+Here, if the normalized value is greater than 1, we set that value as 1; on the other hand, if the value is less than 0, we set that value as 0.
+Then, the conditional class probability is
+determined by the CPON output as the CDF value for the classifier's normalized ouput.
+
+For multi-class classification problems, the CPON can be constructed for each classifier's output. Then, the following conditional probability for
+the $k$th class $C_k$; that is, the output of the $k$th CPON $F_k(y_k)$ for $k$the classifier's normalized output $y_k$ is calculated as
+\begin{equation}
+F_k(y_k) = P(C_k| Y_k\le y_k) = F_{Y_k}(y_k),
+\end{equation}
+where $Y_k$ represents a random variable for the $k$th class $C_k$ and $F_{Y_k}(y_k)$ represents its CDF.
+This output implies the $p$-value of testing hypotheses of the $k$th class $C_k$. 
+Then, the final decision can be made by selecting the class with the maximum $p$-value; that is, for $K$ classes, the selected class $C_l$ is
+determined by
+\begin{equation}
+l = \arg \max_{1\le k\le K} F_k(y_k).
+\end{equation}
+From the above equation, the final decision of the type of emitter is made.
+
+
+\newpage
+\section{Simulation}
+
+To demonstrate the effectiveness of the proposed method, the simulation for radar pattern classification was performed for the radar data ...
+
+- radar data
+
+- classification method
+
+- evaluation criteria: accuracy, precision, recall, F-measure
+
+- simulation results
+
+- analysis of simulation results
+
+
+
+
+\newpage
+\section{Conclusion}
+
+A new method of radar pattern classification was proposed based on the class probability output network (CPON). In the proposed method,
+the sequences of key features such as the frequencies, time of arrivals, and pulse widiths of emitting signals are analysed and 
+statistical measures of these features such as the mean, variance, skewness, and kurtosis are extracted and used as
+the input to the CPON. Then, the CPON is used to construct a hypothesis of specific emitter from
+the distributions of these features. As a result, the CPONs provide the $p$-values of testing hypotheses of the types of emitters.
+Through the simulation for radar pattern classification, it has been demonstarted that the proposed method method is comparable with
+(or better than) human experts.
+
+
+
+
+\begin{thebibliography}{4}
+
+\bibitem{cit:Vp} Vapnik, V.: Statistical Learning Theory, New York, Wiley (1998)
+
+\bibitem{cit:PK} Park, W. and Kil, R.: Pattern classification with class probability output network,
+        IEEE Transactions on Neural Networks, vol. 20, no. 10, 1659-1673 (2009)
+
+\bibitem{cit:HKH} Harvey Rosas, Kil, R., and Han, S.: Automatic media data rating based on class probability output networks,
+        IEEE Transactions on Consumer Electronics, vol. 56, no. 4, 2296-2302 (2010)
+
+\bibitem{Kil93}
+Kil, R.: Function approximation based on a network with kernel
+functions of bounds and locality. ETRI Journal, vol. 15, 35--51 (1993)
+
+\end{thebibliography}
+
+\end{document}

@@ -12,7 +12,7 @@ import lkpy as lkep
 import math
 from sklearn import svm
 from sklearn import metrics
-
+from sklearn.neighbors import nn
 
 CATArr_INDEX_NAME = 0
 CATArr_INDEX_TRAIN = 1
@@ -104,7 +104,7 @@ class cpon :
     def getcslist(self, idx) : 
         return self._cslist[idx]
 
-    def Learn(self) : 
+    def learn(self) : 
         print 'learning'
         fsblist = []
         for fold in range(self._fmax) : 
@@ -164,7 +164,6 @@ class cpon :
             fsblist.append(foldsb)
         return fsblist
         
-        pass
 
     def onSVMTesting(self, fold) : 
         plist = []
@@ -172,54 +171,37 @@ class cpon :
             for vd in tcs.getValidData() : 
                 pred = self._svm.predict(vd)
                 plist.append([tcs.getName(), pred[0]])
-            #acc = self._svm.score(tcs.getValidData(), [tcs.getName() for x in tcs.getValidData()])
             pass
             #fn = 'svm#%d%s' % (fold + 1, tcs.getName())
             #lkep.plotoar(fn, dmap, i)
         
         return plist
 
-    def test(self) : 
-        res = []
-        ctrdmap = []
-        for cat in self._CategoryArr : 
-            ctrdmap.append(cat[CATArr_INDEX_CAT].getCentroidList())
-        
-        resname = []
-        for cat in self._CategoryArr : 
-            vldata = cat[CATArr_INDEX_CAT].getValidData()
-            mycls = 1. * self.CAT_DIM
-            resdstc, dstc = [], []
+    def learnKNN(self) : 
+        print 'learning Nearest Neighbor'
 
-            subres = [0, 0]
-            for vlpos in vldata : 
-                minnorm = 1. * self.CAT_DIM
-                minname = 'name'
+        fsblist = []
+        for fold in range(self._fmax) : 
+            self._svm = nn()
+            print 'fold#%d' % fold
 
-                for ctrd in ctrdmap : 
-                    euclidean = getPairwiseDistances(vlpos, ctrd[0]._Pos, ctrd[0]._Category.getVar())#npla.norm(vlpos-ctrd[0]._Pos)
-                    #dstc.append(euclidean)
-                    #print '%s\t%s\t%lf'% (cat[CATArr_INDEX_NAME], ctrd[0]._Category._Name, euclidean)
-                    if minnorm > euclidean : 
-                        minnorm = euclidean
-                        minname = ctrd[0]._Category._Name
+            fitdatalist = []
+            fitnamelist = []
+            for cs in self._cslist : 
+                cs.onFolding(fold)
+                fdlist = cs.getTrainData()
+                csn = cs.getName()
+                fnlist = [csn for td in fdlist]
+                fitdatalist.extend(fdlist)
+                fitnamelist.extend(fnlist)
 
-                    if cat[CATArr_INDEX_NAME] is ctrd[0]._Category.getName() : 
-                        dstc.append(euclidean)
-                    else : 
-                        resdstc.append(euclidean)
-
-                
-                if cat[CATArr_INDEX_NAME] is minname : 
-                    subres[0] += 1
-                else : 
-                    subres[1] += 1
-                        
-                resname.append([cat[CATArr_INDEX_NAME], minname])
-            lkep.plotOaR(cat[CATArr_INDEX_NAME], dstc, resdstc, self._LogPath)
-
-            res.append(subres)
-        return res, resname
+            self._svm.fit(fitdatalist, fitnamelist)#training
+            foldsb = self.onSVMTesting(fold)#testing
+            fsblist.append(foldsb)
+        return fsblist
+        pass
+    def onKNNTesting(self) : 
+        pass
     pass
 
 

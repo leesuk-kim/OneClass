@@ -5,8 +5,8 @@ from lkpy import lkexporter as xprt
 if __name__ == '__main__' : 
     trainer = cpon(10)
     xprttrainer = xprt(trainer)
-    src = 'data'
-    #src = 'data_12'
+    #src = 'data'
+    src = 'data50_12'
     #src = 'data_24'
     #src = 'data_24_ddtoa'
     #src = 'data_abs_24_ddtoa'
@@ -27,9 +27,11 @@ if __name__ == '__main__' :
             cs = trainer.csfactory(name, srcdata)
             trainer.registcs(cs)
 
-    trainer.Learn()
-    xprttrainer.csvctrdmap()
-    xprttrainer.csvclfboard()
+#    trainer.learn()
+#    xprttrainer.csvctrdmap()
+#    xprttrainer.csvclfboard()
+
+    k = trainer.learnSVM()
 
     #report = trainer.learnSVM()
     pass
