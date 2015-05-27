@@ -183,8 +183,6 @@ class cpon :
     def learnSVM(self) : 
         print 'learning SVM'
 
-        originsvm = SVC(kernel='linear')
-        
         for fold in range(self._fmax) :
             print 'fold#%d' % fold
             
@@ -202,24 +200,26 @@ class cpon :
                 fittingdata.extend(tdlist)
                 fittingname = ['one' for x in cs._trdata]
                 fittingname.extend(['rest' for x in tdlist])
-                print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + cs._Name + '=>initSVM'
-                #cs.initSVM([[i + x + y for y in range(1, 25)] for x in range(10)], ['one' if w % 2 == 0 else 'rest' for w in range(10)])
-                cs.initSVM(fittingdata, fittingname)
+                print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + cs._Name + '=>initsvmfit'
+                #cs.initsvmfit([[i + x + y for y in range(1, 25)] for x in range(10)], ['one' if w % 2 == 0 else 'rest' for w in range(10)])
+                cs.initsvmfit(fittingdata, fittingname)
                 pass
             pred = self.onSVMTesting(fold)
         return fsblist
 
     def onSVMTesting(self, fold) : 
         plist = []
-
+        
+        clf = SVC(kernel='linear')
         for tcs in self._cslist : 
             print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._Name + '=>svm testing'
-            vatarget = []
-            valist = []
+            clf.fit(tcs._fitdata, tcs._fitname)
+
+            vatarget, valist = [], []
             for vcs in self._cslist : 
                 valist.extend([x for x in vcs._vadata])
                 vatarget.extend(['one' if tcs._Name is vcs._Name else 'rest' for x in vcs._vadata])
-            pred = tcs._svm.predict(valist)
+            pred = clf.predict(valist)
             acc = metrics.accuracy_score(vatarget, pred)
             pre = metrics.precision_score(vatarget, pred, pos_label='one')
             rec = metrics.recall_score(vatarget, pred, pos_label='one')
@@ -369,9 +369,9 @@ class cspace :
     def getKernels(self) : 
         return self._kslist
 
-    def initSVM(self, data, name) : 
-        self._svm = SVC(kernel='linear')
-        self._svm.fit(data, name)
+    def initsvmfit(self, data, name) : 
+        self._fitdata = data
+        self._fitname = name
         pass
     pass
 
