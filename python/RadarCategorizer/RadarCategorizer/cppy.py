@@ -10,9 +10,10 @@ from scipy.stats import beta
 import scipy.stats as scistats
 import lkpy as lkep
 import math
-from sklearn import svm
+from sklearn.svm import SVC
 from sklearn import metrics
-from sklearn.neighbors import nn
+from sklearn.neighbors import NearestNeighbors
+import gc
 
 CATArr_INDEX_NAME = 0
 CATArr_INDEX_TRAIN = 1
@@ -106,7 +107,8 @@ class cpon :
 
     def learn(self) : 
         print 'learning'
-        fsblist = []
+        fsblist, fstatslist = [], []
+        self._clfAPRF = []
         for fold in range(self._fmax) : 
             print 'fold#%d' % fold
 
@@ -117,11 +119,42 @@ class cpon :
             fctrdmap = mapctrd(self._cslist, self._fmax)
             self._ctrdmap.append(fctrdmap)
 
-            #lkep.printCtrdMap(self._cslist, fold, self._LogPath)
             foldsb = boardclf(scoreclf(self.onTesting(fold)))
             fsblist.append(foldsb)
+            self._clfAPRF.append(self.onOARTesting())
         self._clfboard = fsblist
-        return fsblist
+        self._clfstatslist = fstatslist
+        pass
+
+    def onOARTesting(self) : 
+        cn = 10e+10
+        stats = []
+        totalvaliddatalen = reduce(lambda x, y : x + y , [len(cs._vadata) for cs in self._cslist])
+        tfpnlist = []
+
+        for i, cs in enumerate(self._cslist) : 
+            resKernelList = self.getRestKernels(cs._Name)
+            oneKernelList = cs._kslist
+
+            for vcs in self._cslist : 
+                for vd in vcs._vadata : 
+                    oclostlist = [getNorm(vd, kn._pos, kn._var) for kn in oneKernelList]
+                    rclostlist = [getNorm(vd, kn._pos, kn._var) for kn in resKernelList]
+                    oclost, rclost = min(oclostlist), min(rclostlist)
+
+                    if cs._Name is vcs._Name : 
+                        pn = True
+                        tf = True if oclost < rclost else False
+                    else : 
+                        pn = False
+                        tf = True if oclost > rclost else False
+
+                    tfpnlist.append([tf, pn])
+                    pass
+                pass
+            pass
+        stats = getAPRF(tfpnlist)
+        return stats
 
     def onTesting(self, fold) : 
         '''
@@ -137,52 +170,71 @@ class cpon :
                 dmap.append(dlist)
             dmlist.append(dmap)
             fn = '#%d%s' % (fold + 1, tcs.getName())
-            #lkep.plotoar(fn, dmap, i, self._LogPath)
             
         return dmlist
+
+    def getRestKernels(self, onename) : 
+        rkn = []
+        for vd in self._cslist : 
+            if onename is not vd._Name : 
+                rkn.extend(vd._kslist)
+        return rkn
 
     def learnSVM(self) : 
         print 'learning SVM'
 
-        fsblist = []
-        for fold in range(self._fmax) : 
-            self._svm = svm.LinearSVC()
+        originsvm = SVC(kernel='linear')
+        
+        for fold in range(self._fmax) :
             print 'fold#%d' % fold
-
-            fitdatalist = []
-            fitnamelist = []
+            
+            restrdata = []
             for cs in self._cslist : 
                 cs.onFolding(fold)
-                fdlist = cs.getTrainData()
-                csn = cs.getName()
-                fnlist = [csn for td in fdlist]
-                fitdatalist.extend(fdlist)
-                fitnamelist.extend(fnlist)
 
-            self._svm.fit(fitdatalist, fitnamelist)#training
-            foldsb = self.onSVMTesting(fold)#testing
-            fsblist.append(foldsb)
+            ##set training data of rest class
+            for i, cs in enumerate(self._cslist) : 
+                tdlist = []
+                for vcs in self._cslist : 
+                    if vcs._Name is not cs._Name : 
+                        tdlist.extend(vcs._trdata)
+                fittingdata = [x for x in cs._trdata]
+                fittingdata.extend(tdlist)
+                fittingname = ['one' for x in cs._trdata]
+                fittingname.extend(['rest' for x in tdlist])
+                print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + cs._Name + '=>initSVM'
+                #cs.initSVM([[i + x + y for y in range(1, 25)] for x in range(10)], ['one' if w % 2 == 0 else 'rest' for w in range(10)])
+                cs.initSVM(fittingdata, fittingname)
+                pass
+            pred = self.onSVMTesting(fold)
         return fsblist
-        
 
     def onSVMTesting(self, fold) : 
         plist = []
-        for i, tcs in enumerate(self._cslist) : 
-            for vd in tcs.getValidData() : 
-                pred = self._svm.predict(vd)
-                plist.append([tcs.getName(), pred[0]])
+
+        for tcs in self._cslist : 
+            print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._Name + '=>svm testing'
+            vatarget = []
+            valist = []
+            for vcs in self._cslist : 
+                valist.extend([x for x in vcs._vadata])
+                vatarget.extend(['one' if tcs._Name is vcs._Name else 'rest' for x in vcs._vadata])
+            pred = tcs._svm.predict(valist)
+            acc = metrics.accuracy_score(vatarget, pred)
+            pre = metrics.precision_score(vatarget, pred, pos_label='one')
+            rec = metrics.recall_score(vatarget, pred, pos_label='one')
+            f1m = metrics.f1_score(vatarget, pred, pos_label='one')
+            plist.append([acc, pre, rec, f1m])
             pass
-            #fn = 'svm#%d%s' % (fold + 1, tcs.getName())
-            #lkep.plotoar(fn, dmap, i)
-        
+
         return plist
 
     def learnKNN(self) : 
         print 'learning Nearest Neighbor'
 
         fsblist = []
+        cslen = len(self._cslist)
         for fold in range(self._fmax) : 
-            self._svm = nn()
             print 'fold#%d' % fold
 
             fitdatalist = []
@@ -194,13 +246,23 @@ class cpon :
                 fnlist = [csn for td in fdlist]
                 fitdatalist.extend(fdlist)
                 fitnamelist.extend(fnlist)
+            #training
+            self._knn = NearestNeighbors(n_neighbors=cslens).fit(fitdatalist)
 
-            self._svm.fit(fitdatalist, fitnamelist)#training
-            foldsb = self.onSVMTesting(fold)#testing
+            #distances, indices = knn.kneighbors(fitdatalist)
+            foldsb = self.onKNNTesting()#testing
             fsblist.append(foldsb)
         return fsblist
-        pass
+
     def onKNNTesting(self) : 
+        plist = []
+        
+        for i, tcs in enumerate(self._cslist) : 
+            for vd in tcs.getValidData() : 
+                dist, indice = self._knn.kneighbors(vd)
+                #plist.append([tcs.getName(), pred[0]])
+            pass
+        #self._knn.kneighbors
         pass
     pass
 
@@ -212,13 +274,9 @@ class cspace :
     def __init__(self, name, features, foldmax, knvol = 1) : 
         self._Name = name
         self._FeatureList = features
-        self._FeatureVol = len(features)
-        self._FoldValidVol = int(float(self._FeatureVol) / float(foldmax))
-        self._foldTrainVol = self._FeatureVol - self._FoldValidVol
-        #self._trMean = self._TrainArr.mean(axis=0)
-        #self._trVar = self._TrainArr.var(axis=0, ddof=1)
-        #self._trDev = self._TrainArr.std(axis=0, ddof=1)
-        #self._CentroidArr = []
+        self._ftvolume = len(features)
+        self._vavolume = int(float(self._ftvolume) / float(foldmax))
+        self._trvolume = self._ftvolume - self._vavolume
         self._KernelSize = knvol
         pass
 
@@ -232,8 +290,8 @@ class cspace :
         '''
         self._Fold = cnt
         self._kslist = []
-        aindex = cnt * self._FoldValidVol
-        bindex = aindex + self._FoldValidVol
+        aindex = cnt * self._vavolume
+        bindex = aindex + self._vavolume
         trdata = self._FeatureList[:aindex] + self._FeatureList[bindex:]
         vadata = self._FeatureList[aindex : bindex]
         
@@ -245,7 +303,7 @@ class cspace :
             v = 0
             for row in trtrrow : 
                 v += (row - m) ** 2
-                v /= self._foldTrainVol - 1
+                v /= self._trvolume - 1
             var.append(v)
             dev.append(v ** 0.5)
 
@@ -310,11 +368,16 @@ class cspace :
 
     def getKernels(self) : 
         return self._kslist
+
+    def initSVM(self, data, name) : 
+        self._svm = SVC(kernel='linear')
+        self._svm.fit(data, name)
+        pass
     pass
 
 class kspace : 
     def __init__(self, ctrd_pos, trd, name='noname') : 
-        self._Pos = ctrd_pos
+        self._pos = ctrd_pos
         #self._Category = scs
         ###get statistics : mean and variance
         self._name = name
@@ -393,7 +456,7 @@ class kspace :
         return nmnt
 
     def getCentroid(self) : 
-        return self._Pos
+        return self._pos
     pass
 
 def getNorm(row, mean, var) : 
@@ -455,3 +518,31 @@ def mapctrd(cslist, fold) :
             map[i][j] = getNorm(bcs.getKernels()[0].getCentroid(), acs.getMean(), acs.getVar())
  
     return map
+
+def getAPRF(tfpnlist) : 
+    '''get accuracy, precision, recall, F_1 measure
+    listing by data and data composed on T/F, P/N
+    '''
+    tp, fp, tn, fn = 0, 0, 0, 0
+    for tf, pn in tfpnlist : 
+        if tf is True and pn is True : 
+            tp += 1
+        elif tf is False and pn is True : 
+            fp += 1
+        elif tf is True and pn is False : 
+            tn += 1
+        elif tf is False and pn is False : 
+            fn += 1
+    tp, fp, tn, fn = float(tp), float(fp), float(tn), float(fn)
+    acc = (tp+tn)/(tp+fp+tn+fn)
+    pre = tp/(tp+fp)
+    rec = tp/(tp+fn)
+    fme = (2 * pre * rec) / (pre + rec)
+
+    return acc, pre, rec, fme
+
+def svcfactory(data, name) : 
+    mod = SVC(kernel='linear')
+    mod.fit(data, name)
+    mod.fit([[0], [1]],[0, 1])
+    return mod

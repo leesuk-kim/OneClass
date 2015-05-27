@@ -6,8 +6,8 @@ if __name__ == '__main__' :
     trainer = cpon(10)
     xprttrainer = xprt(trainer)
     #src = 'data'
-    src = 'data50_12'
-    #src = 'data_24'
+    #src = 'data50_12'
+    src = 'data_24'
     #src = 'data_24_ddtoa'
     #src = 'data_abs_24_ddtoa'
     trainer._srcdir = src
@@ -28,10 +28,12 @@ if __name__ == '__main__' :
             trainer.registcs(cs)
 
 #    trainer.learn()
+#    xprttrainer.csvaprf()
 #    xprttrainer.csvctrdmap()
 #    xprttrainer.csvclfboard()
 
-    k = trainer.learnSVM()
+    trainer.learnSVM()
+    #k = trainer.learnKNN()
 
     #report = trainer.learnSVM()
     pass

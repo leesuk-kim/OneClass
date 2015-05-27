@@ -50,6 +50,15 @@ class lkexporter :
                     cw.writerow(row)
         print 'export clfboard complete'
 
+    def csvaprf(self) : 
+        aprf = self._cpon._clfAPRF
+        fn = self.genffn('aprf', 'csv', 0)
+        with open(fn, 'wb') as f : 
+                cw = csv.writer(f, delimiter = ',')
+                cw.writerow(['acc','pre','rec','f1m'])
+                for row in aprf : 
+                    cw.writerow(row)
+
     def xlsxclfdtcmap(self) : 
         '''
         export classification distance map with xlsx extension
