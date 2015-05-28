@@ -7,7 +7,8 @@ if __name__ == '__main__' :
     xprttrainer = xprt(trainer)
     #src = 'data'
     #src = 'data50_12'
-    src = 'data_24'
+    #src = 'data_24'
+    src = 'data_24_fs'
     #src = 'data_24_ddtoa'
     #src = 'data_abs_24_ddtoa'
     trainer._srcdir = src
@@ -33,6 +34,7 @@ if __name__ == '__main__' :
 #    xprttrainer.csvclfboard()
 
     trainer.learnSVM()
+    xprttrainer.csvsvm()
     #k = trainer.learnKNN()
 
     #report = trainer.learnSVM()

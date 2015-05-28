@@ -68,6 +68,16 @@ class lkexporter :
     def pngoargraph(self) : 
         pass
 
+    def csvsvm(self) : 
+        aprf = self._cpon._clfAPRF
+        for fl, map in enumerate(aprf) : 
+            fn = self.genffn('aprf', 'csv', fl)
+            with open(fn, 'wb') as f : 
+                    cw = csv.writer(f, delimiter = ',')
+                    cw.writerow(['acc','pre','rec','f1m'])
+                    for row in map : 
+                        cw.writerow(row)
+
 def plotPDF(vec_x, figname = 'noname', plotnum = 20) : 
     '''bons-fold PDF plot(histogram)'''
     fig, ax = pyp.subplots(1, 1)

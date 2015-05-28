@@ -3,6 +3,7 @@ Radar signal Categorizer
 version 1.0
 Designed by leesuk kim(aka. LK)
 '''
+import csv
 import time
 import numpy as np
 import numpy.linalg as npla
@@ -11,9 +12,10 @@ import scipy.stats as scistats
 import lkpy as lkep
 import math
 from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from sklearn import metrics
 from sklearn.neighbors import NearestNeighbors
-import gc
+import copy
 
 CATArr_INDEX_NAME = 0
 CATArr_INDEX_TRAIN = 1
@@ -180,51 +182,84 @@ class cpon :
                 rkn.extend(vd._kslist)
         return rkn
 
+    denominator = 1
     def learnSVM(self) : 
         print 'learning SVM'
+        aprnlist = []
 
+        ffdata = [[] for f in range(self._fmax)]
+        ffname = [[[] for cs in self._cslist] for f in range(self._fmax)]
         for fold in range(self._fmax) :
             print 'fold#%d' % fold
             
             restrdata = []
             for cs in self._cslist : 
                 cs.onFolding(fold)
-
+            svclist = [SVC(kernel='linear', verbose=True, class_weight={1:49}, max_iter=110000) for x in self._cslist]#, class_weight={1:49}
             ##set training data of rest class
+            fittingdata= []
             for i, cs in enumerate(self._cslist) : 
-                tdlist = []
-                for vcs in self._cslist : 
-                    if vcs._Name is not cs._Name : 
-                        tdlist.extend(vcs._trdata)
-                fittingdata = [x for x in cs._trdata]
-                fittingdata.extend(tdlist)
-                fittingname = ['one' for x in cs._trdata]
-                fittingname.extend(['rest' for x in tdlist])
-                print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + cs._Name + '=>initsvmfit'
-                #cs.initsvmfit([[i + x + y for y in range(1, 25)] for x in range(10)], ['one' if w % 2 == 0 else 'rest' for w in range(10)])
-                cs.initsvmfit(fittingdata, fittingname)
+                #fittingdata.extend(cs._trdata[:len(cs._trdata)/denominator])
+                ffdata[fold].extend(cs._trdata[:len(cs._trdata)/cpon.denominator])
+                for j, cscs in enumerate(self._cslist) : 
+                    ffname[fold][i].extend([1 if cs._Name is cscs._Name else 0 for x in cscs._trdata[:len(cs._trdata)/cpon.denominator]])
+            for i, cs in enumerate(self._cslist) : 
+            #    fittingname = []
+            #    for cscs in self._cslist : 
+            #        fittingname.extend(['one' if cs._Name is cscs._Name else 'rest' for x in cscs._trdata[:len(cs._trdata)/denominator]])
+
+                #with open(('#%02d_'%fold)+cs._Name+'_fitdata.csv','wb') as f : 
+                #    cw = csv.writer(f, delimiter=',')
+                #    for row in fittingdata : 
+                #        cw.writerow(row)
+                #with open(('#%02d'%fold)+cs._Name+'_fitname.csv','wb') as f : 
+                #    cw = csv.writer(f, delimiter=',')
+                #    for row in fittingname : 
+                #        cw.writerow(row)
+                
+                #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + cs._Name + '=>initsvmfit'
+                
+                size = 100
+                #ffdata[fold], ffname[fold][i] = [[i + x + (0.001 * y) for y in range(1, 25)] for x in range(size)], ['one' if w % 2 == 0 else 'rest' for w in range(size)]
+                #cs.initsvmfit(fittingdata, fittingname)
+                #a = self.getfitname(self._cslist[13]._Name)
+                #a = [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                #d = self.getfitdata(cs._Name)
+                #svclist[i].fit(d, a)
+                #svclist[i].fit(ffdata[fold], ffname[fold][i])
+                #pred = svclist[i].predict(ffdata[fold])
+                
+                #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + cs._Name + '=>initsvmfit end'
+                cs.initsvmfit(ffdata[fold], ffname[fold][i])
                 pass
             pred = self.onSVMTesting(fold)
-        return fsblist
+            aprnlist.append(pred)
+            self._clfAPRF = aprnlist
+        return aprnlist
 
     def onSVMTesting(self, fold) : 
         plist = []
         
-        clf = SVC(kernel='linear')
+        clf = SVC(kernel='linear', shrinking=False, verbose=True)
         for tcs in self._cslist : 
+            #if tcs._Name is not self._cslist[1]._Name : 
+            #    continue
             print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._Name + '=>svm testing'
-            clf.fit(tcs._fitdata, tcs._fitname)
+            data = [[y for y in x] for x in tcs._fitdata]
+            name = [x for x in tcs._fitname]
+            clf.fit(data, name)
 
             vatarget, valist = [], []
             for vcs in self._cslist : 
                 valist.extend([x for x in vcs._vadata])
-                vatarget.extend(['one' if tcs._Name is vcs._Name else 'rest' for x in vcs._vadata])
+                vatarget.extend([1 if tcs._Name is vcs._Name else 0 for x in vcs._vadata])
             pred = clf.predict(valist)
             acc = metrics.accuracy_score(vatarget, pred)
-            pre = metrics.precision_score(vatarget, pred, pos_label='one')
-            rec = metrics.recall_score(vatarget, pred, pos_label='one')
-            f1m = metrics.f1_score(vatarget, pred, pos_label='one')
+            pre = metrics.precision_score(vatarget, pred, pos_label=1)
+            rec = metrics.recall_score(vatarget, pred, pos_label=1)
+            f1m = metrics.f1_score(vatarget, pred, pos_label=1)
             plist.append([acc, pre, rec, f1m])
+            print '[%02d]%s=>%lf, %lf, %lf, %lf'%(fold, tcs._Name, acc, pre, rec, f1m)
             pass
 
         return plist
@@ -264,6 +299,21 @@ class cpon :
             pass
         #self._knn.kneighbors
         pass
+
+    def getfitname(self, csname) : 
+        cs = filter(lambda x : x._Name is csname, self._cslist)
+        targetlist = []
+        for cs in self._cslist : 
+            targetlist.extend([1 if cs._Name is csname else 0 for x in cs._trdata[:len(cs._trdata)/cpon.denominator]])
+        return targetlist
+
+    def getfitdata(self, csname) : 
+        cs = filter(lambda x : x._Name is csname, self._cslist)
+        data = [x for x in cs[0]._trdata[:len(cs[0]._trdata)/cpon.denominator]]
+        for cs in self._cslist : 
+            if cs._Name is not csname : 
+                data.extend(cs._trdata[:len(cs._trdata)/cpon.denominator])
+        return data
     pass
 
 
@@ -278,6 +328,8 @@ class cspace :
         self._vavolume = int(float(self._ftvolume) / float(foldmax))
         self._trvolume = self._ftvolume - self._vavolume
         self._KernelSize = knvol
+        self._fitdata = []
+        self._fitname = []
         pass
 
     def getName(self):
@@ -312,6 +364,7 @@ class cspace :
         self._dev = dev
         self._trdata = trdata
         self._vadata = vadata
+        self._fitdata = None
         pass
 
     def onTraining(self) : 
