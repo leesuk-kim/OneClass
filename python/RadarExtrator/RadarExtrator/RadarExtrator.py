@@ -1,7 +1,7 @@
 import sys
 import os
 from raexpy import raex
-
+import raexpy as rex
 if __name__ == "__main__" : 
     rrelist = []
     for dirname, dirnames, filenames in os.walk('.'):
@@ -30,7 +30,7 @@ if __name__ == "__main__" :
                 #print data
                 rrelist.append(rre)
                 print 'append %s' % rre.getName()
-
+    #rex.featurescaling(rrelist)#for feature scaling
     #export Data
     with open('merge.csv', 'wb') as fm : 
         for c in rrelist : 

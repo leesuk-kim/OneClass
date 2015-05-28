@@ -63,13 +63,14 @@ class raex :
         for i, v in enumerate(self.srclist) : 
             self.srclist[i] = zip(*v)#transpose matrix!!!!!!
 
-        for i, toa in enumerate(self.srclist) : 
-            dtoa = diff(toa[1], zindex=True)
-            toa.pop(1)
-            toa.insert(1, dtoa)
+        #for i, toa in enumerate(self.srclist) : 
+        #    dtoa = diff(toa[1], zindex=True)
+        #    toa.pop(1)
+        #    toa.insert(1, dtoa)
 
-        #self.appenddiff()
+        self.appenddiff()
         self.setRaw()
+        pass
     pass
 
 def diff(list, zindex = False, absolute = False) : 
@@ -124,4 +125,18 @@ def statfeatures(list, moments = 'mvsk') :
 
     return sflist
 
-#junk comment for commit
+def featurescaling(samplelist = list) : 
+    dimlist = [zip(*s.rawdata) for s in samplelist]
+    dimlist = zip(*dimlist)
+    fslist = [[[0. for s in c] for c in d] for d in dimlist]
+    for i, dim in enumerate(dimlist) : 
+        dmax, dmin = max([max([s for s in c]) for c in dim]), min([min([s for s in c]) for c in dim])
+        for j, c in enumerate(dim) : 
+            for k, s in enumerate(c) : 
+                #s = (s - dmin) / (dmax - dmin)
+                fslist[i][j][k] = (s - dmin) / (dmax - dmin)
+    fslist = zip(*fslist)
+    fslist = [zip(*fs) for fs in fslist]
+    for sample, fs in zip(samplelist, fslist) : 
+        sample.rawdata = fs
+    pass
