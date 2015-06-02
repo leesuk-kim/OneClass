@@ -14,10 +14,10 @@ import math
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVC
 from sklearn import metrics
-from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import KNeighborsClassifier
 import copy
 
-CATArr_INDEX_NAME = 0
+CATArr_INDEX_name = 0
 CATArr_INDEX_TRAIN = 1
 CATArr_INDEX_TEST = 2
 CATArr_INDEX_CAT = 1
@@ -94,7 +94,7 @@ class cpon :
         self._fmax = fold
 
     def getcsnames(self) : 
-        return [cs._Name for cs in self._cslist]
+        return [cs._name for cs in self._cslist]
         
     def getKnVol(self):
         return self._kmax
@@ -109,9 +109,10 @@ class cpon :
 
     def learn(self) : 
         print 'learning'
-        fsblist, fstatslist = [], []
+        clfboard, clfstatsboard = [], []
         self._clfAPRF = []
         for fold in range(self._fmax) : 
+            lkep.fold = fold
             print 'fold#%d' % fold
 
             for cs in self._cslist : 
@@ -120,12 +121,13 @@ class cpon :
 
             fctrdmap = mapctrd(self._cslist, self._fmax)
             self._ctrdmap.append(fctrdmap)
-
-            foldsb = boardclf(scoreclf(self.onTesting(fold)))
-            fsblist.append(foldsb)
+            foldclfstats = scoreclf(self.onTesting(fold))
+            clfstatsboard.append(foldclfstats)
+            foldclf = boardclf(foldclfstats)
+            clfboard.append(foldclf)
             self._clfAPRF.append(self.onOARTesting())
-        self._clfboard = fsblist
-        self._clfstatslist = fstatslist
+        self._clfboard = clfboard
+        self._clfstatsboard = clfstatsboard
         pass
 
     def onOARTesting(self) : 
@@ -135,22 +137,42 @@ class cpon :
         tfpnlist = []
 
         for i, cs in enumerate(self._cslist) : 
-            resKernelList = self.getRestKernels(cs._Name)
+            resKernelList = self.getRestKernels(cs._name)
             oneKernelList = cs._kslist
 
             for vcs in self._cslist : 
                 for vd in vcs._vadata : 
-                    oclostlist = [getNorm(vd, kn._pos, kn._var) for kn in oneKernelList]
-                    rclostlist = [getNorm(vd, kn._pos, kn._var) for kn in resKernelList]
-                    oclost, rclost = min(oclostlist), min(rclostlist)
+                    #oclostlist = [getNorm(vd, kn._pos, kn._var) for kn in oneKernelList]
+                    #rclostlist = [getNorm(vd, kn._pos, kn._var) for kn in resKernelList]
+                    oplist = [kn.getPval(vd) for kn in oneKernelList]
+                    rplist = [kn.getPval(vd) for kn in resKernelList]
+                    
 
-                    if cs._Name is vcs._Name : 
+                    #oclost, rclost = min(oclostlist), min(rclostlist)
+                    opval = max(oplist)
+                    rpval = max(rplist)
+
+                    #if oclost < rclost : 
+                    #    pn = True
+                    #    tf = True if cs._name is vcs._name else False
+                    #else : 
+                    #    pn = False
+                    #    tf = False if cs._name is vcs._name else True
+                    if opval >= rpval : 
                         pn = True
-                        tf = True if oclost < rclost else False
+                        tf = True if cs._name is vcs._name else False
                     else : 
                         pn = False
-                        tf = True if oclost > rclost else False
+                        tf = False if cs._name is vcs._name else True
 
+                    #if cs._name is vcs._name and oclost < rclost : 
+                    #    tf, pn = True, True
+                    #elif cs._name is vcs._name and oclost > rclost : 
+                    #    tf, pn = False, False
+                    #elif cs._name is not vcs._name and oclost < rclost : 
+                    #    tf, pn = False, True
+                    #elif cs._name is not vcs._name and oclost > rclost : 
+                    #    tf, pn = True, False
                     tfpnlist.append([tf, pn])
                     pass
                 pass
@@ -171,18 +193,17 @@ class cpon :
                 dlist = tcs.onTesting(kn)
                 dmap.append(dlist)
             dmlist.append(dmap)
-            fn = '#%d%s' % (fold + 1, tcs.getName())
+            fn = '#%d%s' % (fold + 1, tcs._name)
             
         return dmlist
 
     def getRestKernels(self, onename) : 
         rkn = []
         for vd in self._cslist : 
-            if onename is not vd._Name : 
+            if onename is not vd._name : 
                 rkn.extend(vd._kslist)
         return rkn
 
-    denominator = 1
     def learnSVM(self) : 
         print 'learning SVM'
         aprnlist = []
@@ -195,42 +216,15 @@ class cpon :
             restrdata = []
             for cs in self._cslist : 
                 cs.onFolding(fold)
-            svclist = [SVC(kernel='linear', verbose=True, class_weight={1:49}, max_iter=110000) for x in self._cslist]#, class_weight={1:49}
             ##set training data of rest class
             fittingdata= []
             for i, cs in enumerate(self._cslist) : 
-                #fittingdata.extend(cs._trdata[:len(cs._trdata)/denominator])
-                ffdata[fold].extend(cs._trdata[:len(cs._trdata)/cpon.denominator])
+                ffdata[fold].extend(cs._trdata)
                 for j, cscs in enumerate(self._cslist) : 
-                    ffname[fold][i].extend([1 if cs._Name is cscs._Name else 0 for x in cscs._trdata[:len(cs._trdata)/cpon.denominator]])
+                    ffname[fold][i].extend([1 if cs._name is cscs._name else 0 for x in cscs._trdata])
             for i, cs in enumerate(self._cslist) : 
-            #    fittingname = []
-            #    for cscs in self._cslist : 
-            #        fittingname.extend(['one' if cs._Name is cscs._Name else 'rest' for x in cscs._trdata[:len(cs._trdata)/denominator]])
-
-                #with open(('#%02d_'%fold)+cs._Name+'_fitdata.csv','wb') as f : 
-                #    cw = csv.writer(f, delimiter=',')
-                #    for row in fittingdata : 
-                #        cw.writerow(row)
-                #with open(('#%02d'%fold)+cs._Name+'_fitname.csv','wb') as f : 
-                #    cw = csv.writer(f, delimiter=',')
-                #    for row in fittingname : 
-                #        cw.writerow(row)
-                
-                #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + cs._Name + '=>initsvmfit'
-                
                 size = 100
-                #ffdata[fold], ffname[fold][i] = [[i + x + (0.001 * y) for y in range(1, 25)] for x in range(size)], ['one' if w % 2 == 0 else 'rest' for w in range(size)]
-                #cs.initsvmfit(fittingdata, fittingname)
-                #a = self.getfitname(self._cslist[13]._Name)
-                #a = [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-                #d = self.getfitdata(cs._Name)
-                #svclist[i].fit(d, a)
-                #svclist[i].fit(ffdata[fold], ffname[fold][i])
-                #pred = svclist[i].predict(ffdata[fold])
-                
-                #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + cs._Name + '=>initsvmfit end'
-                cs.initsvmfit(ffdata[fold], ffname[fold][i])
+                cs.initSklearnParam(ffdata[fold], ffname[fold][i])
                 pass
             pred = self.onSVMTesting(fold)
             aprnlist.append(pred)
@@ -240,11 +234,9 @@ class cpon :
     def onSVMTesting(self, fold) : 
         plist = []
         
-        clf = SVC(kernel='linear', shrinking=False, verbose=True)
+        clf = SVC(kernel='rbf')
         for tcs in self._cslist : 
-            #if tcs._Name is not self._cslist[1]._Name : 
-            #    continue
-            print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._Name + '=>svm testing'
+            print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>svm testing'
             data = [[y for y in x] for x in tcs._fitdata]
             name = [x for x in tcs._fitname]
             clf.fit(data, name)
@@ -252,67 +244,88 @@ class cpon :
             vatarget, valist = [], []
             for vcs in self._cslist : 
                 valist.extend([x for x in vcs._vadata])
-                vatarget.extend([1 if tcs._Name is vcs._Name else 0 for x in vcs._vadata])
+                vatarget.extend([1 if tcs._name is vcs._name else 0 for x in vcs._vadata])
             pred = clf.predict(valist)
             acc = metrics.accuracy_score(vatarget, pred)
-            pre = metrics.precision_score(vatarget, pred, pos_label=1)
-            rec = metrics.recall_score(vatarget, pred, pos_label=1)
-            f1m = metrics.f1_score(vatarget, pred, pos_label=1)
+            pre = metrics.precision_score(vatarget, pred, pos_label=0)
+            rec = metrics.recall_score(vatarget, pred, pos_label=0)
+            f1m = metrics.f1_score(vatarget, pred, pos_label=0)
+            clfr = metrics.classification_report(vatarget, pred)
+            mcc = metrics.matthews_corrcoef(vatarget, pred)
             plist.append([acc, pre, rec, f1m])
-            print '[%02d]%s=>%lf, %lf, %lf, %lf'%(fold, tcs._Name, acc, pre, rec, f1m)
+            #print '[%02d]%s=>%lf, %lf, %lf, %lf'%(fold, tcs._name, acc, pre, rec, f1m)
+            #print clfr
             pass
 
         return plist
 
     def learnKNN(self) : 
         print 'learning Nearest Neighbor'
+        aprnlist = []
 
-        fsblist = []
-        cslen = len(self._cslist)
-        for fold in range(self._fmax) : 
+        ffdata = [[] for f in range(self._fmax)]
+        ffname = [[[] for cs in self._cslist] for f in range(self._fmax)]
+        for fold in range(self._fmax) :
             print 'fold#%d' % fold
-
-            fitdatalist = []
-            fitnamelist = []
+            
+            restrdata = []
             for cs in self._cslist : 
                 cs.onFolding(fold)
-                fdlist = cs.getTrainData()
-                csn = cs.getName()
-                fnlist = [csn for td in fdlist]
-                fitdatalist.extend(fdlist)
-                fitnamelist.extend(fnlist)
-            #training
-            self._knn = NearestNeighbors(n_neighbors=cslens).fit(fitdatalist)
+            ##set training data of rest class
+            fittingdata= []
+            for i, cs in enumerate(self._cslist) : 
+                ffdata[fold].extend(cs._trdata)
+                for j, cscs in enumerate(self._cslist) : 
+                    ffname[fold][i].extend([1 if cs._name is cscs._name else 0 for x in cscs._trdata])
+            for i, cs in enumerate(self._cslist) : 
+                size = 100
+                cs.initSklearnParam(ffdata[fold], ffname[fold][i])
+                pass
+            pred = self.onKNNTesting(fold)
+            aprnlist.append(pred)
+            self._clfAPRF = aprnlist
+        return aprnlist
 
-            #distances, indices = knn.kneighbors(fitdatalist)
-            foldsb = self.onKNNTesting()#testing
-            fsblist.append(foldsb)
-        return fsblist
-
-    def onKNNTesting(self) : 
+    def onKNNTesting(self, fold) : 
         plist = []
         
-        for i, tcs in enumerate(self._cslist) : 
-            for vd in tcs.getValidData() : 
-                dist, indice = self._knn.kneighbors(vd)
-                #plist.append([tcs.getName(), pred[0]])
+        clf = KNeighborsClassifier(weights='distance')
+        for tcs in self._cslist : 
+            print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>knn testing'
+            data = [[y for y in x] for x in tcs._fitdata]
+            name = [x for x in tcs._fitname]
+            clf.fit(data, name)
+
+            vatarget, valist = [], []
+            for vcs in self._cslist : 
+                valist.extend([x for x in vcs._vadata])
+                vatarget.extend([1 if tcs._name is vcs._name else 0 for x in vcs._vadata])
+            pred = clf.predict(valist)
+            acc = metrics.accuracy_score(vatarget, pred)
+            pre = metrics.precision_score(vatarget, pred)
+            rec = metrics.recall_score(vatarget, pred)
+            f1m = metrics.f1_score(vatarget, pred)
+            aprf = metrics.classification_report(vatarget, pred)
+            plist.append([acc, pre, rec, f1m])
+            #print '[%02d]%s=>%lf, %lf, %lf, %lf'%(fold, tcs._name, acc, pre, rec, f1m)
+            #print aprf
             pass
-        #self._knn.kneighbors
-        pass
+
+        return plist
 
     def getfitname(self, csname) : 
-        cs = filter(lambda x : x._Name is csname, self._cslist)
+        cs = filter(lambda x : x._name is csname, self._cslist)
         targetlist = []
         for cs in self._cslist : 
-            targetlist.extend([1 if cs._Name is csname else 0 for x in cs._trdata[:len(cs._trdata)/cpon.denominator]])
+            targetlist.extend([1 if cs._name is csname else 0 for x in cs._trdata])
         return targetlist
 
     def getfitdata(self, csname) : 
-        cs = filter(lambda x : x._Name is csname, self._cslist)
-        data = [x for x in cs[0]._trdata[:len(cs[0]._trdata)/cpon.denominator]]
+        cs = filter(lambda x : x._name is csname, self._cslist)
+        data = [x for x in cs[0]._trdata]
         for cs in self._cslist : 
-            if cs._Name is not csname : 
-                data.extend(cs._trdata[:len(cs._trdata)/cpon.denominator])
+            if cs._name is not csname : 
+                data.extend(cs._trdata)
         return data
     pass
 
@@ -322,7 +335,7 @@ class cspace :
     radar category
     '''
     def __init__(self, name, features, foldmax, knvol = 1) : 
-        self._Name = name
+        self._name = name
         self._FeatureList = features
         self._ftvolume = len(features)
         self._vavolume = int(float(self._ftvolume) / float(foldmax))
@@ -331,9 +344,6 @@ class cspace :
         self._fitdata = []
         self._fitname = []
         pass
-
-    def getName(self):
-        return self._Name
 
     def onFolding(self, cnt) : 
         '''
@@ -371,7 +381,7 @@ class cspace :
         #positioning kernel position for kernel size 1
         #if you want to set more kernel, you take method 'dalken(data allocate on kernel)'
         kpos = self._mean
-        self._kslist.append(kspace(kpos, self._trdata, self._Name))
+        self._kslist.append(kspace(kpos, self._trdata, self._name))
         pass
 
     def onTesting(self, tck) : 
@@ -382,36 +392,12 @@ class cspace :
         for vd in self._vadata : 
             dlist = []
             for kernel in tck : 
-                d = getNorm(vd, kernel.getMean(), kernel.getVar())
+                #d = getNorm(vd, kernel._mean, kernel._var)
+                d = kernel.getPval(vd)
                 dlist.append(d)
             dmap.append(dlist)
             pass
         return dmap
-
-    def setKernel(self) : 
-        '''
-        set centroid
-        get Centroid position and set that pos. on each kernels
-        in Radar Categorizer, we take ONLY ONE centroid.
-        '''
-        self.initCtrdPos()
-
-        self._CentroidArr = []
-
-        for knl in range(self._KernelSize) : 
-            self._CentroidArr.append(cpon.cspace.kspace(self._trMean, self))
-        pass
-
-    def initCtrdPos(self) : 
-        pos = []
-        pass
-
-    def getMean(self) : 
-        return self._mean
-    def getVar(self) : 
-        return self._var
-    def getDev(self) : 
-        return self._dev
 
     def getTrainData(self) : 
         return self._trdata
@@ -422,97 +408,204 @@ class cspace :
     def getKernels(self) : 
         return self._kslist
 
-    def initsvmfit(self, data, name) : 
+    def initSklearnParam(self, data, name) : 
         self._fitdata = data
         self._fitname = name
         pass
     pass
 
 class kspace : 
+    '''
+    Kernel on centroid
+    '''
     def __init__(self, ctrd_pos, trd, name='noname') : 
         self._pos = ctrd_pos
         #self._Category = scs
+
         ###get statistics : mean and variance
         self._name = name
         self._data = np.array(trd)
         datatr = np.array(zip(*trd))
-        mean, var = [], []
-        for dtr in datatr : 
-            m = dtr.mean()
-            v = dtr.var(ddof = 1)
-            mean.append(m)
-            var.append(v)
-         ###get statistics ends
-        normlist = [getNorm(row, mean, var) for row in trd]
-        self._mean = mean
-        self._var = var
-        self._normlist = normlist
-        #self._trNorm = trNorm = [npla.norm(ctrd_pos - x) for x in self._data]
-        #NOT YET...
-        #self._lentr = lentr = len(trNorm)
-        #self._trNorm_mean = trNorm_mean = np.mean(trNorm)
-        #self._trNorm_var = trNorm_var = np.var(trNorm, ddof = 1)
-        #featureScaling = trNorm
-        #fsmax, fsmin = max(featureScaling), min(featureScaling)
-        #featureScaling.sort()
-        #self._trNorm_fs = trNorm_fs = [(x - fsmin) / (fsmax - fsmin) for x  in featureScaling]
-                
-        #y_pval, y_d, y_sigma, y_beta_a, y_beta_b , ecdf, betacdf = self.getKernel()
-        #y = self.setKernel(y_sigma)
+        self._mean, self._var = [m.mean() for m in datatr], [v.var(ddof=1) for v in datatr]
+        ###get statistics ends
+
+        self._ybp = self.discriminant()
+        
+        #IGNORE
         #ecdf = [float(x) / float(lentr) for x in range(1, lentr + 1)]
         #betaCDF = beta.cdf(y, y_beta_a, y_beta_b)
         #betaPDF = beta.pdf(y, y_beta_a, y_beta_b)
                 
-        #lkep.plotPDF(y, rCat._Name)
-        #lkep.plotCDF(y, rCat._Name)
-        #lkep.plotKStest(y, ecdf, betaCDF, y_beta_a, y_beta_b, y_pval, rCat._Name)
-        #lkep.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
-        #lkep.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._Name)
+        #lkep.plotPDF(y, rCat._name)
+        #lkep.plotCDF(y, rCat._name)
+        #lkep.plotKStest(y, ecdf, betaCDF, y_beta_a, y_beta_b, y_pval, rCat._name)
+        #lkep.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._name)
+        #lkep.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._name)
         pass
-    def getMean(self) : 
-        return self._mean
-    def getVar(self) : 
-        return self._var
-    def getName(self) :
-        return self._name
 
-    def setKernel(self, sigma) :
-        y = [math.exp(-1 * (x ** 2) / (2 * sigma ** 2)) for x in self._trNorm]
-        return [1 - yi for yi in y]
+    def discriminant(self) : 
+        sigma_weight_cddt = [2 ** (i - 2) for i in range(5)]
+        nmnt = [0.]
+        trlen = len(self._data)
+        flag_swmin = False
+        flag_swmax = False
+        ccdt_i, pval, sign = 1., 0., 1
+        ecdf = [float(x) / float(trlen) for x in range(1, trlen + 1)]
 
-    def getKernel(self) : 
-        sigma_cddt = [2 ** (i - 4) for i in range(7)]
-        nmnt = [0., 0., 0., 0., 0., 0., 0.]
-        trlen = len(self._trNorm)
+        dimlen = len(self._data[0])
+        candi = 3
+        candi_half = int(candi/2)
+        rangedimlen = range(dimlen)
+        swc_idx_map = [[(x/(3**y))%3 for y in rangedimlen] for x in range(candi ** dimlen)]
+        swc_map = [[2 ** (x - candi_half) for x in v] for v in swc_idx_map]
+        
+        for swc in swc_map : 
+            bcdfparams = self.getbcdf_pval_swc(swc)
+            if not isinstance(bcdfparams, ybp) : 
+                continue
 
-        for sigma in sigma_cddt : 
-            y = self.setKernel(sigma)
-            y_m = np.mean(y)
-            y_v = np.var(y, ddof = 1)
+            #Y = [self.kernelizeisw(x, swc) for x in self._data]
+
+            #Y.sort()
+            #y_m = np.mean(Y)
+            #y_v = np.var(Y, ddof = 1)
+            #if math.isnan(y_v) or y_v == 0 : 
+            #    continue
+
+            #ba = y_m ** 2 * ((1 - y_m) / y_v - 1 / y_m)
+            #bb = ba * (1 - y_m) / y_m
+#            bafit, bbfit, loc, scal = beta.fit(Y, ba, bb)
+            #betacdf = beta.cdf(Y, ba, bb)
+            #betacdf = beta.cdf(Y, bafit, bbfit)
+                    
+            #Y = featureScaling(Y)
+            #d, pval = scistats.kstest(Y, lambda cdf : betacdf)
+            if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.05 : 
+                print swc
+                nmnt = [bcdfparams._pval, bcdfparams._d, bcdfparams._Y, swc, bcdfparams._betaA, bcdfparams._betaB, ecdf, bcdfparams._betaCDF]
+                #nmnt = [pval, d, Y, swc, bafit, bbfit, ecdf, betacdf]
+            pass        
+        
+        return ybp(nmnt[0], nmnt[1], nmnt[2], nmnt[3], nmnt[4], nmnt[5], nmnt[6], nmnt[7])
+        
+        while True :
+            ccdt_i += 1.
+            ccdt = sign * ccdt_i if flag_swmax else (-1 if ccdt_i % 2 == 0 else 1) * int(ccdt_i * 0.5)
+            sigma_weight = 1 / float(ccdt) if ccdt < 0 else ccdt#2 ** ccdt#
+
+            Y = [self.kernelize(x, sigma_weight) for x in self._data]
+            Y.sort()
+            y_m = np.mean(Y)
+            y_v = np.var(Y, ddof = 1)
+            if math.isnan(y_v) or y_v == 0 : 
+                continue
+
             ba = y_m ** 2 * ((1 - y_m) / y_v - 1 / y_m)
             bb = ba * (1 - y_m) / y_m
-            bafit, bbfit, loc, scal = beta.fit(y, ba, bb)
-            for x in range(20) : 
-                bafit, bbfit, loc, scal = beta.fit(y, bafit, bbfit)
-            betacdf = beta.cdf(y, bafit, bbfit)
+            bafit, bbfit, loc, scal = beta.fit(Y, ba, bb)
+            betacdf = beta.cdf(Y, bafit, bbfit)
                     
-            ymax, ymin = max(y), min(y)
-            ecdf = [float(x) / float(trlen) for x in range(1, trlen + 1)]
-            #WHAT IS 'CALLABLE'???
-            #d, pval = scistats.ks_2samp(ecdf, betacdf)
-            d, pval = scistats.kstest(ecdf, lambda cdf : betacdf)
+            #Y = featureScaling(Y)
+            d, pval = scistats.kstest(Y, lambda cdf : betacdf)
 
-            if nmnt[0] < pval : 
-                nmnt = [pval, d, sigma, bafit, bbfit, ecdf, betacdf]
-        lkep.plotKStest(y, nmnt[5], nmnt[6], nmnt[3], nmnt[4], nmnt[0], self._Category._Name)
+            if nmnt[0] < pval and not flag_swmax : 
+                nmnt = [pval, d, Y, sigma_weight, bafit, bbfit, ecdf, betacdf]
+                flag_swmax = True
+                sign = -1 if ccdt < 0 else 1
+                ccdt_i = int(ccdt_i * 0.5)
+            elif flag_swmax : 
+                if nmnt[0] >= pval or math.isnan(pval) or ccdt_i > 16 : 
+                    break
+                else : 
+                    nmnt = [pval, d, Y, sigma_weight, bafit, bbfit, ecdf, betacdf]
+            elif ccdt_i > 50 : 
+                nmnt = [pval, d, Y, sigma_weight, bafit, bbfit, ecdf, betacdf]
+                print self._name + ' p-value = 0'
+                break
+            pass
+        #if nmnt[0] < 0.005 : 
+        #    print self._name + '-> pval reject'
+        lkep.plotKStest(nmnt[0], nmnt[2], nmnt[4], nmnt[5], nmnt[6], nmnt[7], self._name)
+        return ybp(nmnt[0], nmnt[1], nmnt[2], nmnt[3], nmnt[4], nmnt[5], nmnt[6], nmnt[7])
 
-        return nmnt
+    def getPval(self, valid) : 
+        y = self.kernelize(valid, self._ybp._sw)
+        pval = self._ybp.mapy2beta(y)
+        return pval
 
-    def getCentroid(self) : 
-        return self._pos
+    def kernelize(self, X, sw = 1) : 
+        '''
+        <parameter>
+        x : [role]input pattern [type] array-like
+        sw : [role]weight list for sigma on each dimensions [type] float, default=1
+        <issue> this method use one sigma weight for every dimension. 
+        in other word, every dimension takes same sigma weight.
+        How to find proper sigma weight for each dimension?
+        <return>
+        result of the discriminant function h(x)
+        '''
+        h_x = 0.#output of kernel
+        dsquare = 0.#exponential parameter for euler's constant. it is square of d.
+        xmv = zip(X, self._mean, self._var)
+        #temp = [((x - m) ** 2) / ((sw ** 2) * v) for x, m, v in xmv]
+        #dsq = sum(temp)
+        #dsquare = 0.5 * dsq
+        dsquare = 0.5 * reduce(lambda p, q : p + q, [((x - m) ** 2) / ((sw ** 2) * v) for x, m, v in xmv])
+                
+        h_x = math.exp(-1 * dsquare)
+        
+        return h_x
+
+    def kernelizeisw(self, X, sw) :
+        """
+        kernelize with indipentent sigma weight
+        """
+        h_x = 0.
+        dsquare = 0.
+        xmvw = zip(X, self._mean, self._var, sw)
+        dsquare = 0.5 * reduce(lambda p, q : p + q, [((x - m) ** 2) / ((w ** 2) * v) for x, m, v, w in xmvw])
+                
+        h_x = math.exp(-1 * dsquare)
+        
+        return h_x
+
+    def getbcdf_pval_swc(self, swc) : 
+        """
+        get p-value of beta CDF with candidated sigma weight
+        parameters
+        ----------
+
+        returns
+        -------
+        pval : 
+        d : 
+        Y : 
+        ba : 
+        bb : 
+        bcdf
+        """
+        Y = [self.kernelizeisw(x, swc) for x in self._data]
+
+        Y.sort()
+        y_m = np.mean(Y)
+        y_v = np.var(Y, ddof = 1)
+        if math.isnan(y_v) or y_v == 0 : 
+            return 0
+
+        ba = y_m ** 2 * ((1 - y_m) / y_v - 1 / y_m)
+        bb = ba * (1 - y_m) / y_m
+        bcdf = beta.cdf(Y, ba, bb)
+                    
+        #Y = featureScaling(Y)
+        d, pval = scistats.kstest(Y, lambda cdf : bcdf)
+        
+        params = ybp(pval, d, Y, swc, ba, bb, 0, bcdf)
+        return params
+
     pass
 
 def getNorm(row, mean, var) : 
+    '''ldfnhd;hnda;lkhnd;obndfa;lgndf;lgknndnfg;lan;ln1!!!!'''
     d = 0.
     d = reduce(lambda x, y : x + y , [(i - m) ** 2 / v for i, m, v in zip(row, mean, var)])
     #for i, m, v in zip(row, mean, var) : 
@@ -524,9 +617,9 @@ def scoreclf(distancemap) :
     for eclist in map : 
         ecsb = []
         for klist in eclist : 
-            v = reduce(lambda x, y : x if x < y else y, min(klist))
-            i = klist.index(v)
-            ecsb.append(i)
+            v = max([max(a) for a in klist])
+            clsidx = next((i for i, sublist in enumerate(klist) if v in sublist), -1)
+            ecsb.append(clsidx)
         sb.append(ecsb)
         pass
     return sb
@@ -568,7 +661,7 @@ def mapctrd(cslist, fold) :
     map = [[0. for y in cslist] for x in cslist]
     for i, acs in enumerate(cslist) : 
         for j, bcs in enumerate(cslist) : 
-            map[i][j] = getNorm(bcs.getKernels()[0].getCentroid(), acs.getMean(), acs.getVar())
+            map[i][j] = getNorm(bcs._kslist[0]._pos, acs._mean, acs._var)
  
     return map
 
@@ -593,9 +686,52 @@ def getAPRF(tfpnlist) :
     fme = (2 * pre * rec) / (pre + rec)
 
     return acc, pre, rec, fme
+    
+class ybp : 
+    def __init__(self, pval, d, Y, sw, ba, bb, ecdf, bcdf):
+        self._pval = pval
+        self._d = d
+        self._Y = Y
+        self._ymin = min(Y)
+        self._ymax = max(Y)
+        self._sw = sw#sigma weight
+        self._betaA = ba
+        self._betaB = bb
+        self._ecdf = ecdf
+        self._betaCDF = bcdf
 
-def svcfactory(data, name) : 
-    mod = SVC(kernel='linear')
-    mod.fit(data, name)
-    mod.fit([[0], [1]],[0, 1])
-    return mod
+    def mapy2beta(self, y) : 
+        """
+        mapping y to beta
+        
+        parameters
+        ----------
+        self : class object
+            hypothesis criteria
+
+        y : array_like
+            Input array
+
+        returns
+        -------
+        pair of beta CDF : Float 
+            Returns a float.
+        """
+        i = 0
+        if y < self._ymin : 
+            return 0
+        elif y > self._ymax : 
+            return 1
+        else : 
+            for i, z in enumerate(self._Y) : 
+                if y < z : 
+                    i = self._Y.index(z)
+                    break
+        return self._betaCDF[i]
+    pass
+
+def featureScaling(arr) : 
+    xmin, xmax = min(arr), max(arr)
+    if xmax != 0 and xmax - xmin != 0 : 
+        arr = [(x - xmin) / (xmax - xmin) for x in arr]
+    return arr

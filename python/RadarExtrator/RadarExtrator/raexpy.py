@@ -68,7 +68,7 @@ class raex :
         #    toa.pop(1)
         #    toa.insert(1, dtoa)
 
-        self.appenddiff()
+        #self.appenddiff()
         self.setRaw()
         pass
     pass

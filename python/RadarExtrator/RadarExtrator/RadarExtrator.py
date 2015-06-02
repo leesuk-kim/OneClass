@@ -30,7 +30,7 @@ if __name__ == "__main__" :
                 #print data
                 rrelist.append(rre)
                 print 'append %s' % rre.getName()
-    #rex.featurescaling(rrelist)#for feature scaling
+    rex.featurescaling(rrelist)#for feature scaling
     #export Data
     with open('merge.csv', 'wb') as fm : 
         for c in rrelist : 

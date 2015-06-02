@@ -3,6 +3,8 @@ import matplotlib.pyplot as pyp
 from scipy.stats import beta
 import cppy
 
+fold = 0
+
 class lkexporter : 
     def __init__(self, cpon) : 
         self._cpon = cpon
@@ -59,6 +61,19 @@ class lkexporter :
                 for row in aprf : 
                     cw.writerow(row)
 
+    def csvclfstats(self) : 
+        statboard, csnames = self._cpon._clfstatsboard, self._cpon.getcsnames()
+        for fl, clflist in enumerate(statboard) : 
+            fn = self.genffn('clfstatsboard', 'csv', fl)
+            with open(fn, 'wb') as f : 
+                cw = csv.writer(f, delimiter = ',')
+                for i, clfstats in enumerate(clflist) : 
+                    clfstats = [x + 1 for x in clfstats]
+                    clfstats.insert(0, csnames[i])
+                    cw.writerow(clfstats)
+                
+        print 'export clfstats complete'
+
     def xlsxclfdtcmap(self) : 
         '''
         export classification distance map with xlsx extension
@@ -68,7 +83,7 @@ class lkexporter :
     def pngoargraph(self) : 
         pass
 
-    def csvsvm(self) : 
+    def csvsklearn(self) : 
         aprf = self._cpon._clfAPRF
         for fl, map in enumerate(aprf) : 
             fn = self.genffn('aprf', 'csv', fl)
@@ -139,7 +154,7 @@ def plotBetaCDF(a, b, dataname = 'noname', bins = 100) :
     pyp.close(fig)
     pass
 
-def plotKStest(y, y_emp, betacdf, a, b, pvalue, dataname = 'noname', bins = 100) : 
+def plotKStest(pvalue, y, a, b, y_emp, betacdf, dataname = 'noname', bins = 100) : 
     fig, ax = pyp.subplots(1, 1)
 
     fig.suptitle(dataname + ' beta CDF')
@@ -148,7 +163,7 @@ def plotKStest(y, y_emp, betacdf, a, b, pvalue, dataname = 'noname', bins = 100)
     ax.plot(y, y_emp, 'r--', label = 'empiCDF')
     ax.legend(loc = 4)
     path = os.path.join(os.path.dirname(__file__), 'KStest')
-    fn = 'KStest_' + dataname + '.png'
+    fn = ('f#%02d_KStest_' % fold) + dataname + '.png'
     fig.savefig(os.path.join(path, fn))
     #pyp.show()
     pyp.close(fig)
