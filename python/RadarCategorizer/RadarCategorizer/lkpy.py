@@ -135,18 +135,47 @@ class lkexporter :
                 for row in aprf : 
                     cw.writerow(row)
 
-    def csvclfstats(self) : 
-        statboard, csnames = self._cpon._clfstatsboard, self._cpon.getcsnames()
+    def csvclfscore(self) : 
+        statboard, csnames = self._cpon._clfscoreboard, self._cpon.getcsnames()
         for fl, clflist in enumerate(statboard) : 
-            fn = self.genffn('clfstatsboard', 'csv', fl)
+            fn = self.genffn('clfscoreboard', 'csv', fl)
             with open(fn, 'wb') as f : 
                 cw = csv.writer(f, delimiter = ',')
-                for i, clfstats in enumerate(clflist) : 
-                    clfstats = [x + 1 for x in clfstats]
-                    clfstats.insert(0, csnames[i])
-                    cw.writerow(clfstats)
+                for i, clfscore in enumerate(clflist) : 
+                    clfscore = [x + 1 for x in clfscore]
+                    clfscore.insert(0, csnames[i])
+                    cw.writerow(clfscore)
                 
-        print 'export clfstats complete'
+        print 'export clfscore complete'
+
+    def xlsxclfscore(self) : 
+        scoreboard, csnames = self._cpon._clfscoreboard, self._cpon.getcsnames()
+        wb = xlsxwriter.Workbook(self.genfn('clfscore', 'xlsx'))
+        header = ['[%d]'%i for i, x in enumerate(scoreboard[0][0])]
+        header.insert(0, '')
+        for fl, foldsb in enumerate(scoreboard) : 
+            ws = wb.add_worksheet('fold#%02d'%fl)
+            row, col = 0, 0
+
+            #write header
+            for cell in header : 
+                ws.write(row, col, cell)
+                col += 1
+            row, col = 1, 1
+
+            #write scores
+            for i, clssb in enumerate(foldsb) : 
+                ws.write(row, 0, 'ep_%02d' % i + 1)
+                for cell in clssb : 
+                    ws.write(row, col, cell + 1)
+                    col += 1
+                row += 1
+                col = 1
+
+        #write total percent
+
+        wb.close()
+        pass
 
     def pngoargraph(self) : 
         pass

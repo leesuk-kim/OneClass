@@ -111,7 +111,7 @@ class cpon :
 
     def learn(self) : 
         print 'learning'
-        clfboard, clfstatsboard = [], []
+        clfboard, clfscoreboard = [], []
         self._clfAPRF = []
         for fold in range(self._fmax) : 
             lkep.fold = fold
@@ -123,13 +123,13 @@ class cpon :
 
             fctrdmap = mapctrd(self._cslist, self._fmax)
             self._ctrdmap.append(fctrdmap)
-            #foldclfstats = scoreclf(self.onTesting(fold))
-            #clfstatsboard.append(foldclfstats)
-            #foldclf = boardclf(foldclfstats)
+            foldclfscore = scoreclf(self.onTesting(fold))
+            clfscoreboard.append(foldclfscore)
+            #foldclf = boardclf(foldclfscore)
             #clfboard.append(foldclf)
             #self._clfAPRF.append(self.onOARTesting())
         #self._clfboard = clfboard
-        #self._clfstatsboard = clfstatsboard
+        self._clfscoreboard = clfscoreboard
         pass
 
     def onOARTesting(self) : 
