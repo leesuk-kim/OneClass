@@ -99,14 +99,13 @@ class lkexporter :
         for cell in header : 
             ws.write(row, col, cell)
             col += 1
-        row, col = 1, 0
 
         for line in map : 
+            row += 1
+            col = 0
             for cell in line : 
                 ws.write(row, col, cell)
                 col += 1
-            row += 1
-            col = 0
 
         wb.close()
         pass
@@ -125,6 +124,17 @@ class lkexporter :
                     row.insert(0, tag)
                     cw.writerow(row)
         print 'export clfboard complete'
+
+    def xlsxclfboard(self) : 
+        clfboard, csnames = self._cpon._clfboard, self._cpon.getcsnames()
+        header = csnames[:]
+        header.insert(0,'')
+
+        wb = xlsxwriter.Workbook(self.genfn('clfboard', 'xslx'))
+
+        for fl, board in enumerate(clfboard) : 
+            ws = wb.add_worksheet('fold#%02d'%fl)
+
 
     def csvaprf(self) : 
         aprf = self._cpon._clfAPRF
@@ -161,16 +171,15 @@ class lkexporter :
             for cell in header : 
                 ws.write(row, col, cell)
                 col += 1
-            row, col = 1, 1
 
             #write scores
             for i, clssb in enumerate(foldsb) : 
+                row += 1
+                col = 1
                 ws.write(row, 0, 'ep_%02d' % i + 1)
                 for cell in clssb : 
                     ws.write(row, col, cell + 1)
                     col += 1
-                row += 1
-                col = 1
 
         #write total percent
 
@@ -320,3 +329,7 @@ def plotoar(name, map, idx, logpath) :
     fig.savefig(os.path.join(path, fn))
     pyp.close(fig)
     pass
+
+def worksheetwriteline(row, col, line) : 
+
+    return row, col

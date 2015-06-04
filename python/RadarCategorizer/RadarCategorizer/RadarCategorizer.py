@@ -39,6 +39,7 @@ if __name__ == '__main__' :
     #xprttrainer.csvclfscore()
     #xprttrainer.xlsxctrdcmap()
     xprttrainer.xlsxclfscore()
+    xprttrainer.xlsxclfboard()
     #trainer.learnSVM()
     #xprttrainer.csvsklearn()
     #trainer.learnKNN()
