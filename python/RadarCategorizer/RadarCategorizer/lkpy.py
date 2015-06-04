@@ -2,6 +2,7 @@ import os, csv, numpy
 import matplotlib.pyplot as pyp
 from scipy.stats import beta
 import cppy
+import xlsxwriter
 
 fold = 0
 
@@ -24,6 +25,14 @@ class lkexporter :
         
         return os.path.join(dn, '%s#%02d.%s' % (self._timestamp, fold, fext))
 
+    def genfn(self, filename, fext) : 
+        logpath = self._logpath[:-10] + self._cpon._srcdir + '_' + self._logpath[-10:]
+        if not os.path.exists(logpath) : 
+            os.makedirs(logpath)
+        
+        return os.path.join(logpath, '%s_%s.%s' % (filename, self._timestamp, fext))
+
+
     def csvctrdmap(self) :
         ctrdmap, csnames = self._cpon._ctrdmap, self._cpon.getcsnames()
         header = csnames[:]
@@ -38,6 +47,70 @@ class lkexporter :
                     cw.writerow(row)
         print 'export ctrdmap complete'
 
+    def xlsxctrdcmap(self) : 
+        '''
+        export classification distance map with xlsx extension
+        '''
+        ctrdmap, csnames = self._cpon._ctrdmap, self._cpon.getcsnames()
+        header = csnames[:]
+        header.insert(0,'')
+
+        wb = xlsxwriter.Workbook(self.genfn('ctrdmap', 'xlsx'))
+        
+        for fl, map in enumerate(ctrdmap) :
+            ws = wb.add_worksheet('fold#%d'%(fl))
+            row, col = 0, 0
+            
+            for cell in header : 
+                ws.write(row, col, cell)
+                col += 1
+            row, col = 1, 0
+
+            for r, t in zip(map, csnames) : r.insert(0, t)
+
+            #write header
+            for cell in header : 
+                ws.write(row, col, cell)
+                col += 1
+            #write map
+            for line in map : 
+                col = 0
+                for cell in line : 
+                    ws.write(row, col, cell)
+                    col += 1
+                row += 1
+                pass
+
+            pass
+        tm = zip(*ctrdmap)
+        tm = [zip(*fm) for fm in tm]
+        map = []
+        for cm in tm : 
+            line = []
+            for cl in cm : 
+                if isinstance(cl[0], str) : 
+                    line.append(cl[0])
+                else : 
+                    line.append(sum(cl)/len(cl))
+            map.append(line)
+
+        ws = wb.add_worksheet('average')
+        row, col = 0, 0
+        for cell in header : 
+            ws.write(row, col, cell)
+            col += 1
+        row, col = 1, 0
+
+        for line in map : 
+            for cell in line : 
+                ws.write(row, col, cell)
+                col += 1
+            row += 1
+            col = 0
+
+        wb.close()
+        pass
+
     def csvclfboard(self) : 
         clfboard, csnames = self._cpon._clfboard, self._cpon.getcsnames()
         header = csnames[:]
@@ -48,6 +121,7 @@ class lkexporter :
                 cw = csv.writer(f, delimiter = ',')
                 cw.writerow(header)
                 for row, tag in zip(map, csnames) : 
+                    row = [x if x != 0 else '' for x in row]
                     row.insert(0, tag)
                     cw.writerow(row)
         print 'export clfboard complete'
@@ -73,12 +147,6 @@ class lkexporter :
                     cw.writerow(clfstats)
                 
         print 'export clfstats complete'
-
-    def xlsxclfdtcmap(self) : 
-        '''
-        export classification distance map with xlsx extension
-        '''
-        pass
 
     def pngoargraph(self) : 
         pass

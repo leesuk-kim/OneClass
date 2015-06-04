@@ -15,12 +15,14 @@ from sklearn.svm import SVC
 from sklearn.svm import LinearSVC
 from sklearn import metrics
 from sklearn.neighbors import KNeighborsClassifier
-import copy
+import cppy
+import random
 
 CATArr_INDEX_name = 0
 CATArr_INDEX_TRAIN = 1
 CATArr_INDEX_TEST = 2
 CATArr_INDEX_CAT = 1
+
 
 class cpon : 
     '''
@@ -121,13 +123,13 @@ class cpon :
 
             fctrdmap = mapctrd(self._cslist, self._fmax)
             self._ctrdmap.append(fctrdmap)
-            foldclfstats = scoreclf(self.onTesting(fold))
-            clfstatsboard.append(foldclfstats)
-            foldclf = boardclf(foldclfstats)
-            clfboard.append(foldclf)
-            self._clfAPRF.append(self.onOARTesting())
-        self._clfboard = clfboard
-        self._clfstatsboard = clfstatsboard
+            #foldclfstats = scoreclf(self.onTesting(fold))
+            #clfstatsboard.append(foldclfstats)
+            #foldclf = boardclf(foldclfstats)
+            #clfboard.append(foldclf)
+            #self._clfAPRF.append(self.onOARTesting())
+        #self._clfboard = clfboard
+        #self._clfstatsboard = clfstatsboard
         pass
 
     def onOARTesting(self) : 
@@ -142,37 +144,22 @@ class cpon :
 
             for vcs in self._cslist : 
                 for vd in vcs._vadata : 
-                    #oclostlist = [getNorm(vd, kn._pos, kn._var) for kn in oneKernelList]
-                    #rclostlist = [getNorm(vd, kn._pos, kn._var) for kn in resKernelList]
-                    oplist = [kn.getPval(vd) for kn in oneKernelList]
-                    rplist = [kn.getPval(vd) for kn in resKernelList]
+                    opplist = [kn.postprob(vd) for kn in oneKernelList]
+                    rpplist = [kn.postprob(vd) for kn in resKernelList]
                     
+                    '''
+                    Let compare Beta ppf of one and rest then find largest ppf.
+                    Largest beta ppf indicates of which the class predict. 
+                    '''
+                    opp, rpp = max(opplist), max(rpplist)
 
-                    #oclost, rclost = min(oclostlist), min(rclostlist)
-                    opval = max(oplist)
-                    rpval = max(rplist)
-
-                    #if oclost < rclost : 
-                    #    pn = True
-                    #    tf = True if cs._name is vcs._name else False
-                    #else : 
-                    #    pn = False
-                    #    tf = False if cs._name is vcs._name else True
-                    if opval >= rpval : 
+                    if opp >= rpp : 
                         pn = True
                         tf = True if cs._name is vcs._name else False
                     else : 
                         pn = False
                         tf = False if cs._name is vcs._name else True
 
-                    #if cs._name is vcs._name and oclost < rclost : 
-                    #    tf, pn = True, True
-                    #elif cs._name is vcs._name and oclost > rclost : 
-                    #    tf, pn = False, False
-                    #elif cs._name is not vcs._name and oclost < rclost : 
-                    #    tf, pn = False, True
-                    #elif cs._name is not vcs._name and oclost > rclost : 
-                    #    tf, pn = True, False
                     tfpnlist.append([tf, pn])
                     pass
                 pass
@@ -381,7 +368,9 @@ class cspace :
         #positioning kernel position for kernel size 1
         #if you want to set more kernel, you take method 'dalken(data allocate on kernel)'
         kpos = self._mean
-        self._kslist.append(kspace(kpos, self._trdata, self._name))
+        ks = kspace(self._mean, self._trdata, self._name)
+
+        self._kslist.append(ks)
         pass
 
     def onTesting(self, tck) : 
@@ -392,8 +381,7 @@ class cspace :
         for vd in self._vadata : 
             dlist = []
             for kernel in tck : 
-                #d = getNorm(vd, kernel._mean, kernel._var)
-                d = kernel.getPval(vd)
+                d = kernel.postprob(vd)
                 dlist.append(d)
             dmap.append(dlist)
             pass
@@ -420,19 +408,17 @@ class kspace :
     '''
     def __init__(self, ctrd_pos, trd, name='noname') : 
         self._pos = ctrd_pos
-        #self._Category = scs
-
         ###get statistics : mean and variance
         self._name = name
         self._data = np.array(trd)
         datatr = np.array(zip(*trd))
         self._mean, self._var = [m.mean() for m in datatr], [v.var(ddof=1) for v in datatr]
         ###get statistics ends
-
+        self.dimlen = len(trd[0])
+        self.rangedimlen = range(self.dimlen)
         self._ybp = self.discriminant()
         
         #IGNORE
-        #ecdf = [float(x) / float(lentr) for x in range(1, lentr + 1)]
         #betaCDF = beta.cdf(y, y_beta_a, y_beta_b)
         #betaPDF = beta.pdf(y, y_beta_a, y_beta_b)
                 
@@ -442,119 +428,59 @@ class kspace :
         #lkep.plotBetaPDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._name)
         #lkep.plotBetaCDF(trNorm_fs_Beta_a, trNorm_fs_Beta_b, rCat._name)
         pass
-
+    
     def discriminant(self) : 
-        sigma_weight_cddt = [2 ** (i - 2) for i in range(5)]
-        nmnt = [0.]
-        trlen = len(self._data)
-        flag_swmin = False
-        flag_swmax = False
-        ccdt_i, pval, sign = 1., 0., 1
-        ecdf = [float(x) / float(trlen) for x in range(1, trlen + 1)]
+        """
+        discriminant function 
+        paramters
+        ---------
 
-        dimlen = len(self._data[0])
-        candi = 3
-        candi_half = int(candi/2)
-        rangedimlen = range(dimlen)
-        swc_idx_map = [[(x/(3**y))%3 for y in rangedimlen] for x in range(candi ** dimlen)]
-        swc_map = [[2 ** (x - candi_half) for x in v] for v in swc_idx_map]
+        returns
+        -------
+        ybp : ybp object
+        It has p-value, D, Y, alpha and beta of beta parameter, eCDF, beta CDF
+        """
+        trlen = len(self._data)
+        #swc_idx_map = [[(x/(candi**y))%candi for y in rangedimlen] for x in range(candi ** dimlen)]
+        #swc_map = [[2 ** (x - candi_half) for x in v] for v in swc_idx_map]
+        #swc_map = getSWCmap(self.dimlen)
+        ecdf = [float(x) / float(trlen) for x in range(1, trlen + 1)]
+        nmnt = [0.]
+        mct = 0
+
+        #step 1. find MSD(Most Significant Dimension)
+        len_nomi = 5
+        len_dim = self.dimlen
+        rangedimlen = self.rangedimlen
+
+        for msd in rangedimlen : 
+
+            pass
         
-        for swc in swc_map : 
+        #for swc in swc_map : 
+        while True : 
+            mct += 1
+            swc = mcswc(self.dimlen)
             bcdfparams = self.getbcdf_pval_swc(swc)
             if not isinstance(bcdfparams, ybp) : 
                 continue
 
-            #Y = [self.kernelizeisw(x, swc) for x in self._data]
-
-            #Y.sort()
-            #y_m = np.mean(Y)
-            #y_v = np.var(Y, ddof = 1)
-            #if math.isnan(y_v) or y_v == 0 : 
-            #    continue
-
-            #ba = y_m ** 2 * ((1 - y_m) / y_v - 1 / y_m)
-            #bb = ba * (1 - y_m) / y_m
-#            bafit, bbfit, loc, scal = beta.fit(Y, ba, bb)
-            #betacdf = beta.cdf(Y, ba, bb)
-            #betacdf = beta.cdf(Y, bafit, bbfit)
-                    
-            #Y = featureScaling(Y)
-            #d, pval = scistats.kstest(Y, lambda cdf : betacdf)
-            if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.05 : 
-                print swc
+            #if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.9 : 
+            if True : 
+                #print 'Monte-carlo try : %d' % mct
                 nmnt = [bcdfparams._pval, bcdfparams._d, bcdfparams._Y, swc, bcdfparams._betaA, bcdfparams._betaB, ecdf, bcdfparams._betaCDF]
                 #nmnt = [pval, d, Y, swc, bafit, bbfit, ecdf, betacdf]
-            pass        
-        
-        return ybp(nmnt[0], nmnt[1], nmnt[2], nmnt[3], nmnt[4], nmnt[5], nmnt[6], nmnt[7])
-        
-        while True :
-            ccdt_i += 1.
-            ccdt = sign * ccdt_i if flag_swmax else (-1 if ccdt_i % 2 == 0 else 1) * int(ccdt_i * 0.5)
-            sigma_weight = 1 / float(ccdt) if ccdt < 0 else ccdt#2 ** ccdt#
-
-            Y = [self.kernelize(x, sigma_weight) for x in self._data]
-            Y.sort()
-            y_m = np.mean(Y)
-            y_v = np.var(Y, ddof = 1)
-            if math.isnan(y_v) or y_v == 0 : 
-                continue
-
-            ba = y_m ** 2 * ((1 - y_m) / y_v - 1 / y_m)
-            bb = ba * (1 - y_m) / y_m
-            bafit, bbfit, loc, scal = beta.fit(Y, ba, bb)
-            betacdf = beta.cdf(Y, bafit, bbfit)
-                    
-            #Y = featureScaling(Y)
-            d, pval = scistats.kstest(Y, lambda cdf : betacdf)
-
-            if nmnt[0] < pval and not flag_swmax : 
-                nmnt = [pval, d, Y, sigma_weight, bafit, bbfit, ecdf, betacdf]
-                flag_swmax = True
-                sign = -1 if ccdt < 0 else 1
-                ccdt_i = int(ccdt_i * 0.5)
-            elif flag_swmax : 
-                if nmnt[0] >= pval or math.isnan(pval) or ccdt_i > 16 : 
-                    break
-                else : 
-                    nmnt = [pval, d, Y, sigma_weight, bafit, bbfit, ecdf, betacdf]
-            elif ccdt_i > 50 : 
-                nmnt = [pval, d, Y, sigma_weight, bafit, bbfit, ecdf, betacdf]
-                print self._name + ' p-value = 0'
-                break
+                break#gee chan a yo
             pass
-        #if nmnt[0] < 0.005 : 
-        #    print self._name + '-> pval reject'
-        lkep.plotKStest(nmnt[0], nmnt[2], nmnt[4], nmnt[5], nmnt[6], nmnt[7], self._name)
+        
+        #lkep.plotKStest(nmnt[0], nmnt[2], nmnt[4], nmnt[5], nmnt[6], nmnt[7], 'mc_'+self._name)
         return ybp(nmnt[0], nmnt[1], nmnt[2], nmnt[3], nmnt[4], nmnt[5], nmnt[6], nmnt[7])
 
-    def getPval(self, valid) : 
-        y = self.kernelize(valid, self._ybp._sw)
+
+    def postprob(self, valid) : 
+        y = self.kernelizeisw(valid, self._ybp._sw)
         pval = self._ybp.mapy2beta(y)
         return pval
-
-    def kernelize(self, X, sw = 1) : 
-        '''
-        <parameter>
-        x : [role]input pattern [type] array-like
-        sw : [role]weight list for sigma on each dimensions [type] float, default=1
-        <issue> this method use one sigma weight for every dimension. 
-        in other word, every dimension takes same sigma weight.
-        How to find proper sigma weight for each dimension?
-        <return>
-        result of the discriminant function h(x)
-        '''
-        h_x = 0.#output of kernel
-        dsquare = 0.#exponential parameter for euler's constant. it is square of d.
-        xmv = zip(X, self._mean, self._var)
-        #temp = [((x - m) ** 2) / ((sw ** 2) * v) for x, m, v in xmv]
-        #dsq = sum(temp)
-        #dsquare = 0.5 * dsq
-        dsquare = 0.5 * reduce(lambda p, q : p + q, [((x - m) ** 2) / ((sw ** 2) * v) for x, m, v in xmv])
-                
-        h_x = math.exp(-1 * dsquare)
-        
-        return h_x
 
     def kernelizeisw(self, X, sw) :
         """
@@ -582,7 +508,7 @@ class kspace :
         Y : 
         ba : 
         bb : 
-        bcdf
+        bcdf : beta.cdf
         """
         Y = [self.kernelizeisw(x, swc) for x in self._data]
 
@@ -599,17 +525,17 @@ class kspace :
         #Y = featureScaling(Y)
         d, pval = scistats.kstest(Y, lambda cdf : bcdf)
         
-        params = ybp(pval, d, Y, swc, ba, bb, 0, bcdf)
+        params = ybp(pval, d, Y, [x for x in swc], ba, bb, 0, bcdf)
         return params
 
     pass
 
 def getNorm(row, mean, var) : 
-    '''ldfnhd;hnda;lkhnd;obndfa;lgndf;lgknndnfg;lan;ln1!!!!'''
-    d = 0.
+    """
+    Euclidean norm calculator
+
+    """
     d = reduce(lambda x, y : x + y , [(i - m) ** 2 / v for i, m, v in zip(row, mean, var)])
-    #for i, m, v in zip(row, mean, var) : 
-    #    d += (i - m) ** 2 / v
     return d ** 0.5
 
 def scoreclf(distancemap) : 
@@ -717,6 +643,7 @@ class ybp :
         pair of beta CDF : Float 
             Returns a float.
         """
+        a = beta.cdf(y, self._betaA, self._betaB)
         i = 0
         if y < self._ymin : 
             return 0
@@ -727,11 +654,41 @@ class ybp :
                 if y < z : 
                     i = self._Y.index(z)
                     break
-        return self._betaCDF[i]
+        return a
+        #return self._betaCDF[i]
     pass
 
 def featureScaling(arr) : 
+    """
+    feature scaling
+    parameters
+    ----------
+    arr : numeric array-like
+
+    returns
+    -------
+    arr : numeric array-like
+    feature scaled array
+    """
     xmin, xmax = min(arr), max(arr)
     if xmax != 0 and xmax - xmin != 0 : 
         arr = [(x - xmin) / (xmax - xmin) for x in arr]
     return arr
+
+
+def mcswc(dimlen) : 
+    """
+    Monte-Carlo Sigma Weight Candidator.
+
+    parameters
+    ----------
+    dimlen : int
+    length of dimension
+    
+    returns
+    -------
+    swc : Float array-like.
+    candidated sigma weights
+    """
+    swc = [2 ** (random.randrange(0, 3) - 1) for x in range(dimlen)]
+    return swc

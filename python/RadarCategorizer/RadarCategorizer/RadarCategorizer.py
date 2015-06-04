@@ -37,6 +37,7 @@ if __name__ == '__main__' :
     #xprttrainer.csvctrdmap()
     #xprttrainer.csvclfboard()
     #xprttrainer.csvclfstats()
+    xprttrainer.xlsxctrdcmap()
 
     #trainer.learnSVM()
     #xprttrainer.csvsklearn()
