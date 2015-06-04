@@ -33,11 +33,8 @@ if __name__ == '__main__' :
             trainer.registcs(cs)
 
     trainer.learn()
-    #xprttrainer.csvaprf()
-    #xprttrainer.csvctrdmap()
-    #xprttrainer.csvclfboard()
-    #xprttrainer.csvclfscore()
-    #xprttrainer.xlsxctrdcmap()
+    xprttrainer.csvaprf()
+    xprttrainer.xlsxctrdcmap()
     xprttrainer.xlsxclfscore()
     xprttrainer.xlsxclfboard()
     #trainer.learnSVM()

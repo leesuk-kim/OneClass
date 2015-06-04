@@ -39,7 +39,7 @@ class cpon :
         self._fmax = fold
         self._kmax = 1
         self._cslist = []
-        self._ctrdmap = []
+        self._kcdboard = []
         '''
         a map consist of distance between each centroid of class
         '''
@@ -116,14 +116,14 @@ class cpon :
                 cs.onFolding(fold)
                 cs.onTraining()
 
-            fctrdmap = mapctrd(self._cslist, self._fmax)
-            self._ctrdmap.append(fctrdmap)
+            fkcdboard = mapctrd(self._cslist, self._fmax)
+            self._kcdboard.append(fkcdboard)
             foldclfscore = scoreclf(self.onTesting(fold))
             clfscoreboard.append(foldclfscore)
-            #foldclf = boardclf(foldclfscore)
-            #clfboard.append(foldclf)
-            #self._clfAPRF.append(self.onOARTesting())
-        #self._clfboard = clfboard
+            foldclf = boardclf(foldclfscore)
+            clfboard.append(foldclf)
+            self._clfAPRF.append(self.onOARTesting())
+        self._clfboard = clfboard
         self._clfscoreboard = clfscoreboard
         pass
 
@@ -171,7 +171,7 @@ class cpon :
         for i, tcs in enumerate(self._cslist) : 
             dmap = []
             for vcs in self._cslist : 
-                kn = vcs.getKernels()
+                kn = vcs._kslist
                 dlist = tcs.onTesting(kn)
                 dmap.append(dlist)
             dmlist.append(dmap)
@@ -367,15 +367,6 @@ class cspace :
             pass
         return dmap
 
-    def getTrainData(self) : 
-        return self._trdata
-
-    def getValidData(self) : 
-        return self._vadata
-
-    def getKernels(self) : 
-        return self._kslist
-
     def initSklearnParam(self, data, name) : 
         self._fitdata = data
         self._fitname = name
@@ -509,6 +500,54 @@ class kspace :
         return params
 
     pass
+    
+class p3c : 
+    """
+    Posterior Probability Parameters of Class
+    """
+    def __init__(self, pval, d, Y, sw, ba, bb, ecdf, bcdf):
+        self._pval = pval
+        self._d = d
+        self._Y = Y
+        self._ymin = min(Y)
+        self._ymax = max(Y)
+        self._sw = sw#sigma weight
+        self._betaA = ba
+        self._betaB = bb
+        self._ecdf = ecdf
+        self._betaCDF = bcdf
+
+    def mapy2beta(self, y) : 
+        """
+        mapping y to beta
+        
+        parameters
+        ----------
+        self : class object
+            hypothesis criteria
+
+        y : array_like
+            Input array
+
+        returns
+        -------
+        pair of beta CDF : Float 
+            Returns a float.
+        """
+        a = beta.cdf(y, self._betaA, self._betaB)
+        i = 0
+        if y < self._ymin : 
+            return 0
+        elif y > self._ymax : 
+            return 1
+        else : 
+            for i, z in enumerate(self._Y) : 
+                if y < z : 
+                    i = self._Y.index(z)
+                    break
+        return a
+        #return self._betaCDF[i]
+    pass
 
 def getNorm(row, mean, var) : 
     """
@@ -592,51 +631,6 @@ def getAPRF(tfpnlist) :
     fme = (2 * pre * rec) / (pre + rec)
 
     return acc, pre, rec, fme
-    
-class p3c : 
-    def __init__(self, pval, d, Y, sw, ba, bb, ecdf, bcdf):
-        self._pval = pval
-        self._d = d
-        self._Y = Y
-        self._ymin = min(Y)
-        self._ymax = max(Y)
-        self._sw = sw#sigma weight
-        self._betaA = ba
-        self._betaB = bb
-        self._ecdf = ecdf
-        self._betaCDF = bcdf
-
-    def mapy2beta(self, y) : 
-        """
-        mapping y to beta
-        
-        parameters
-        ----------
-        self : class object
-            hypothesis criteria
-
-        y : array_like
-            Input array
-
-        returns
-        -------
-        pair of beta CDF : Float 
-            Returns a float.
-        """
-        a = beta.cdf(y, self._betaA, self._betaB)
-        i = 0
-        if y < self._ymin : 
-            return 0
-        elif y > self._ymax : 
-            return 1
-        else : 
-            for i, z in enumerate(self._Y) : 
-                if y < z : 
-                    i = self._Y.index(z)
-                    break
-        return a
-        #return self._betaCDF[i]
-    pass
 
 def featureScaling(arr) : 
     """

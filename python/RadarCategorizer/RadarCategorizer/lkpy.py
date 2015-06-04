@@ -33,79 +33,48 @@ class lkexporter :
         return os.path.join(logpath, '%s_%s.%s' % (filename, self._timestamp, fext))
 
 
-    def csvctrdmap(self) :
-        ctrdmap, csnames = self._cpon._ctrdmap, self._cpon.getcsnames()
+    def csvkcdboard(self) :
+        kcdboard, csnames = self._cpon._kcdboard, self._cpon.getcsnames()
         header = csnames[:]
         header.insert(0,'')
-        for fl, map in enumerate(ctrdmap) :
-            fn = self.genffn('ctrdmap', 'csv', fl)
+        for fl, map in enumerate(kcdboard) :
+            fn = self.genffn('kcdboard', 'csv', fl)
             with open(fn, 'wb') as f : 
                 cw = csv.writer(f, delimiter=',')
                 cw.writerow(header)
                 for row, tag in zip(map, csnames) : 
                     row.insert(0, tag)
                     cw.writerow(row)
-        print 'export ctrdmap complete'
+        print 'export kcdboard complete'
 
     def xlsxctrdcmap(self) : 
         '''
         export classification distance map with xlsx extension
         '''
-        ctrdmap, csnames = self._cpon._ctrdmap, self._cpon.getcsnames()
+        kcdboard, csnames = self._cpon._kcdboard, self._cpon.getcsnames()
         header = csnames[:]
         header.insert(0,'')
 
-        wb = xlsxwriter.Workbook(self.genfn('ctrdmap', 'xlsx'))
-        
-        for fl, map in enumerate(ctrdmap) :
+        wb = xlsxwriter.Workbook(self.genfn('kcdboard', 'xlsx'))
+        lenfold = len(kcdboard)
+        totalmap = [[sum(y) / lenfold for y in zip(*x)] for x in zip(*kcdboard)]
+        for fl, map in enumerate(kcdboard) :
+            
             ws = wb.add_worksheet('fold#%d'%(fl))
             row, col = 0, 0
-            
-            for cell in header : 
-                ws.write(row, col, cell)
-                col += 1
-            row, col = 1, 0
-
-            for r, t in zip(map, csnames) : r.insert(0, t)
-
             #write header
-            for cell in header : 
-                ws.write(row, col, cell)
-                col += 1
+            row, col = worksheetwriteline(ws, row, col, header)
             #write map
-            for line in map : 
-                col = 0
-                for cell in line : 
-                    ws.write(row, col, cell)
-                    col += 1
-                row += 1
-                pass
-
-            pass
-        tm = zip(*ctrdmap)
-        tm = [zip(*fm) for fm in tm]
-        map = []
-        for cm in tm : 
-            line = []
-            for cl in cm : 
-                if isinstance(cl[0], str) : 
-                    line.append(cl[0])
-                else : 
-                    line.append(sum(cl)/len(cl))
-            map.append(line)
+            for line, tag in zip(map, csnames) : 
+                line.insert(0, tag)
+                row, col = worksheetwriteline(ws, row, col, line)
 
         ws = wb.add_worksheet('average')
         row, col = 0, 0
-        for cell in header : 
-            ws.write(row, col, cell)
-            col += 1
-
-        for line in map : 
-            row += 1
-            col = 0
-            for cell in line : 
-                ws.write(row, col, cell)
-                col += 1
+        row, col = worksheetwriteline(ws, row, col, header)
+        for line, tag in zip(totalmap, csnames) : 
+            line.insert(0, tag)
+            row, col = worksheetwriteline(ws, row, col, line)
 
         wb.close()
         pass
@@ -130,15 +99,36 @@ class lkexporter :
         header = csnames[:]
         header.insert(0,'')
 
-        wb = xlsxwriter.Workbook(self.genfn('clfboard', 'xslx'))
+        wb = xlsxwriter.Workbook(self.genfn('clfboard', 'xlsx'))
+
+        totalboard = [[sum(y) for y in zip(*x)] for x in zip(*clfboard)]
 
         for fl, board in enumerate(clfboard) : 
+            row, col = 0, 0
             ws = wb.add_worksheet('fold#%02d'%fl)
+            row, col = worksheetwriteline(ws, row, col, header)
 
+            for tag, line in zip(csnames, board) : 
+                col = 0
+                ws.write(row, col, tag)
+                col += 1
+                line = ['' if x == 0 else x for x in line]
+                row, col = worksheetwriteline(ws, row, col, line)
+
+        ws = wb.add_worksheet('average')
+        row, col = 0, 0
+        row, col = worksheetwriteline(ws, row, col, header)
+        for line, tag in zip(totalboard, csnames) : 
+            line = ['' if x == 0 else x for x in line]
+            line.insert(0, tag)
+            row, col = worksheetwriteline(ws, row, col, line)
+                        
+        wb.close()
+        pass
 
     def csvaprf(self) : 
         aprf = self._cpon._clfAPRF
-        fn = self.genffn('aprf', 'csv', 0)
+        fn = self.genfn('aprf', 'csv')
         with open(fn, 'wb') as f : 
                 cw = csv.writer(f, delimiter = ',')
                 cw.writerow(['acc','pre','rec','f1m'])
@@ -168,20 +158,14 @@ class lkexporter :
             row, col = 0, 0
 
             #write header
-            for cell in header : 
-                ws.write(row, col, cell)
-                col += 1
+            row, col = worksheetwriteline(ws, row, col, header)
 
             #write scores
-            for i, clssb in enumerate(foldsb) : 
-                row += 1
-                col = 1
-                ws.write(row, 0, 'ep_%02d' % i + 1)
-                for cell in clssb : 
-                    ws.write(row, col, cell + 1)
-                    col += 1
-
-        #write total percent
+            for line, tag in zip(foldsb, csnames) : 
+                ws.write(row, col, tag)
+                col += 1
+                line = [x + 1 for x in line]
+                row, col = worksheetwriteline(ws, row, col, line)
 
         wb.close()
         pass
@@ -330,6 +314,14 @@ def plotoar(name, map, idx, logpath) :
     pyp.close(fig)
     pass
 
-def worksheetwriteline(row, col, line) : 
+def worksheetwriteline(worksheet, row, col, line) : 
+    """
+    write line
+    """
+    for cell in line : 
+        worksheet.write(row, col, cell)
+        col += 1
+    row += 1
+    col = 0
 
     return row, col
