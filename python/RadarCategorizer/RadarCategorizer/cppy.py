@@ -97,17 +97,12 @@ class cpon :
 
     def getcsnames(self) : 
         return [cs._name for cs in self._cslist]
-        
-    def getKnVol(self):
-        return self._kmax
+
     def setKnVol(self, knvol) : 
         '''if it has fixed number of kernel, then put number in.
         if grow is true, it makes kernel volmes most effective.
         '''
         self._kmax = knvol
-
-    def getcslist(self, idx) : 
-        return self._cslist[idx]
 
     def learn(self) : 
         print 'learning'
@@ -299,21 +294,6 @@ class cpon :
             pass
 
         return plist
-
-    def getfitname(self, csname) : 
-        cs = filter(lambda x : x._name is csname, self._cslist)
-        targetlist = []
-        for cs in self._cslist : 
-            targetlist.extend([1 if cs._name is csname else 0 for x in cs._trdata])
-        return targetlist
-
-    def getfitdata(self, csname) : 
-        cs = filter(lambda x : x._name is csname, self._cslist)
-        data = [x for x in cs[0]._trdata]
-        for cs in self._cslist : 
-            if cs._name is not csname : 
-                data.extend(cs._trdata)
-        return data
     pass
 
 
@@ -416,7 +396,7 @@ class kspace :
         ###get statistics ends
         self.dimlen = len(trd[0])
         self.rangedimlen = range(self.dimlen)
-        self._ybp = self.discriminant()
+        self._p3c = self.discriminant()
         
         #IGNORE
         #betaCDF = beta.cdf(y, y_beta_a, y_beta_b)
@@ -437,7 +417,7 @@ class kspace :
 
         returns
         -------
-        ybp : ybp object
+        p3c : p3c object
         It has p-value, D, Y, alpha and beta of beta parameter, eCDF, beta CDF
         """
         trlen = len(self._data)
@@ -462,7 +442,7 @@ class kspace :
             mct += 1
             swc = mcswc(self.dimlen)
             bcdfparams = self.getbcdf_pval_swc(swc)
-            if not isinstance(bcdfparams, ybp) : 
+            if not isinstance(bcdfparams, p3c) : 
                 continue
 
             #if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.9 : 
@@ -474,12 +454,12 @@ class kspace :
             pass
         
         #lkep.plotKStest(nmnt[0], nmnt[2], nmnt[4], nmnt[5], nmnt[6], nmnt[7], 'mc_'+self._name)
-        return ybp(nmnt[0], nmnt[1], nmnt[2], nmnt[3], nmnt[4], nmnt[5], nmnt[6], nmnt[7])
+        return p3c(nmnt[0], nmnt[1], nmnt[2], nmnt[3], nmnt[4], nmnt[5], nmnt[6], nmnt[7])
 
 
     def postprob(self, valid) : 
-        y = self.kernelizeisw(valid, self._ybp._sw)
-        pval = self._ybp.mapy2beta(y)
+        y = self.kernelizeisw(valid, self._p3c._sw)
+        pval = self._p3c.mapy2beta(y)
         return pval
 
     def kernelizeisw(self, X, sw) :
@@ -525,7 +505,7 @@ class kspace :
         #Y = featureScaling(Y)
         d, pval = scistats.kstest(Y, lambda cdf : bcdf)
         
-        params = ybp(pval, d, Y, [x for x in swc], ba, bb, 0, bcdf)
+        params = p3c(pval, d, Y, [x for x in swc], ba, bb, 0, bcdf)
         return params
 
     pass
@@ -613,7 +593,7 @@ def getAPRF(tfpnlist) :
 
     return acc, pre, rec, fme
     
-class ybp : 
+class p3c : 
     def __init__(self, pval, d, Y, sw, ba, bb, ecdf, bcdf):
         self._pval = pval
         self._d = d
