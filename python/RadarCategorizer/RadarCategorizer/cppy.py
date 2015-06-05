@@ -405,7 +405,7 @@ class kspace :
         discriminant function 
         paramters
         ---------
-
+        3435
         returns
         -------
         p3c : p3c object
@@ -436,12 +436,12 @@ class kspace :
             if not isinstance(bcdfparams, p3c) : 
                 continue
 
-            #if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.9 : 
-            if True : 
-                #print 'Monte-carlo try : %d' % mct
+            if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.9 : #0.9 is similiar to 0.99
+            #if True : 
+                print 'Monte-carlo try : %d' % mct
                 nmnt = [bcdfparams._pval, bcdfparams._d, bcdfparams._Y, swc, bcdfparams._betaA, bcdfparams._betaB, ecdf, bcdfparams._betaCDF]
                 #nmnt = [pval, d, Y, swc, bafit, bbfit, ecdf, betacdf]
-                break#gee chan a yo
+                break#Monte-Carlo
             pass
         
         #lkep.plotKStest(nmnt[0], nmnt[2], nmnt[4], nmnt[5], nmnt[6], nmnt[7], 'mc_'+self._name)

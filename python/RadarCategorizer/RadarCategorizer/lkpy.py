@@ -134,6 +134,8 @@ class lkexporter :
                 cw.writerow(['acc','pre','rec','f1m'])
                 for row in aprf : 
                     cw.writerow(row)
+                row = [sum(attr)/len(attr) for attr in zip(*aprf)]
+                cw.writerow(row)
 
     def csvclfscore(self) : 
         statboard, csnames = self._cpon._clfscoreboard, self._cpon.getcsnames()
