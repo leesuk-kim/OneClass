@@ -272,8 +272,9 @@ class cpon :
         plist = []
         
         clf = KNeighborsClassifier(weights='distance')
+        knnscoreboard = []
         for tcs in self._cslist : 
-            print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>knn testing'
+            #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>knn testing'
             data = [[y for y in x] for x in tcs._fitdata]
             name = [x for x in tcs._fitname]
             clf.fit(data, name)
@@ -291,8 +292,9 @@ class cpon :
             plist.append([acc, pre, rec, f1m])
             #print '[%02d]%s=>%lf, %lf, %lf, %lf'%(fold, tcs._name, acc, pre, rec, f1m)
             #print aprf
+            knnscoreboard.append(pred)
             pass
-
+        self._knnscoreboard = knnscoreboard
         return plist
     pass
 

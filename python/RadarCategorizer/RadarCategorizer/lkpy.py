@@ -151,7 +151,7 @@ class lkexporter :
         print 'export clfscore complete'
 
     def xlsxclfscore(self) : 
-        scoreboard, csnames = self._cpon._clfscoreboard, self._cpon.getcsnames()
+        scoreboard, csnames = self._cpon._knnscoreboard, self._cpon.getcsnames()
         wb = xlsxwriter.Workbook(self.genfn('clfscore', 'xlsx'))
         header = ['[%d]'%i for i, x in enumerate(scoreboard[0][0])]
         header.insert(0, '')
@@ -184,6 +184,10 @@ class lkexporter :
                     cw.writerow(['acc','pre','rec','f1m'])
                     for row in map : 
                         cw.writerow(row)
+
+    def xlsxknnsb(self) : 
+
+        pass
 
 def plotPDF(vec_x, figname = 'noname', plotnum = 20) : 
     '''bons-fold PDF plot(histogram)'''

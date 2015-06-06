@@ -32,14 +32,16 @@ if __name__ == '__main__' :
             cs = trainer.csfactory(name, srcdata)
             trainer.registcs(cs)
 
-    trainer.learn()
-    xprttrainer.csvaprf()
-    xprttrainer.xlsxctrdcmap()
-    xprttrainer.xlsxclfscore()
-    xprttrainer.xlsxclfboard()
+    #trainer.learn()
+    #xprttrainer.csvaprf()
+    #xprttrainer.xlsxctrdcmap()
+    #xprttrainer.xlsxclfscore()
+    #xprttrainer.xlsxclfboard()
     #trainer.learnSVM()
     #xprttrainer.csvsklearn()
-    #trainer.learnKNN()
-    #xprttrainer.csvsklearn()
+    trainer.learnKNN()
+    xprttrainer.csvsklearn()
+    xprttrainer.xlsxknnsb()
     #report = trainer.learnSVM()
+    print trainer._knnscoreboard
     pass
