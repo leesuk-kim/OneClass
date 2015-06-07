@@ -344,6 +344,7 @@ class cspace :
         self._trdata = trdata
         self._vadata = vadata
         self._fitdata = None
+        self.ctrddrt()
         pass
 
     def onTraining(self) : 
@@ -372,6 +373,63 @@ class cspace :
     def initSklearnParam(self, data, name) : 
         self._fitdata = data
         self._fitname = name
+        pass
+
+    def ctrddrt(self, bins = 2, peaks = 2) :
+        """
+        set centroid direction 
+        peaks : int.
+        number of modals. if you need bimodal which means you need two kernels, then peaks are 2
+        """
+        dimdata = zip(*self._trdata)
+        #1.get min and max of every dimension
+        minlist = [min(x) for x in dimdata]
+        maxlist = [max(x) for x in dimdata]
+        dmlist = self._mean
+        dvlist = self._var
+
+        dimpeaks = []
+        for dimlist, dm, dv in zip(dimdata, dmlist, dvlist) : 
+            inc, dec = False, False
+            bound = False
+            y = [x for x in dimlist]
+            leny = float(len(y))
+            y.sort()
+            miny, maxy = y[0], y[-1]
+            #fsy = 
+            y.sort()
+            buffer, lenbuffer, pv = [], 0., 0.
+            peaks = []
+            for dim in y : 
+                buffer.append(dim)
+                lenbuffer += 1.
+                if lenbuffer > 29 : 
+                    m = sum(buffer) / lenbuffer
+                    v = sum([0 if x == m else (x - m)**2 for x in buffer]) / lenbuffer
+                    if pv > v : 
+                        dec = True
+                    elif dec and pv < v : 
+                        peaks.append(buffer[:-1])
+                        buffer, m, v, dec, lenbuffer = [buffer[-1]], 0, 0, False, 0
+                    pv = v
+            peaks.append(buffer)
+            dimpeaks.append(peaks)
+            pass
+        lenpeaks = reduce(lambda x, y : x * y, [len(k) for k in dimpeaks])
+                
+            
+        #chunking data on same variance
+        chunks = []
+        
+
+        #get Probability Cumulative Distribution Function
+        
+        
+        #get priority table sorted by variance
+        varlist = [[i, x] for i, x in enumerate(self._var)]
+        varlist.sort(key=lambda x : x[1])#sort by var in order to increase
+
+        # 
         pass
     pass
 
@@ -668,3 +726,44 @@ def mcswc(dimlen) :
     """
     swc = [2 ** (random.randrange(0, 3) - 1) for x in range(dimlen)]
     return swc
+
+def pcdf(a, bins = 10) : 
+    """
+    Probability Cumulative Distribution Function
+    parameters
+    ----------
+    list : array-like
+    bins : int or sequence of scalars, optional
+    If bins is an int, it defines the number of equal-width bins 
+    in the given range (10, by default). If bins is a sequence, 
+    it defines the bin edges, including the rightmost edge, 
+    allowing for non-uniform bin widths.
+
+    returns
+    -------
+    CDF : array-like
+    """
+    cdfa = range(len(a))
+    lena = len(a)
+    y = [x for x in a]
+    y.sort()
+    binlist = []
+
+    if isinstance(bins, int) : 
+        
+        return binlist
+    elif isinstance(bins, list) : 
+        pass
+
+def chunk(a, bins) : 
+    lena = len(a)
+    ratio = float(lena) / float(bins)
+    can = []
+    
+    for i in range(bins) : 
+        start = int(math.ceil(i * ratio))
+        end = int(math.ceil((i + 1) * ratio))
+        bin = a[start : end]
+        can.append(bin)
+
+    return can
