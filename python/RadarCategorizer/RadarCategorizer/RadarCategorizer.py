@@ -40,8 +40,9 @@ if __name__ == '__main__' :
     #trainer.learnSVM()
     #xprttrainer.csvsklearn()
     trainer.learnKNN()
-    xprttrainer.csvsklearn()
-    xprttrainer.xlsxknnsb()
+    xprttrainer.csvaprf()
+    #xprttrainer.xslxsklearn()
+    #xprttrainer.xlsxknnsb()
     #report = trainer.learnSVM()
-    print trainer._knnscoreboard
+    #print trainer._knnscoreboard
     pass

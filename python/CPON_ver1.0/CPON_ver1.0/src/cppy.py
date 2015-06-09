@@ -39,7 +39,7 @@ class cpon :
         self._fmax = fold
         self._kmax = 1
         self._cslist = []
-        self._ctrdmap = []
+        self._kcdboard = []
         '''
         a map consist of distance between each centroid of class
         '''
@@ -97,17 +97,12 @@ class cpon :
 
     def getcsnames(self) : 
         return [cs._name for cs in self._cslist]
-        
-    def getKnVol(self):
-        return self._kmax
+
     def setKnVol(self, knvol) : 
         '''if it has fixed number of kernel, then put number in.
         if grow is true, it makes kernel volmes most effective.
         '''
         self._kmax = knvol
-
-    def getcslist(self, idx) : 
-        return self._cslist[idx]
 
     def learn(self) : 
         print 'learning'
@@ -121,14 +116,14 @@ class cpon :
                 cs.onFolding(fold)
                 cs.onTraining()
 
-            fctrdmap = mapctrd(self._cslist, self._fmax)
-            self._ctrdmap.append(fctrdmap)
+            fkcdboard = mapctrd(self._cslist, self._fmax)
+            self._kcdboard.append(fkcdboard)
             foldclfscore = scoreclf(self.onTesting(fold))
             clfscoreboard.append(foldclfscore)
-            #foldclf = boardclf(foldclfscore)
-            #clfboard.append(foldclf)
-            #self._clfAPRF.append(self.onOARTesting())
-        #self._clfboard = clfboard
+            foldclf = boardclf(foldclfscore)
+            clfboard.append(foldclf)
+            self._clfAPRF.append(self.onOARTesting())
+        self._clfboard = clfboard
         self._clfscoreboard = clfscoreboard
         pass
 
@@ -137,11 +132,12 @@ class cpon :
         stats = []
         totalvaliddatalen = reduce(lambda x, y : x + y , [len(cs._vadata) for cs in self._cslist])
         tfpnlist = []
-
+        clstfpntable = []
+        emr = 0
         for i, cs in enumerate(self._cslist) : 
             resKernelList = self.getRestKernels(cs._name)
             oneKernelList = cs._kslist
-
+            clstfpnlist = []
             for vcs in self._cslist : 
                 for vd in vcs._vadata : 
                     opplist = [kn.postprob(vd) for kn in oneKernelList]
@@ -152,19 +148,26 @@ class cpon :
                     Largest beta ppf indicates of which the class predict. 
                     '''
                     opp, rpp = max(opplist), max(rpplist)
-
+                    
                     if opp >= rpp : 
                         pn = True
                         tf = True if cs._name is vcs._name else False
+                        #if tf : 
+                        #    emr += 1
                     else : 
                         pn = False
                         tf = False if cs._name is vcs._name else True
-
                     tfpnlist.append([tf, pn])
+                    clstfpnlist.append([tf, pn])
                     pass
                 pass
+            clstfpntable.append(clstfpnlist)
             pass
+        #print 'emr=%d'%emr
         stats = getAPRF(tfpnlist)
+        clsstatstable = []
+        for clstfpn in clstfpntable : 
+            clsstatstable.append(getAPRF(clstfpn))
         return stats
 
     def onTesting(self, fold) : 
@@ -176,7 +179,7 @@ class cpon :
         for i, tcs in enumerate(self._cslist) : 
             dmap = []
             for vcs in self._cslist : 
-                kn = vcs.getKernels()
+                kn = vcs._kslist
                 dlist = tcs.onTesting(kn)
                 dmap.append(dlist)
             dmlist.append(dmap)
@@ -214,6 +217,7 @@ class cpon :
                 cs.initSklearnParam(ffdata[fold], ffname[fold][i])
                 pass
             pred = self.onSVMTesting(fold)
+            pred = [np.mean(x) for x in zip(*pred)]
             aprnlist.append(pred)
             self._clfAPRF = aprnlist
         return aprnlist
@@ -221,9 +225,9 @@ class cpon :
     def onSVMTesting(self, fold) : 
         plist = []
         
-        clf = SVC(kernel='rbf')
+        clf = SVC(kernel='linear')
         for tcs in self._cslist : 
-            print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>svm testing'
+            #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>svm testing'
             data = [[y for y in x] for x in tcs._fitdata]
             name = [x for x in tcs._fitname]
             clf.fit(data, name)
@@ -269,6 +273,7 @@ class cpon :
                 cs.initSklearnParam(ffdata[fold], ffname[fold][i])
                 pass
             pred = self.onKNNTesting(fold)
+            pred = [np.mean(x) for x in zip(*pred)]
             aprnlist.append(pred)
             self._clfAPRF = aprnlist
         return aprnlist
@@ -277,8 +282,9 @@ class cpon :
         plist = []
         
         clf = KNeighborsClassifier(weights='distance')
+        knnscoreboard = []
         for tcs in self._cslist : 
-            print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>knn testing'
+            #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>knn testing'
             data = [[y for y in x] for x in tcs._fitdata]
             name = [x for x in tcs._fitname]
             clf.fit(data, name)
@@ -296,24 +302,10 @@ class cpon :
             plist.append([acc, pre, rec, f1m])
             #print '[%02d]%s=>%lf, %lf, %lf, %lf'%(fold, tcs._name, acc, pre, rec, f1m)
             #print aprf
+            knnscoreboard.append(pred)
             pass
-
+        self._knnscoreboard = knnscoreboard
         return plist
-
-    def getfitname(self, csname) : 
-        cs = filter(lambda x : x._name is csname, self._cslist)
-        targetlist = []
-        for cs in self._cslist : 
-            targetlist.extend([1 if cs._name is csname else 0 for x in cs._trdata])
-        return targetlist
-
-    def getfitdata(self, csname) : 
-        cs = filter(lambda x : x._name is csname, self._cslist)
-        data = [x for x in cs[0]._trdata]
-        for cs in self._cslist : 
-            if cs._name is not csname : 
-                data.extend(cs._trdata)
-        return data
     pass
 
 
@@ -362,6 +354,7 @@ class cspace :
         self._trdata = trdata
         self._vadata = vadata
         self._fitdata = None
+        #self.ctrddrt()
         pass
 
     def onTraining(self) : 
@@ -387,18 +380,64 @@ class cspace :
             pass
         return dmap
 
-    def getTrainData(self) : 
-        return self._trdata
-
-    def getValidData(self) : 
-        return self._vadata
-
-    def getKernels(self) : 
-        return self._kslist
-
     def initSklearnParam(self, data, name) : 
         self._fitdata = data
         self._fitname = name
+        pass
+
+    def ctrddrt(self, bins = 2, peaks = 2) :
+        """
+        set centroid direction 
+        peaks : int.
+        number of modals. if you need bimodal which means you need two kernels, then peaks are 2
+        """
+        dimdata = zip(*self._trdata)
+        #1.get min and max of every dimension
+        minlist = [min(x) for x in dimdata]
+        maxlist = [max(x) for x in dimdata]
+        dmlist = self._mean
+        dvlist = self._var
+
+        dimpeaks = []
+        for dimlist, dm, dv in zip(dimdata, dmlist, dvlist) : 
+            inc, dec = False, False
+            bound = False
+            y = [x for x in dimlist]
+            leny = float(len(y))
+            y.sort()
+            miny, maxy = y[0], y[-1]
+            buffer, lenbuffer, pv = [], 0., 0.
+            peaks = []
+            for dim in y : 
+                buffer.append(dim)
+                lenbuffer += 1.
+                if lenbuffer > 1 : 
+                    m = sum(buffer) / lenbuffer
+                    v = sum([0 if x == m else (x - m)**2 for x in buffer]) / lenbuffer
+                    if pv > v : 
+                        dec = True
+                    elif dec and pv < v : 
+                        peaks.append(buffer[:-1])
+                        buffer, m, v, dec, lenbuffer = [buffer[-1]], 0, 0, False, 0
+                    pv = v
+            peaks.append(buffer)
+            dimpeaks.append(peaks)
+            pass
+        lenpeaks = reduce(lambda x, y : x * y, [len(k) for k in dimpeaks])
+                
+            
+        #chunking data on same variance
+        chunks = []
+        
+
+        #get Probability Cumulative Distribution Function
+        
+        
+        #get priority table sorted by variance
+        varlist = [[i, x] for i, x in enumerate(self._var)]
+        varlist.sort(key=lambda x : x[1])#sort by var in order to increase
+
+        # 
         pass
     pass
 
@@ -416,7 +455,7 @@ class kspace :
         ###get statistics ends
         self.dimlen = len(trd[0])
         self.rangedimlen = range(self.dimlen)
-        self._ybp = self.discriminant()
+        self._p3c = self.discriminant()
         
         #IGNORE
         #betaCDF = beta.cdf(y, y_beta_a, y_beta_b)
@@ -434,10 +473,10 @@ class kspace :
         discriminant function 
         paramters
         ---------
-
+        3435
         returns
         -------
-        ybp : ybp object
+        p3c : p3c object
         It has p-value, D, Y, alpha and beta of beta parameter, eCDF, beta CDF
         """
         trlen = len(self._data)
@@ -462,24 +501,24 @@ class kspace :
             mct += 1
             swc = mcswc(self.dimlen)
             bcdfparams = self.getbcdf_pval_swc(swc)
-            if not isinstance(bcdfparams, ybp) : 
+            if not isinstance(bcdfparams, p3c) : 
                 continue
 
-            #if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.9 : 
-            if True : 
+            if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.1 : #0.9 is similiar to 0.99
+            #if True : 
                 #print 'Monte-carlo try : %d' % mct
                 nmnt = [bcdfparams._pval, bcdfparams._d, bcdfparams._Y, swc, bcdfparams._betaA, bcdfparams._betaB, ecdf, bcdfparams._betaCDF]
                 #nmnt = [pval, d, Y, swc, bafit, bbfit, ecdf, betacdf]
-                break#gee chan a yo
+                break#Monte-Carlo
             pass
         
         #lkep.plotKStest(nmnt[0], nmnt[2], nmnt[4], nmnt[5], nmnt[6], nmnt[7], 'mc_'+self._name)
-        return ybp(nmnt[0], nmnt[1], nmnt[2], nmnt[3], nmnt[4], nmnt[5], nmnt[6], nmnt[7])
+        return p3c(nmnt[0], nmnt[1], nmnt[2], nmnt[3], nmnt[4], nmnt[5], nmnt[6], nmnt[7])
 
 
     def postprob(self, valid) : 
-        y = self.kernelizeisw(valid, self._ybp._sw)
-        pval = self._ybp.mapy2beta(y)
+        y = self.kernelizeisw(valid, self._p3c._sw)
+        pval = self._p3c.mapy2beta(y)
         return pval
 
     def kernelizeisw(self, X, sw) :
@@ -525,9 +564,57 @@ class kspace :
         #Y = featureScaling(Y)
         d, pval = scistats.kstest(Y, lambda cdf : bcdf)
         
-        params = ybp(pval, d, Y, [x for x in swc], ba, bb, 0, bcdf)
+        params = p3c(pval, d, Y, [x for x in swc], ba, bb, 0, bcdf)
         return params
 
+    pass
+    
+class p3c : 
+    """
+    Posterior Probability Parameters of Class
+    """
+    def __init__(self, pval, d, Y, sw, ba, bb, ecdf, bcdf):
+        self._pval = pval
+        self._d = d
+        self._Y = Y
+        self._ymin = min(Y)
+        self._ymax = max(Y)
+        self._sw = sw#sigma weight
+        self._betaA = ba
+        self._betaB = bb
+        self._ecdf = ecdf
+        self._betaCDF = bcdf
+
+    def mapy2beta(self, y) : 
+        """
+        mapping y to beta
+        
+        parameters
+        ----------
+        self : class object
+            hypothesis criteria
+
+        y : array_like
+            Input array
+
+        returns
+        -------
+        pair of beta CDF : Float 
+            Returns a float.
+        """
+        a = beta.cdf(y, self._betaA, self._betaB)
+        i = 0
+        if y < self._ymin : 
+            return 0
+        elif y > self._ymax : 
+            return 1
+        else : 
+            for i, z in enumerate(self._Y) : 
+                if y < z : 
+                    i = self._Y.index(z)
+                    break
+        return a
+        #return self._betaCDF[i]
     pass
 
 def getNorm(row, mean, var) : 
@@ -612,51 +699,6 @@ def getAPRF(tfpnlist) :
     fme = (2 * pre * rec) / (pre + rec)
 
     return acc, pre, rec, fme
-    
-class ybp : 
-    def __init__(self, pval, d, Y, sw, ba, bb, ecdf, bcdf):
-        self._pval = pval
-        self._d = d
-        self._Y = Y
-        self._ymin = min(Y)
-        self._ymax = max(Y)
-        self._sw = sw#sigma weight
-        self._betaA = ba
-        self._betaB = bb
-        self._ecdf = ecdf
-        self._betaCDF = bcdf
-
-    def mapy2beta(self, y) : 
-        """
-        mapping y to beta
-        
-        parameters
-        ----------
-        self : class object
-            hypothesis criteria
-
-        y : array_like
-            Input array
-
-        returns
-        -------
-        pair of beta CDF : Float 
-            Returns a float.
-        """
-        a = beta.cdf(y, self._betaA, self._betaB)
-        i = 0
-        if y < self._ymin : 
-            return 0
-        elif y > self._ymax : 
-            return 1
-        else : 
-            for i, z in enumerate(self._Y) : 
-                if y < z : 
-                    i = self._Y.index(z)
-                    break
-        return a
-        #return self._betaCDF[i]
-    pass
 
 def featureScaling(arr) : 
     """
@@ -692,3 +734,44 @@ def mcswc(dimlen) :
     """
     swc = [2 ** (random.randrange(0, 3) - 1) for x in range(dimlen)]
     return swc
+
+def pcdf(a, bins = 10) : 
+    """
+    Probability Cumulative Distribution Function
+    parameters
+    ----------
+    list : array-like
+    bins : int or sequence of scalars, optional
+    If bins is an int, it defines the number of equal-width bins 
+    in the given range (10, by default). If bins is a sequence, 
+    it defines the bin edges, including the rightmost edge, 
+    allowing for non-uniform bin widths.
+
+    returns
+    -------
+    CDF : array-like
+    """
+    cdfa = range(len(a))
+    lena = len(a)
+    y = [x for x in a]
+    y.sort()
+    binlist = []
+
+    if isinstance(bins, int) : 
+        
+        return binlist
+    elif isinstance(bins, list) : 
+        pass
+
+def chunk(a, bins) : 
+    lena = len(a)
+    ratio = float(lena) / float(bins)
+    can = []
+    
+    for i in range(bins) : 
+        start = int(math.ceil(i * ratio))
+        end = int(math.ceil((i + 1) * ratio))
+        bin = a[start : end]
+        can.append(bin)
+
+    return can

@@ -132,11 +132,12 @@ class cpon :
         stats = []
         totalvaliddatalen = reduce(lambda x, y : x + y , [len(cs._vadata) for cs in self._cslist])
         tfpnlist = []
-
+        clstfpntable = []
+        emr = 0
         for i, cs in enumerate(self._cslist) : 
             resKernelList = self.getRestKernels(cs._name)
             oneKernelList = cs._kslist
-
+            clstfpnlist = []
             for vcs in self._cslist : 
                 for vd in vcs._vadata : 
                     opplist = [kn.postprob(vd) for kn in oneKernelList]
@@ -147,19 +148,26 @@ class cpon :
                     Largest beta ppf indicates of which the class predict. 
                     '''
                     opp, rpp = max(opplist), max(rpplist)
-
+                    
                     if opp >= rpp : 
                         pn = True
                         tf = True if cs._name is vcs._name else False
+                        #if tf : 
+                        #    emr += 1
                     else : 
                         pn = False
                         tf = False if cs._name is vcs._name else True
-
                     tfpnlist.append([tf, pn])
+                    clstfpnlist.append([tf, pn])
                     pass
                 pass
+            clstfpntable.append(clstfpnlist)
             pass
+        #print 'emr=%d'%emr
         stats = getAPRF(tfpnlist)
+        clsstatstable = []
+        for clstfpn in clstfpntable : 
+            clsstatstable.append(getAPRF(clstfpn))
         return stats
 
     def onTesting(self, fold) : 
@@ -209,6 +217,7 @@ class cpon :
                 cs.initSklearnParam(ffdata[fold], ffname[fold][i])
                 pass
             pred = self.onSVMTesting(fold)
+            pred = [np.mean(x) for x in zip(*pred)]
             aprnlist.append(pred)
             self._clfAPRF = aprnlist
         return aprnlist
@@ -216,9 +225,9 @@ class cpon :
     def onSVMTesting(self, fold) : 
         plist = []
         
-        clf = SVC(kernel='rbf')
+        clf = SVC(kernel='linear')
         for tcs in self._cslist : 
-            print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>svm testing'
+            #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>svm testing'
             data = [[y for y in x] for x in tcs._fitdata]
             name = [x for x in tcs._fitname]
             clf.fit(data, name)
@@ -264,6 +273,7 @@ class cpon :
                 cs.initSklearnParam(ffdata[fold], ffname[fold][i])
                 pass
             pred = self.onKNNTesting(fold)
+            pred = [np.mean(x) for x in zip(*pred)]
             aprnlist.append(pred)
             self._clfAPRF = aprnlist
         return aprnlist
@@ -344,7 +354,7 @@ class cspace :
         self._trdata = trdata
         self._vadata = vadata
         self._fitdata = None
-        self.ctrddrt()
+        #self.ctrddrt()
         pass
 
     def onTraining(self) : 
@@ -396,14 +406,12 @@ class cspace :
             leny = float(len(y))
             y.sort()
             miny, maxy = y[0], y[-1]
-            #fsy = 
-            y.sort()
             buffer, lenbuffer, pv = [], 0., 0.
             peaks = []
             for dim in y : 
                 buffer.append(dim)
                 lenbuffer += 1.
-                if lenbuffer > 29 : 
+                if lenbuffer > 1 : 
                     m = sum(buffer) / lenbuffer
                     v = sum([0 if x == m else (x - m)**2 for x in buffer]) / lenbuffer
                     if pv > v : 
@@ -496,9 +504,9 @@ class kspace :
             if not isinstance(bcdfparams, p3c) : 
                 continue
 
-            if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.9 : #0.9 is similiar to 0.99
+            if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.1 : #0.9 is similiar to 0.99
             #if True : 
-                print 'Monte-carlo try : %d' % mct
+                #print 'Monte-carlo try : %d' % mct
                 nmnt = [bcdfparams._pval, bcdfparams._d, bcdfparams._Y, swc, bcdfparams._betaA, bcdfparams._betaB, ecdf, bcdfparams._betaCDF]
                 #nmnt = [pval, d, Y, swc, bafit, bbfit, ecdf, betacdf]
                 break#Monte-Carlo
