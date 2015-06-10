@@ -152,8 +152,8 @@ class cpon :
                     if opp >= rpp : 
                         pn = True
                         tf = True if cs._name is vcs._name else False
-                        #if tf : 
-                        #    emr += 1
+                        if tf : 
+                            emr += 1
                     else : 
                         pn = False
                         tf = False if cs._name is vcs._name else True
@@ -163,7 +163,7 @@ class cpon :
                 pass
             clstfpntable.append(clstfpnlist)
             pass
-        #print 'emr=%d'%emr
+        print 'emr=%d'%emr
         stats = getAPRF(tfpnlist)
         clsstatstable = []
         for clstfpn in clstfpntable : 
@@ -211,21 +211,21 @@ class cpon :
             for i, cs in enumerate(self._cslist) : 
                 ffdata[fold].extend(cs._trdata)
                 for j, cscs in enumerate(self._cslist) : 
-                    ffname[fold][i].extend([1 if cs._name is cscs._name else 0 for x in cscs._trdata])
+                    ffname[fold][i].extend(['oc' if cs._name is cscs._name else 'rc' for x in cscs._trdata])
             for i, cs in enumerate(self._cslist) : 
                 size = 100
                 cs.initSklearnParam(ffdata[fold], ffname[fold][i])
                 pass
             pred = self.onSVMTesting(fold)
-            pred = [np.mean(x) for x in zip(*pred)]
+            #pred = [np.mean(x) for x in zip(*pred)]
             aprnlist.append(pred)
-            self._clfAPRF = aprnlist
+        self._clfAPRF = aprnlist
         return aprnlist
 
     def onSVMTesting(self, fold) : 
         plist = []
-        
-        clf = SVC(kernel='linear')
+        tfpnlist, emrlist = [], []
+        clf = SVC(kernel='rbf')
         for tcs in self._cslist : 
             #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>svm testing'
             data = [[y for y in x] for x in tcs._fitdata]
@@ -235,20 +235,22 @@ class cpon :
             vatarget, valist = [], []
             for vcs in self._cslist : 
                 valist.extend([x for x in vcs._vadata])
-                vatarget.extend([1 if tcs._name is vcs._name else 0 for x in vcs._vadata])
+                vatarget.extend(['oc' if tcs._name is vcs._name else 'rc' for x in vcs._vadata])
             pred = clf.predict(valist)
             acc = metrics.accuracy_score(vatarget, pred)
-            pre = metrics.precision_score(vatarget, pred, pos_label=0)
-            rec = metrics.recall_score(vatarget, pred, pos_label=0)
-            f1m = metrics.f1_score(vatarget, pred, pos_label=0)
+            pre = metrics.precision_score(vatarget, pred, pos_label='oc')
+            rec = metrics.recall_score(vatarget, pred, pos_label='oc')
+            f1m = metrics.f1_score(vatarget, pred, pos_label='oc')
             clfr = metrics.classification_report(vatarget, pred)
-            mcc = metrics.matthews_corrcoef(vatarget, pred)
-            plist.append([acc, pre, rec, f1m])
-            #print '[%02d]%s=>%lf, %lf, %lf, %lf'%(fold, tcs._name, acc, pre, rec, f1m)
-            #print clfr
+            tfpn, emr = skl_tfpn(pred, vatarget, 'oc', 'rc', isEMR = True)
+            tfpnlist.append(tfpn)
+            emrlist.append(emr)
+            #plist.append([acc, pre, rec, f1m])
             pass
-
-        return plist
+        print 'emr=%d'%sum(emrlist)
+        aprf = tfpnlist_aprf(tfpnlist, avetype = 'micro')
+        return aprf
+        #return plist
 
     def learnKNN(self) : 
         print 'learning Nearest Neighbor'
@@ -267,19 +269,20 @@ class cpon :
             for i, cs in enumerate(self._cslist) : 
                 ffdata[fold].extend(cs._trdata)
                 for j, cscs in enumerate(self._cslist) : 
-                    ffname[fold][i].extend([1 if cs._name is cscs._name else 0 for x in cscs._trdata])
+                    ffname[fold][i].extend(['oc' if cs._name is cscs._name else 'rc' for x in cscs._trdata])
             for i, cs in enumerate(self._cslist) : 
                 size = 100
                 cs.initSklearnParam(ffdata[fold], ffname[fold][i])
                 pass
             pred = self.onKNNTesting(fold)
-            pred = [np.mean(x) for x in zip(*pred)]
+            #pred = [np.mean(x) for x in zip(*pred)]
             aprnlist.append(pred)
-            self._clfAPRF = aprnlist
+        self._clfAPRF = aprnlist
         return aprnlist
 
     def onKNNTesting(self, fold) : 
         plist = []
+        tfpnlist, emrlist = [], []
         
         clf = KNeighborsClassifier(weights='distance')
         knnscoreboard = []
@@ -292,20 +295,26 @@ class cpon :
             vatarget, valist = [], []
             for vcs in self._cslist : 
                 valist.extend([x for x in vcs._vadata])
-                vatarget.extend([1 if tcs._name is vcs._name else 0 for x in vcs._vadata])
+                vatarget.extend(['oc' if tcs._name is vcs._name else 'rc' for x in vcs._vadata])
             pred = clf.predict(valist)
             acc = metrics.accuracy_score(vatarget, pred)
-            pre = metrics.precision_score(vatarget, pred)
-            rec = metrics.recall_score(vatarget, pred)
-            f1m = metrics.f1_score(vatarget, pred)
-            aprf = metrics.classification_report(vatarget, pred)
-            plist.append([acc, pre, rec, f1m])
-            #print '[%02d]%s=>%lf, %lf, %lf, %lf'%(fold, tcs._name, acc, pre, rec, f1m)
+            pre = metrics.precision_score(vatarget, pred, pos_label='oc')
+            rec = metrics.recall_score(vatarget, pred, pos_label='oc')
+            f1m = metrics.f1_score(vatarget, pred, pos_label='oc')
+            clfr = metrics.classification_report(vatarget, pred)
+            tfpn, emr = skl_tfpn(pred, vatarget, 'oc', 'rc', isEMR = True)
+            tfpnlist.append(tfpn)
+            emrlist.append(emr)
+            #plist.append([acc, pre, rec, f1m])
+            pass
             #print aprf
             knnscoreboard.append(pred)
             pass
+        print 'emr=%d'%sum(emrlist)
+        aprf = tfpnlist_aprf(tfpnlist, avetype = 'micro')
         self._knnscoreboard = knnscoreboard
-        return plist
+        return aprf
+        #return plist
     pass
 
 
@@ -480,9 +489,11 @@ class kspace :
         It has p-value, D, Y, alpha and beta of beta parameter, eCDF, beta CDF
         """
         trlen = len(self._data)
-        #swc_idx_map = [[(x/(candi**y))%candi for y in rangedimlen] for x in range(candi ** dimlen)]
-        #swc_map = [[2 ** (x - candi_half) for x in v] for v in swc_idx_map]
-        #swc_map = getSWCmap(self.dimlen)
+        lenswc = 5
+        swczero = int(float(lenswc) / 2.)
+        rangeswc = range(lenswc)
+        rangedimlen = range(self.dimlen)
+        swc_map = [[2**(x - swczero) for y in rangedimlen] for x in rangeswc]
         ecdf = [float(x) / float(trlen) for x in range(1, trlen + 1)]
         nmnt = [0.]
         mct = 0
@@ -491,25 +502,21 @@ class kspace :
         len_nomi = 5
         len_dim = self.dimlen
         rangedimlen = self.rangedimlen
-
-        for msd in rangedimlen : 
-
-            pass
         
-        #for swc in swc_map : 
-        while True : 
+        for swc in swc_map : 
+        #while True : 
             mct += 1
-            swc = mcswc(self.dimlen)
+            #swc = mcswc(self.dimlen)#montecarlo
             bcdfparams = self.getbcdf_pval_swc(swc)
             if not isinstance(bcdfparams, p3c) : 
                 continue
 
-            if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.1 : #0.9 is similiar to 0.99
+            if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.05 : #0.9 is similiar to 0.99
             #if True : 
                 #print 'Monte-carlo try : %d' % mct
                 nmnt = [bcdfparams._pval, bcdfparams._d, bcdfparams._Y, swc, bcdfparams._betaA, bcdfparams._betaB, ecdf, bcdfparams._betaCDF]
                 #nmnt = [pval, d, Y, swc, bafit, bbfit, ecdf, betacdf]
-                break#Monte-Carlo
+                #break#Monte-Carlo
             pass
         
         #lkep.plotKStest(nmnt[0], nmnt[2], nmnt[4], nmnt[5], nmnt[6], nmnt[7], 'mc_'+self._name)
@@ -684,19 +691,19 @@ def getAPRF(tfpnlist) :
     '''
     tp, fp, tn, fn = 0, 0, 0, 0
     for tf, pn in tfpnlist : 
-        if tf is True and pn is True : 
+        if tf and pn: 
             tp += 1
-        elif tf is False and pn is True : 
+        elif not tf and pn : 
             fp += 1
-        elif tf is True and pn is False : 
+        elif tf and not pn : 
             tn += 1
-        elif tf is False and pn is False : 
+        elif not tf and not pn : 
             fn += 1
     tp, fp, tn, fn = float(tp), float(fp), float(tn), float(fn)
     acc = (tp+tn)/(tp+fp+tn+fn)
     pre = tp/(tp+fp)
     rec = tp/(tp+fn)
-    fme = (2 * pre * rec) / (pre + rec)
+    fme = 0.0 if pre + rec == 0 else (2 * pre * rec) / (pre + rec)
 
     return acc, pre, rec, fme
 
@@ -775,3 +782,68 @@ def chunk(a, bins) :
         can.append(bin)
 
     return can
+
+def skl_tfpn(pred, target, posname, negname, isEMR = False) : 
+    emrlist, tfpn = [], []
+    tf, pn = False, False
+    emr = 0
+    for p, t in zip(pred, target) : 
+        if p in posname : 
+            pn = True
+            #tf = True if t in p else False
+
+            if t in p : 
+                tf = True
+                emr += 1
+            else : 
+                tf = False
+
+        elif p in negname : 
+            pn = False
+            tf = True if t in p else False
+        else : 
+            'wtf?'
+        tfpn.append([tf, pn])
+
+    return [tfpn, emr] if isEMR else tfpn
+
+def tfpnlist_aprf(tplist, avetype = 'macro') : 
+    aprf = []
+    tptnfpfn = []
+    for tfpn in tplist : 
+        tp, tn, fp, fn = 0, 0, 0, 0
+        for tf, pn in tfpn : 
+            if tf and pn : 
+                tp += 1
+            elif tf and not pn : 
+                tn += 1
+            elif not tf and pn : 
+                fp += 1
+            elif not tf and not pn :
+                fn += 1
+            else : 
+                "wtf?"
+        tptnfpfn.append([tp, tn, fp, fn])
+        pass
+    lentptnfpfn = float(len(tptnfpfn))
+    a = sum(float(tp + tn)/float(tp + tn + fp + fn) for tp, tn, fp, fn in tptnfpfn)/float(lentptnfpfn)
+    if avetype is 'macro' : 
+        p, r, f = 0., 0., 0.
+        for tp, tn, fp, fn in tptnfpfn : 
+            p += 0.0 if tp+fp == 0 else float(tp) / float(tp+fp)
+            r += 0.0 if tp+fn == 0 else float(tp) / float(tp+fn)
+        p /= lentptnfpfn
+        r /= lentptnfpfn
+        pass
+    elif avetype is 'micro' : 
+        tp, tn, fp, fn = [sum(x) for x in zip(*tptnfpfn)]
+        p = 0.0 if tp+fp == 0 else float(tp) / float(tp+fp)
+        r = 0.0 if tp+fn == 0 else float(tp) / float(tp+fn)
+        pass
+    else : 
+        print 'input avetype as micro or macro'
+        return 0
+    f = 0.0 if p + r == 0.0 else (2*p*r)/(p+r)
+    aprf = [a, p, r, f]
+    
+    return aprf
