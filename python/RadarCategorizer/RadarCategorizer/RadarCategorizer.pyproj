@@ -28,6 +28,9 @@
     <Compile Include="lkpy.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="clfmgmt.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RadarCategorizer.py" />
   </ItemGroup>
   <PropertyGroup>

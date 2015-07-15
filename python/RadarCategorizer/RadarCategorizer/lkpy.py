@@ -45,7 +45,7 @@ class lkexporter :
                 for row, tag in zip(map, csnames) : 
                     row.insert(0, tag)
                     cw.writerow(row)
-        print 'export kcdboard complete'
+        print('export kcdboard complete')
 
     def xlsxctrdcmap(self) : 
         '''
@@ -92,7 +92,7 @@ class lkexporter :
                     row = [x if x != 0 else '' for x in row]
                     row.insert(0, tag)
                     cw.writerow(row)
-        print 'export clfboard complete'
+        print('export clfboard complete')
 
     def xlsxclfboard(self) : 
         clfboard, csnames = self._cpon._clfboard, self._cpon.getcsnames()
@@ -148,7 +148,7 @@ class lkexporter :
                     clfscore.insert(0, csnames[i])
                     cw.writerow(clfscore)
                 
-        print 'export clfscore complete'
+        print('export clfscore complete')
 
     def xlsxclfscore(self) : 
         scoreboard, csnames = self._cpon._clfscoreboard, self._cpon.getcsnames()
@@ -172,9 +172,6 @@ class lkexporter :
         wb.close()
         pass
 
-    def pngoargraph(self) : 
-        pass
-
     def csvsklearn(self) : 
         aprf = self._cpon._clfAPRF
         for fl, map in enumerate(aprf) : 
@@ -184,18 +181,47 @@ class lkexporter :
                     cw.writerow(['acc','pre','rec','f1m'])
                     for row in map : 
                         cw.writerow(row)
-    def xslxsklearn(self) : 
-        aprf = self._cpon._clfAPRF
-        wb = xlsxwriter.Workbook(self.genfn('aprf', 'xlsx'))
 
-        for fl, map in enumerate(aprf) : 
+    def xlsxparfe(self) : 
+        parfelist = self._cpon._parfelist
+        wb = xlsxwriter.Workbook(self.genfn('parfe', 'xlsx'))
+        ws = wb.add_worksheet('parfe')
+        ws.write_row(0, 0, ['fold', 'a', 'p', 'r', 'f', 'e'])
+        row, col = 1, 0
+        
+        for fl, parfe in enumerate(parfelist) : 
+            p, a, r, f, e = parfe
+            line = ['#%02d'%(fl+1), a, p, r, f, e]
+            row, col = worksheetwriteline(ws, row, col, line)
+        p, a, r, f, e = [sum(x)/len(x) for x in zip(*parfelist)]
+        line = ['ave', a, p, r, f, e]
+        row, col = worksheetwriteline(ws, row, col, line)
+        wb.close()
+
+    def xlsxtfpnaprf(self) : 
+        tfpnaprftable, cname = self._cpon._tfpnaprf, self._cpon.getcsnames()
+
+        wb = xlsxwriter.Workbook(self.genfn('tfpnaprf', 'xlsx'))
+        ws = wb.add_worksheet('class')
+        r, c = 0, 0
+        header = ['class', 'tp', 'tn', 'fp', 'fn', 'macc', 'mpre', 'mrec', 'mf1m', 'Macc', 'Mpre', 'Mrec', 'Mf1m']
+        r, c = worksheetwriteline(ws, r, c, header)
+        #average for end line decoration
+        lentat = float(len(cname))
+        ave = [sum(val)/lentat for val in zip(*tfpnaprftable)]
+        ave.insert(0, 'ave')
+
+        for cn, tfpnaprf in zip(cname, tfpnaprftable) : 
+            line = tfpnaprf
+            line.insert(0, cn)
+            r, c = worksheetwriteline(ws, r, c, line)
             pass
         
-        pass
+        r, c = worksheetwriteline(ws, r, c, ave)
 
-    def xlsxknnsb(self) : 
-
-        pass
+        ws = wb.add_worksheet('fold')
+        wb.close()
+    pass
 
 def plotPDF(vec_x, figname = 'noname', plotnum = 20) : 
     '''bons-fold PDF plot(histogram)'''

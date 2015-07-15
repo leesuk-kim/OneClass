@@ -2,8 +2,18 @@ import os, time
 import sys
 from cppy import cpon, cspace
 from lkpy import lkexporter as xprt
+#from clfmgmt import clfmgr
+#from clfmgmt import moditem #IF NEED
+import clfmgmt
+from sklearn import datasets
 
 if __name__ == '__main__' : 
+    cm = clfmgmt.clfmgr(fold = 10)
+    cm.addclf(clfmgmt.clffactory('svm'))
+    iris = datasets.load_iris()
+
+    cm.uploadres(iris.data, iris.target)
+    cm.folding(0)
     trainer = cpon(10)
     xprttrainer = xprt(trainer)
     #src = 'data'
@@ -11,6 +21,7 @@ if __name__ == '__main__' :
     #src = 'data_03_fs'
     #src = 'data_12'
     src = 'data_12_fs'
+    #src = 'd5_12fs'
     #src = 'data_24'
     #src = 'data_24_fs'
     #src = 'data_24_ddtoa'
@@ -22,7 +33,7 @@ if __name__ == '__main__' :
 
             with open(filepath) as src : 
                 name = filename[:-4]
-                print 'load ' + name
+                print('load ' + name)
                 srcdata = []
                 for line in src.readlines() : 
                     line = line.split(',')
@@ -32,14 +43,15 @@ if __name__ == '__main__' :
             cs = trainer.csfactory(name, srcdata)
             trainer.registcs(cs)
 
-    #trainer.learn()
-    #xprttrainer.csvaprf()
+    trainer.learn()
     #xprttrainer.xlsxctrdcmap()
     #xprttrainer.xlsxclfscore()
     #xprttrainer.xlsxclfboard()
-    trainer.learnSVM()
+    #trainer.learnSVM()
     #trainer.learnKNN()
-    xprttrainer.csvaprf()
+    #xprttrainer.csvaprf()
+    xprttrainer.xlsxparfe()
+    xprttrainer.xlsxtfpnaprf()
     #xprttrainer.xslxsklearn()
     #xprttrainer.xlsxknnsb()
     #report = trainer.learnSVM()

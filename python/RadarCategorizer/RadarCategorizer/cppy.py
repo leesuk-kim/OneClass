@@ -1,45 +1,41 @@
-'''
+"""
 Radar signal Categorizer
-version 1.0
+version 2.0
 Designed by leesuk kim(aka. LK)
-'''
-import csv
+Lang. : Python
+Lang. ver. : 3.4.3
+
+"""
+from functools import reduce
+import math
 import time
 import numpy as np
 import numpy.linalg as npla
 from scipy.stats import beta
 import scipy.stats as scistats
-import lkpy as lkep
-import math
 from sklearn.svm import SVC
-from sklearn.svm import LinearSVC
 from sklearn import metrics
 from sklearn.neighbors import KNeighborsClassifier
-import cppy
-import random
-
-CATArr_INDEX_name = 0
-CATArr_INDEX_TRAIN = 1
-CATArr_INDEX_TEST = 2
-CATArr_INDEX_CAT = 1
-
+import lkpy as lkep
 
 class cpon : 
     '''
     Class Probability Output Network
+
+    It has classes for classification.
+    It has classifiers-SVM, kNN, and CPON.
+    (DO NOT WRITE ON ENGLISH)
+
     '''
     
     def __init__(self, fold = 2, srcdir='') : 
         self._TimeStamp = '%d' % int(time.time())
-        self._CategoryArr = []
-        '''raw matrix'''
-        self._ClsVol = 0
-        self._CatDim = 1
         self._cslist = []
         self._fmax = fold
         self._kmax = 1
         self._cslist = []
         self._kcdboard = []
+        self._parfelist = []
         '''
         a map consist of distance between each centroid of class
         '''
@@ -58,29 +54,6 @@ class cpon :
     def registcs(self, cs) : 
         self._cslist.append(cs)
 
-    def appendTrainRow(self, row) : 
-        '''
-        append Raw row
-        '''
-        name = row[0]
-        seq = row[1:]
-
-        cat = next((rrow for i, rrow in enumerate(self._CategoryArr) if name in rrow), False)
-        if not cat : 
-            print 'create new category : %s' % name
-            self._CategoryArr.append([name, [seq]])
-            self._ClsVol += 1
-        else : 
-            cat[1].append(seq)
-
-    def appendTrain(self, matrix) : 
-        try : 
-            self.appendTrainRow(matrix[x] for x in range(len(matrix)))
-        except TypeError : 
-            print 'please input a vector.'
-
-        pass
-
     def appendValidRow(self, row) : 
         #append test data
         pass
@@ -88,7 +61,7 @@ class cpon :
         try : 
             self.appendValidRow(matrix[x] for x in range(len(matrix)))
         except TypeError : 
-            print 'please input a vector.'
+            print('please input a vector.')
 
         pass
 
@@ -105,12 +78,15 @@ class cpon :
         self._kmax = knvol
 
     def learn(self) : 
-        print 'learning'
+        print('learning')
         clfboard, clfscoreboard = [], []
         self._clfAPRF = []
+        self._parfelist = []
+        self.predfolable = []
+        self.yfolable = []
         for fold in range(self._fmax) : 
             lkep.fold = fold
-            print 'fold#%d' % fold
+            print('fold#%d' % fold)
 
             for cs in self._cslist : 
                 cs.onFolding(fold)
@@ -122,23 +98,31 @@ class cpon :
             clfscoreboard.append(foldclfscore)
             foldclf = boardclf(foldclfscore)
             clfboard.append(foldclf)
-            self._clfAPRF.append(self.onOARTesting())
+            parfelist, predtable, ytable = self.onOARTesting()
+            self._parfelist.append(parfelist)
+            self.predfolable.append(predtable)
+            self.yfolable.append(ytable)
+        self._tfpnaprf = tfpnaprf(self.predfolable, self.yfolable, 'oc', 'rc')
         self._clfboard = clfboard
         self._clfscoreboard = clfscoreboard
         pass
 
     def onOARTesting(self) : 
         cn = 10e+10
-        stats = []
+        parfe = []
         totalvaliddatalen = reduce(lambda x, y : x + y , [len(cs._vadata) for cs in self._cslist])
         tfpnlist = []
-        clstfpntable = []
+        tfpntable = []
         emr = 0
+        predtable, ytable = [], []
         for i, cs in enumerate(self._cslist) : 
+            ylist = []
+            pred = []
             resKernelList = self.getRestKernels(cs._name)
             oneKernelList = cs._kslist
-            clstfpnlist = []
+            tfpnlist = []
             for vcs in self._cslist : 
+                y = ['oc' if vcs._name in cs._name else 'rc' for x in vcs._vadata]
                 for vd in vcs._vadata : 
                     opplist = [kn.postprob(vd) for kn in oneKernelList]
                     rpplist = [kn.postprob(vd) for kn in resKernelList]
@@ -154,21 +138,24 @@ class cpon :
                         tf = True if cs._name is vcs._name else False
                         if tf : 
                             emr += 1
+                        pred.append('oc')
                     else : 
                         pn = False
                         tf = False if cs._name is vcs._name else True
+                        pred.append('rc')
                     tfpnlist.append([tf, pn])
-                    clstfpnlist.append([tf, pn])
                     pass
+                ylist.extend(y)
                 pass
-            clstfpntable.append(clstfpnlist)
+            ytable.append(ylist)
+            predtable.append(pred)
+            tfpntable.append(tfpnlist)
+            
             pass
-        print 'emr=%d'%emr
-        stats = getAPRF(tfpnlist)
-        clsstatstable = []
-        for clstfpn in clstfpntable : 
-            clsstatstable.append(getAPRF(clstfpn))
-        return stats
+        parfe = tfpnlist_parf(tfpntable, avetype='micro')
+        parfe.append(float(emr) / float(len(self._cslist) * len(cs._vadata)))
+
+        return parfe, predtable, ytable
 
     def onTesting(self, fold) : 
         '''
@@ -195,13 +182,15 @@ class cpon :
         return rkn
 
     def learnSVM(self) : 
-        print 'learning SVM'
-        aprnlist = []
-
+        print('learning SVM')
+        self._parfelist = []
+        self.predfolable = []
+        self.yfolable = []
+        
         ffdata = [[] for f in range(self._fmax)]
         ffname = [[[] for cs in self._cslist] for f in range(self._fmax)]
         for fold in range(self._fmax) :
-            print 'fold#%d' % fold
+            print('fold#%d' % fold)
             
             restrdata = []
             for cs in self._cslist : 
@@ -216,50 +205,65 @@ class cpon :
                 size = 100
                 cs.initSklearnParam(ffdata[fold], ffname[fold][i])
                 pass
-            pred = self.onSVMTesting(fold)
-            #pred = [np.mean(x) for x in zip(*pred)]
-            aprnlist.append(pred)
-        self._clfAPRF = aprnlist
-        return aprnlist
+            pred, predtable, ytable = self.onSVMTesting(fold)
+            self.predfolable.append(predtable)
+            self.yfolable.append(ytable)
+            self._parfelist.append(pred)
+        self._tfpnaprf = tfpnaprf(self.predfolable, self.yfolable, 'oc', 'rc')
 
     def onSVMTesting(self, fold) : 
         plist = []
-        tfpnlist, emrlist = [], []
-        clf = SVC(kernel='rbf')
+        tfpnlist, emrlist, errs = [], [], []
+        clf = SVC(kernel='rbf', gamma=50)
+        predtable = []
+        ytable = []
         for tcs in self._cslist : 
-            #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>svm testing'
+            #print(time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>svm testing'
             data = [[y for y in x] for x in tcs._fitdata]
             name = [x for x in tcs._fitname]
             clf.fit(data, name)
-
+            pred = clf.predict(data)
+            err = metrics.accuracy_score(name, pred)
+        
+            #print('err=%lf'%err
             vatarget, valist = [], []
             for vcs in self._cslist : 
                 valist.extend([x for x in vcs._vadata])
                 vatarget.extend(['oc' if tcs._name is vcs._name else 'rc' for x in vcs._vadata])
             pred = clf.predict(valist)
-            acc = metrics.accuracy_score(vatarget, pred)
-            pre = metrics.precision_score(vatarget, pred, pos_label='oc')
-            rec = metrics.recall_score(vatarget, pred, pos_label='oc')
-            f1m = metrics.f1_score(vatarget, pred, pos_label='oc')
-            clfr = metrics.classification_report(vatarget, pred)
+            predtable.append(pred)
+            ytable.append(vatarget)
+            #acc = metrics.accuracy_score(vatarget, pred)
+            #pre = metrics.precision_score(vatarget, pred, pos_label='oc')
+            #rec = metrics.recall_score(vatarget, pred, pos_label='oc')
+            #f1m = metrics.f1_score(vatarget, pred, pos_label='oc')
+            #clfr = metrics.classification_report(vatarget, pred)
             tfpn, emr = skl_tfpn(pred, vatarget, 'oc', 'rc', isEMR = True)
             tfpnlist.append(tfpn)
             emrlist.append(emr)
+            errs.append(err)
             #plist.append([acc, pre, rec, f1m])
             pass
-        print 'emr=%d'%sum(emrlist)
-        aprf = tfpnlist_aprf(tfpnlist, avetype = 'micro')
-        return aprf
+        ##print('emr=%d'%sum(emrs)
+        errs, aveemr = np.mean(errs), np.mean(emrlist)/len(tcs._vadata)
+        #print('err=%lf'% errs
+        parfe = []
+        parfe = tfpnlist_parf(tfpnlist, avetype = 'macro')
+        parfe.append(aveemr)
+        return parfe, predtable, ytable
         #return plist
 
     def learnKNN(self) : 
-        print 'learning Nearest Neighbor'
+        print('learning Nearest Neighbor')
         aprnlist = []
+        self._parfelist = []
+        self.predfolable = []
+        self.yfolable = []
 
         ffdata = [[] for f in range(self._fmax)]
         ffname = [[[] for cs in self._cslist] for f in range(self._fmax)]
         for fold in range(self._fmax) :
-            print 'fold#%d' % fold
+            print('fold#%d' % fold)
             
             restrdata = []
             for cs in self._cslist : 
@@ -274,20 +278,22 @@ class cpon :
                 size = 100
                 cs.initSklearnParam(ffdata[fold], ffname[fold][i])
                 pass
-            pred = self.onKNNTesting(fold)
-            #pred = [np.mean(x) for x in zip(*pred)]
-            aprnlist.append(pred)
-        self._clfAPRF = aprnlist
-        return aprnlist
+            pred, predtable, ytable = self.onKNNTesting(fold)
+            self.predfolable.append(predtable)
+            self.yfolable.append(ytable)
+            self._parfelist.append(pred)
+        self._tfpnaprf = tfpnaprf(self.predfolable, self.yfolable, 'oc', 'rc')
+        pass
 
     def onKNNTesting(self, fold) : 
         plist = []
         tfpnlist, emrlist = [], []
+        predtable, ytable = [], []
         
         clf = KNeighborsClassifier(weights='distance')
         knnscoreboard = []
         for tcs in self._cslist : 
-            #print time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>knn testing'
+            #print(time.strftime('%X', time.localtime()) + (' fold%02d, ' % fold) + tcs._name + '=>knn testing'
             data = [[y for y in x] for x in tcs._fitdata]
             name = [x for x in tcs._fitname]
             clf.fit(data, name)
@@ -297,23 +303,26 @@ class cpon :
                 valist.extend([x for x in vcs._vadata])
                 vatarget.extend(['oc' if tcs._name is vcs._name else 'rc' for x in vcs._vadata])
             pred = clf.predict(valist)
-            acc = metrics.accuracy_score(vatarget, pred)
-            pre = metrics.precision_score(vatarget, pred, pos_label='oc')
-            rec = metrics.recall_score(vatarget, pred, pos_label='oc')
-            f1m = metrics.f1_score(vatarget, pred, pos_label='oc')
-            clfr = metrics.classification_report(vatarget, pred)
+            predtable.append(pred)
+            ytable.append(vatarget)
+            #acc = metrics.accuracy_score(vatarget, pred)
+            #pre = metrics.precision_score(vatarget, pred, pos_label='oc')
+            #rec = metrics.recall_score(vatarget, pred, pos_label='oc')
+            #f1m = metrics.f1_score(vatarget, pred, pos_label='oc')
+            #clfr = metrics.classification_report(vatarget, pred)
             tfpn, emr = skl_tfpn(pred, vatarget, 'oc', 'rc', isEMR = True)
             tfpnlist.append(tfpn)
             emrlist.append(emr)
             #plist.append([acc, pre, rec, f1m])
             pass
-            #print aprf
+            #print(aprf
             knnscoreboard.append(pred)
             pass
-        print 'emr=%d'%sum(emrlist)
-        aprf = tfpnlist_aprf(tfpnlist, avetype = 'micro')
-        self._knnscoreboard = knnscoreboard
-        return aprf
+        aveemr = np.mean(emrlist)/len(tcs._vadata)
+        
+        parfe = tfpnlist_parf(tfpnlist, avetype = 'micro')
+        parfe.append(aveemr)
+        return parfe, predtable, ytable
         #return plist
     pass
 
@@ -506,14 +515,13 @@ class kspace :
         for swc in swc_map : 
         #while True : 
             mct += 1
-            #swc = mcswc(self.dimlen)#montecarlo
             bcdfparams = self.getbcdf_pval_swc(swc)
             if not isinstance(bcdfparams, p3c) : 
                 continue
 
             if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.05 : #0.9 is similiar to 0.99
             #if True : 
-                #print 'Monte-carlo try : %d' % mct
+                #print('Monte-carlo try : %d' % mct
                 nmnt = [bcdfparams._pval, bcdfparams._d, bcdfparams._Y, swc, bcdfparams._betaA, bcdfparams._betaB, ecdf, bcdfparams._betaCDF]
                 #nmnt = [pval, d, Y, swc, bafit, bbfit, ecdf, betacdf]
                 #break#Monte-Carlo
@@ -725,23 +733,6 @@ def featureScaling(arr) :
     return arr
 
 
-def mcswc(dimlen) : 
-    """
-    Monte-Carlo Sigma Weight Candidator.
-
-    parameters
-    ----------
-    dimlen : int
-    length of dimension
-    
-    returns
-    -------
-    swc : Float array-like.
-    candidated sigma weights
-    """
-    swc = [2 ** (random.randrange(0, 3) - 1) for x in range(dimlen)]
-    return swc
-
 def pcdf(a, bins = 10) : 
     """
     Probability Cumulative Distribution Function
@@ -790,8 +781,6 @@ def skl_tfpn(pred, target, posname, negname, isEMR = False) :
     for p, t in zip(pred, target) : 
         if p in posname : 
             pn = True
-            #tf = True if t in p else False
-
             if t in p : 
                 tf = True
                 emr += 1
@@ -807,8 +796,64 @@ def skl_tfpn(pred, target, posname, negname, isEMR = False) :
 
     return [tfpn, emr] if isEMR else tfpn
 
-def tfpnlist_aprf(tplist, avetype = 'macro') : 
-    aprf = []
+def tfpnaprf(predfolable, yfolable, pname, fname) : 
+    """
+    predfolable : predict fold table
+    yfolable : y fold table
+    """
+    tfpnfolable, macrofolable, microfolable = [], [], []
+
+    for predtable, ytable in zip(predfolable, yfolable) : 
+        tfpntable, macrotable = [], []
+        for pred, y in zip(predtable, ytable) : 
+            tp, tn, fp, fn = 0, 0, 0, 0
+            for p, t in zip(pred, y) : 
+                if p in pname : 
+                    if t in p : 
+                        tp += 1
+                    else :
+                        fp += 1
+                elif p in fname : 
+                    if t in p : 
+                        tn += 1
+                    else : 
+                        fn += 1
+                else : 
+                    'wtf?'
+            ttff = [tp, tn, fp, fn]
+            tfpntable.append(ttff)
+
+            a, p, r = accuracy(tp, tn, fp, fn), precision(tp, fp), recall(tp, fn)
+            f = f1measure(p, r)
+            macrotable.append([a, p, r, f])
+            pass
+        tfpnfolable.append(tfpntable)
+        macrofolable.append(macrotable)
+
+    ztfpn  = [[    sum(bcr) for bcr in zip(*cls)] for cls in zip(*tfpnfolable)]
+    zmacro = [[np.mean(bcr) for bcr in zip(*cls)] for cls in zip(*macrofolable)]
+    for tp, tn, fp, fn in ztfpn : 
+        a, p, r = accuracy(tp, tn, fp, fn), precision(tp, fp), recall(tp, fn)
+        f = f1measure(p, r)
+        microfolable.append([a, p, r, f])
+    table = [[tfpn[0], tfpn[1], tfpn[2], tfpn[3], micro[0], micro[1], micro[2], micro[3], macro[0], macro[1], macro[2], macro[3]] for tfpn, micro, macro in zip(ztfpn, microfolable, zmacro)]
+
+    return table
+
+def accuracy(tp, tn, fp, fn) : 
+    return 0 if tp+tn+fp+fn == 0 else float(tp+tn)/float(tp+tn+fp+fn)
+
+def precision(tp, fp) : 
+    return 0 if tp+fp == 0 else float(tp) / float(tp + fp)
+
+def recall(tp, fn) : 
+    return 0 if tp+fn == 0 else float(tp) / float(tp + fn)
+
+def f1measure(p, r) : 
+    return 0 if p+r == 0 else (2 * p * r)/(p + r)
+
+def tfpnlist_parf(tplist, avetype = 'macro') : 
+    parf = []
     tptnfpfn = []
     for tfpn in tplist : 
         tp, tn, fp, fn = 0, 0, 0, 0
@@ -841,9 +886,9 @@ def tfpnlist_aprf(tplist, avetype = 'macro') :
         r = 0.0 if tp+fn == 0 else float(tp) / float(tp+fn)
         pass
     else : 
-        print 'input avetype as micro or macro'
+        print('input avetype as micro or macro')
         return 0
     f = 0.0 if p + r == 0.0 else (2*p*r)/(p+r)
-    aprf = [a, p, r, f]
+    parf = [p, a, r, f]
     
-    return aprf
+    return parf
