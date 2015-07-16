@@ -1,3 +1,4 @@
+# -*- coding: cp949 -*-
 import os, csv, numpy
 import matplotlib.pyplot as pyp
 from scipy.stats import beta

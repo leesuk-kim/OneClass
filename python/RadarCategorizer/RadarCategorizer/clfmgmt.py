@@ -1,3 +1,4 @@
+# -*- coding: cp949 -*-
 """
 Manage Learning Module
 """
@@ -14,6 +15,7 @@ class clfmgr :
     1. fold learning resource
     2. manage learning modules
     3. manage test result of modules
+    히끅 한글 된당...ㅠㅠ
     """
     fold = 10
 
@@ -68,21 +70,22 @@ class clfmgr :
         self.X, self.y = X, y
         return self
 
-    def folding(self, cnt) : 
+    def folding(self) : 
         """devide training data and targets on fold count
         """
         foldX, foldy = self._foldX, self._foldy
         fX, fy = [], []
-        for i in range(self.fold) : 
-            if i == cnt : 
-                pX, py = foldX[i], foldy[i]
-            else : 
-                fX.extend(foldX[i])
-                fy.extend(foldy[i])
+        for j in range(self.fold) : 
+            for i in range(self.fold) : 
+                if i == j : 
+                    pX, py = foldX[i], foldy[i]
+                else : 
+                    fX.extend(foldX[i])
+                    fy.extend(foldy[i])
             
-        self.fX, self.fy = fX, fy
-        self.pX, self.py = pX, py
-        pass
+            self.fX, self.fy = fX, fy
+            self.pX, self.py = pX, py
+            yield fX, fy
 
     def fit(self, clf) : 
         """fit data and target for classification

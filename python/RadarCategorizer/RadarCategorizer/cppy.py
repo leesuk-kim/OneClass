@@ -1,3 +1,4 @@
+# -*- coding: cp949 -*-
 """
 Radar signal Categorizer
 version 2.0

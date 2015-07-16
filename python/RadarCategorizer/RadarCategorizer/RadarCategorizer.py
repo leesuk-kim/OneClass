@@ -1,3 +1,4 @@
+# -*- coding: cp949 -*-
 import os, time
 import sys
 from cppy import cpon, cspace
@@ -13,7 +14,11 @@ if __name__ == '__main__' :
     iris = datasets.load_iris()
 
     cm.uploadres(iris.data, iris.target)
-    cm.folding(0)
+    a = cm.folding()
+    b = next(a)
+    b = next(a)
+    b = next(a)
+    b = next(a)
     trainer = cpon(10)
     xprttrainer = xprt(trainer)
     #src = 'data'
