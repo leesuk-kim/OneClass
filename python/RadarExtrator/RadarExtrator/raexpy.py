@@ -27,7 +27,7 @@ class raex :
 
     def getRawData(self) : 
         if self.appendable : 
-            print "The Raw data is not ready"
+            print("The Raw data is not ready")
             pass
         return self.rawdata
 

@@ -35,6 +35,7 @@ class clfmgr :
 
     def uploadres(self, X, y) :
         """upload learning resources.
+        각 클래스별로 업로드된 데이터를 fold할 때 일정하게 나눠지도록 블랜딩한다.
         Parameters
         ----------
         X : {array-like, sparce matrix}, shape = [n_samples, n_features]
@@ -71,7 +72,7 @@ class clfmgr :
         return self
 
     def folding(self) : 
-        """devide training data and targets on fold count
+        """블랜딩한 데이터를 fold length만큼 나누고, 매 턴마다 해당 fold는 테스트자료, 나머진 학습자료로 정리해서 yield한다.
         """
         foldX, foldy = self._foldX, self._foldy
         fX, fy = [], []
@@ -90,6 +91,7 @@ class clfmgr :
     def fit(self, clf) : 
         """fit data and target for classification
         If did not call uploadres() at least once, you fill parameters 'X'(learning resources) and 'y'(learning target)
+        이건 그냥 fit하는건데, list로 저장되는게 clf길래 함 만들어봄.
         """
         return clf.fit(self.fX, self.fy)
 
@@ -97,6 +99,7 @@ class clfmgr :
         y_pred = None
         """Perform classification on samples in X.
         For an one-class model, +1 or -1 is returned.
+        이건 그냥 predict하는건데, list로 저장되는게 clf길래 함 만들어봄.
         Parameters
         ----------
         X : {array-like, sparse matrix}, shape = [n_samples, n_features]

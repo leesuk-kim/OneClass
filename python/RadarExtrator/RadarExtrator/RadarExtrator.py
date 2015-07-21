@@ -29,7 +29,7 @@ if __name__ == "__main__" :
                 rre.close()
                 #print data
                 rrelist.append(rre)
-                print 'append %s' % rre.getName()
+                print('append %s' % rre.getName())
     rex.featurescaling(rrelist)#for feature scaling
     #export Data
     with open('merge.csv', 'wb') as fm : 
@@ -38,7 +38,7 @@ if __name__ == "__main__" :
                 for data in c.getRawData() : 
                     dlen = len(data) - 1
                     for i, val in enumerate(data) : 
-                        f.write('%s%c' % (repr(val), ',' if dlen != i else '\n'))
-                        fm.write('%s%c' % (repr(val), ',' if dlen != i else '\n'))
+                        f.write(bytes('%s%c' % (repr(val), ',' if dlen != i else '\n'), 'cp949'))
+                        fm.write(bytes('%s%c' % (repr(val), ',' if dlen != i else '\n'), 'cp949'))
 
-                print 'file write : ' + c.getName() + '.csv'
+                print('file write : ' + c.getName() + '.csv')
