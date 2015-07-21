@@ -1,3 +1,4 @@
+# -*- coding: cp949 -*-
 import re
 
 class raex : 
@@ -61,7 +62,7 @@ class raex :
         self.appendable = False;
 
         for i, v in enumerate(self.srclist) : 
-            self.srclist[i] = zip(*v)#transpose matrix!!!!!!
+            self.srclist[i] = list(zip(*v))#transpose matrix!!!!!!
 
         #for i, toa in enumerate(self.srclist) : 
         #    dtoa = diff(toa[1], zindex=True)
@@ -88,7 +89,7 @@ def diff(list, zindex = False, absolute = False) :
     if zindex :
         sub2.insert(0, 0)
     sub2 = sub2[:-1]
-    dif = [x2 - x1 if not absolute else abs(x2 - x1) for (x1, x2) in zip(sub2, sub)]
+    dif = [x2 - x1 if not absolute else abs(x2 - x1) for (x1, x2) in list(zip(sub2, sub))]
 
     if not zindex : 
         dif.append(sum(dif) / float(len(sub2)))
@@ -114,29 +115,46 @@ def statfeatures(list, moments = 'mvsk') :
 
     if 's' in moments : 
         m3 = (dll * sum([dlls * (x - m) ** 3 for x in list])) 
-        b1 = m3 / (v ** 1.5)
+        b1 = 0 if v == 0 else m3 / (v ** 1.5)
         sflist.append(b1)
 
     if 'k' in moments : 
         vsquare = (sum([dlls * (x - m) ** 2 for x in list])) ** 2
         m4 = (dll * sum([dlls * (x - m) ** 4 for x in list]))
-        g2 = m4 / vsquare - 3
+        g2 = 0 if vsquare == 0 else m4 / vsquare - 3
         sflist.append(g2)
 
     return sflist
 
-def featurescaling(samplelist = list) : 
-    dimlist = [zip(*s.rawdata) for s in samplelist]
-    dimlist = zip(*dimlist)
-    fslist = [[[0. for s in c] for c in d] for d in dimlist]
-    for i, dim in enumerate(dimlist) : 
-        dmax, dmin = max([max([s for s in c]) for c in dim]), min([min([s for s in c]) for c in dim])
-        for j, c in enumerate(dim) : 
-            for k, s in enumerate(c) : 
-                #s = (s - dmin) / (dmax - dmin)
-                fslist[i][j][k] = (s - dmin) / (dmax - dmin)
-    fslist = zip(*fslist)
-    fslist = [zip(*fs) for fs in fslist]
-    for sample, fs in zip(samplelist, fslist) : 
-        sample.rawdata = fs
-    pass
+def featurescaling(clist = list) : 
+    """AMP는 올바르게 작동하지 않습니다.
+    """
+    '''
+    cslist : class sample list
+    dslist : dimensional sample list 
+    cdslist : list for dimensional sample of classes
+    slist : sample list
+    clist : class list
+    dxlist : list for max of dimension
+    dnlist : list for min of dimension 
+    dflist : list for feature on dimension
+    '''
+    if type(clist[0]) is not raex : 
+        print("TYPE INCORRECT")
+        return 0
+
+    cdslist = [list(zip(*cls.rawdata)) for cls in clist]#각 class마다 시간순으로 정리된 sample을 dimension으로 정리해서 복사
+    dslist = list(zip(*cdslist))#각 class순으로 저장된 list를 dimension으로 정리해서 복사
+    dxlist = [max([max(y) for y in x]) for x in dslist]#각 dimension의 최대값
+    dnlist = [min([min(y) for y in x]) for x in dslist]#각 dimension의 최소값
+    ddlist = [dx - dn for dx, dn in zip(dxlist, dnlist)]
+
+    for cls in clist :#each class
+        frawdata = []
+        for samp in cls.rawdata : #each sample
+            smpl = [(s - dn) / dd for s, dn, dd in (zip(samp, dnlist, ddlist))]
+
+            frawdata.append(smpl)
+            pass
+        cls.rawdata = frawdata
+        pass

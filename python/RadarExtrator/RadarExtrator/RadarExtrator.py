@@ -1,3 +1,4 @@
+# -*- coding: cp949 -*-
 import sys
 import os
 from raexpy import raex
