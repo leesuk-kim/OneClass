@@ -33,9 +33,14 @@ if __name__ == "__main__" :
                 print('append %s' % rre.getName())
     rex.featurescaling(rrelist)#for feature scaling
     #export Data
-    with open('merge.csv', 'wb') as fm : 
+    dirname = os.path.dirname(__file__)
+    dirname = os.path.join(dirname, "export")
+    if not os.path.exists(dirname) : 
+        os.makedirs(dirname)
+
+    with open(os.path.join(dirname, 'merge.csv'), 'wb') as fm : 
         for c in rrelist : 
-            with open(c.getName() + '.csv', 'wb') as f : 
+            with open(os.path.join(dirname, c.getName() + '.csv'), 'wb') as f : 
                 for data in c.getRawData() : 
                     dlen = len(data) - 1
                     for i, val in enumerate(data) : 

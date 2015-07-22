@@ -122,12 +122,38 @@ def plotclsphsp(rph = raph) :
     xps, yps = [], []
     dsflist = list(zip(*rph.srclist))#dim x smpl x ftr
     for sflist, ftt in list(zip(dsflist, fttlist)) : 
-        fig = plt.figure(rph.name)
+        ftitle = 'PhaseSpace_'+ftt+'_'+rph.name
+        fig = plt.figure(ftitle)
+        plt.title(ftitle)
         
         for flist in sflist : 
             xps, yps = flist[:-1], flist[1:]
             plt.plot(xps, yps, 'k.')
-        filename = os.path.join(dirname, rph.name+'_'+ftt+"_total")
+        filename = os.path.join(dirname, ftitle)
+        plt.savefig(filename)
+        plt.close(rph.name)#여기서 close 안 해주면 자꾸 뒈짐 ㄷㄷ
+        pass
+    pass
+
+def plotclshistogram(rph = raph) : 
+    print("histogarmming", rph.name)
+
+    dirname = os.path.join(os.path.dirname(__file__), rph.name)
+    if not os.path.exists(dirname) : 
+        os.makedirs(dirname)
+
+    dsflist = list(zip(*rph.srclist))#dim x smpl x ftr
+    for sflist, ftt in list(zip(dsflist, fttlist)) : 
+        ftitle = 'HIstogram_'+ftt+'_'+rph.name
+        fig = plt.figure(ftitle)
+        plt.title(ftitle)
+        
+        histo = []
+        for flist in sflist : 
+            histo.extend(flist)
+        plt.hist(histo, 10, normed=1, histtype='bar')
+        
+        filename = os.path.join(dirname, ftitle)
         plt.savefig(filename)
         plt.close(rph.name)#여기서 close 안 해주면 자꾸 뒈짐 ㄷㄷ
         pass

@@ -23,14 +23,14 @@ if __name__ == '__main__' :
     xprttrainer = xprt(trainer)
     #src = 'data'
     #src = 'data_06_fs'
-    #src = 'data_03_fs'
     #src = 'data_12'
-    src = 'data_12_fs'
+    #src = 'data_12_fs'
     #src = 'd5_12fs'
     #src = 'data_24'
     #src = 'data_24_fs'
     #src = 'data_24_ddtoa'
     #src = 'data_abs_24_ddtoa'
+    src = 'lig_12'
     trainer._srcdir = src
     for dirpath, dirnames, filenames in os.walk(src) : 
         for filename in filenames : 
@@ -49,9 +49,9 @@ if __name__ == '__main__' :
             trainer.registcs(cs)
 
     trainer.learn()
-    #xprttrainer.xlsxctrdcmap()
-    #xprttrainer.xlsxclfscore()
-    #xprttrainer.xlsxclfboard()
+    xprttrainer.xlsxctrdcmap()
+    xprttrainer.xlsxclfscore()
+    xprttrainer.xlsxclfboard()
     #trainer.learnSVM()
     #trainer.learnKNN()
     #xprttrainer.csvaprf()

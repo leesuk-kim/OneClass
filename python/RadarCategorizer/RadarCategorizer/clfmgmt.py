@@ -61,7 +61,7 @@ class clfmgr :
 
         foldX, foldy = [[] for x in range(fold)], [[] for y in range(fold)]
 
-        for i, zxy in enumerate(zip(X, y)) : 
+        for i, zxy in enumerate(list(zip(X, y))) : 
             ii = i % fold
             foldX[ii].append(zxy[0])
             foldy[ii].append(zxy[1])

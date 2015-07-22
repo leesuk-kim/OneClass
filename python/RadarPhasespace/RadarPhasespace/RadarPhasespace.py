@@ -38,7 +38,8 @@ if __name__ == "__main__" :
 
     pool = mp.Pool()
     pool.map(rph.plotclsphsp, rrelist)
-
+    pool.map(rph.plotclshistogram, rrelist)
+    
     #for rre in rrelist : 
     #    rph.plotclsphsp(rre)
 

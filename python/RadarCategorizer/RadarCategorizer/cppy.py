@@ -355,7 +355,7 @@ class cspace :
         trdata = self._FeatureList[:aindex] + self._FeatureList[bindex:]
         vadata = self._FeatureList[aindex : bindex]
         
-        trtr = zip(*trdata)
+        trtr = list(zip(*trdata))
         mean, var, dev = [], [], []
         for trtrrow in trtr : 
             m = reduce(lambda x, y: x + y, trtrrow) / len(trtrrow)
@@ -410,7 +410,7 @@ class cspace :
         peaks : int.
         number of modals. if you need bimodal which means you need two kernels, then peaks are 2
         """
-        dimdata = zip(*self._trdata)
+        dimdata = list(zip(*self._trdata))
         #1.get min and max of every dimension
         minlist = [min(x) for x in dimdata]
         maxlist = [max(x) for x in dimdata]
@@ -418,7 +418,7 @@ class cspace :
         dvlist = self._var
 
         dimpeaks = []
-        for dimlist, dm, dv in zip(dimdata, dmlist, dvlist) : 
+        for dimlist, dm, dv in list(zip(dimdata, dmlist, dvlist)) : 
             inc, dec = False, False
             bound = False
             y = [x for x in dimlist]
@@ -469,7 +469,7 @@ class kspace :
         ###get statistics : mean and variance
         self._name = name
         self._data = np.array(trd)
-        datatr = np.array(zip(*trd))
+        datatr = np.array(list(zip(*trd)))
         self._mean, self._var = [m.mean() for m in datatr], [v.var(ddof=1) for v in datatr]
         ###get statistics ends
         self.dimlen = len(trd[0])
@@ -520,7 +520,7 @@ class kspace :
             if not isinstance(bcdfparams, p3c) : 
                 continue
 
-            if nmnt[0] < bcdfparams._pval and bcdfparams._pval >= 0.05 : #0.9 is similiar to 0.99
+            if nmnt[0] < bcdfparams._pval:# and bcdfparams._pval >= 0.05 : #0.9 is similiar to 0.99
             #if True : 
                 #print('Monte-carlo try : %d' % mct
                 nmnt = [bcdfparams._pval, bcdfparams._d, bcdfparams._Y, swc, bcdfparams._betaA, bcdfparams._betaB, ecdf, bcdfparams._betaCDF]
@@ -543,7 +543,7 @@ class kspace :
         """
         h_x = 0.
         dsquare = 0.
-        xmvw = zip(X, self._mean, self._var, sw)
+        xmvw = list(zip(X, self._mean, self._var, sw))
         dsquare = 0.5 * reduce(lambda p, q : p + q, [((x - m) ** 2) / ((w ** 2) * v) for x, m, v, w in xmvw])
                 
         h_x = math.exp(-1 * dsquare)
@@ -638,11 +638,11 @@ def getNorm(row, mean, var) :
     Euclidean norm calculator
 
     """
-    d = reduce(lambda x, y : x + y , [(i - m) ** 2 / v for i, m, v in zip(row, mean, var)])
+    d = reduce(lambda x, y : x + y , [(i - m) ** 2 / v for i, m, v in list(zip(row, mean, var))])
     return d ** 0.5
 
 def scoreclf(distancemap) : 
-    sb, map = [], [zip(*tcmap) for tcmap in distancemap]
+    sb, map = [], [list(zip(*tcmap)) for tcmap in distancemap]
     for eclist in map : 
         ecsb = []
         for klist in eclist : 
@@ -779,7 +779,7 @@ def skl_tfpn(pred, target, posname, negname, isEMR = False) :
     emrlist, tfpn = [], []
     tf, pn = False, False
     emr = 0
-    for p, t in zip(pred, target) : 
+    for p, t in list(zip(pred, target)) : 
         if p in posname : 
             pn = True
             if t in p : 
@@ -804,11 +804,11 @@ def tfpnaprf(predfolable, yfolable, pname, fname) :
     """
     tfpnfolable, macrofolable, microfolable = [], [], []
 
-    for predtable, ytable in zip(predfolable, yfolable) : 
+    for predtable, ytable in list(zip(predfolable, yfolable)) : 
         tfpntable, macrotable = [], []
-        for pred, y in zip(predtable, ytable) : 
+        for pred, y in list(zip(predtable, ytable)) : 
             tp, tn, fp, fn = 0, 0, 0, 0
-            for p, t in zip(pred, y) : 
+            for p, t in list(zip(pred, y)) : 
                 if p in pname : 
                     if t in p : 
                         tp += 1
@@ -831,8 +831,8 @@ def tfpnaprf(predfolable, yfolable, pname, fname) :
         tfpnfolable.append(tfpntable)
         macrofolable.append(macrotable)
 
-    ztfpn  = [[    sum(bcr) for bcr in zip(*cls)] for cls in zip(*tfpnfolable)]
-    zmacro = [[np.mean(bcr) for bcr in zip(*cls)] for cls in zip(*macrofolable)]
+    ztfpn  = [[    sum(bcr) for bcr in list(zip(*cls))] for cls in list(zip(*tfpnfolable))]
+    zmacro = [[np.mean(bcr) for bcr in list(zip(*cls))] for cls in list(zip(*macrofolable))]
     for tp, tn, fp, fn in ztfpn : 
         a, p, r = accuracy(tp, tn, fp, fn), precision(tp, fp), recall(tp, fn)
         f = f1measure(p, r)
@@ -882,7 +882,7 @@ def tfpnlist_parf(tplist, avetype = 'macro') :
         r /= lentptnfpfn
         pass
     elif avetype is 'micro' : 
-        tp, tn, fp, fn = [sum(x) for x in zip(*tptnfpfn)]
+        tp, tn, fp, fn = [sum(x) for x in list(zip(*tptnfpfn))]
         p = 0.0 if tp+fp == 0 else float(tp) / float(tp+fp)
         r = 0.0 if tp+fn == 0 else float(tp) / float(tp+fn)
         pass
