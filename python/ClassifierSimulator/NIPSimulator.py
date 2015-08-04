@@ -208,3 +208,8 @@ def update_stats(wiki: dict, key, value):
     wiki[key]['fold'].append(value)
 
     return wiki
+
+
+def emr_score(target, pred):
+
+    pass
