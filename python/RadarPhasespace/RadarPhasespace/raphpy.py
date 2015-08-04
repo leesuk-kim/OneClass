@@ -5,27 +5,27 @@ import multiprocessing as mp
 import os
 
 fttlist = ["NO", " S", " V", " AOA", " FREQ", " B", " FMOP", " AMP", " TOA", " PMOP", " PW", " dTOA"]
-class raph : 
+class raph:
 
     def __init__(self, classname): 
-        self.name= classname;
+        self.name = classname
         '''emitter name'''
         self.srclist = []
         '''original data'''
-        self.appendable = True;
+        self.appendable = True
         '''
         flag for whether this class is appendable.
         if not appendable, appending functions don't work.
         '''
         pass
     
-    def appendData(self, dlist) : 
+    def append_data(self, dlist): 
         '''샘플마다 읽어들여서 해당 클래스에 붙인다.
         '''
-        if self.appendable :     
+        if self.appendable:     
             srcbfr = []
             phbfr = []
-            for d in dlist : 
+            for d in dlist: 
                 s = re.sub(' +', ' ', d)#change 1 more whitespaces to a whitespace in the string d
                 s = s[1:].split(' ')
                 s = [float(x) for x in s]
@@ -36,47 +36,49 @@ class raph :
             self.srclist.append(srcbfr)
         pass
 
-    def close(self) : 
-        self.appendable = False;
+    def close(self): 
+        self.appendable = False
 
-        for i, v in enumerate(self.srclist) : 
+        for i, v in enumerate(self.srclist): 
             self.srclist[i] = list(zip(*v))#transpose matrix!!!!!!
         pass
 
     pass
 
-def statfeatures(list, moments = 'mvsk') : 
-    '''
+
+def statfeatures(arr, moments: str = "mvsk"):
+    """
     moment - m/v/s/k. passive is mv.
     if mv, it returns m and v, or if mvk, it returns m, v, and k.
-    '''
-    sflist = []
-    ll = float(len(list))
+    """
+    sfarr = []
+    ll = float(len(arr))
     lls = ll - 1
     dll,  dlls = 1 / ll, 1 / lls
 
     if 'm' in moments: 
-        m = sum(list) / ll
-        sflist.append(m)
+        m = sum(arr) / ll
+        sfarr.append(m)
         
     if 'v' in moments : 
-        v = sum([dlls * (x - m) ** 2 for x in list])
-        sflist.append(v)
+        v = sum([dlls * (x - m) ** 2 for x in arr])
+        sfarr.append(v)
 
     if 's' in moments : 
-        m3 = (dll * sum([dlls * (x - m) ** 3 for x in list])) 
+        m3 = (dll * sum([dlls * (x - m) ** 3 for x in arr])) 
         b1 = m3 / (v ** 1.5)
-        sflist.append(b1)
+        sfarr.append(b1)
 
     if 'k' in moments : 
-        vsquare = (sum([dlls * (x - m) ** 2 for x in list])) ** 2
-        m4 = (dll * sum([dlls * (x - m) ** 4 for x in list]))
+        vsquare = (sum([dlls * (x - m) ** 2 for x in arr])) ** 2
+        m4 = (dll * sum([dlls * (x - m) ** 4 for x in arr]))
         g2 = m4 / vsquare - 3
-        sflist.append(g2)
+        sfarr.append(g2)
 
-    return sflist
+    return sfarr
 
-def featurescaling(clist = list) : 
+
+def featurescaling(clist: list) :
     """AMP는 올바르게 작동하지 않습니다.
     """
     '''
@@ -93,17 +95,17 @@ def featurescaling(clist = list) :
         print("TYPE INCORRECT")
         return 0
 
-    cdslist = [list(zip(*cls.srclist)) for cls in clist]#각 class마다 시간순으로 정리된 sample을 dimension으로 정리해서 복사
-    dslist = list(zip(*cdslist))#각 class순으로 저장된 list를 dimension으로 정리해서 복사
-    dxlist = [max([max([max(z) for z in y]) for y in x]) for x in dslist]#각 dimension의 최대값
-    dnlist = [min([min([min(z) for z in y]) for y in x]) for x in dslist]#각 dimension의 최소값
+    cdslist = [list(zip(*cls.srclist)) for cls in clist] # 각 class마다 시간순으로 정리된 sample을 dimension으로 정리해서 복사
+    dslist = list(zip(*cdslist))  # 각 class순으로 저장된 list를 dimension으로 정리해서 복사
+    dxlist = [max([max([max(z) for z in y]) for y in x]) for x in dslist]  # 각 dimension의 최대값
+    dnlist = [min([min([min(z) for z in y]) for y in x]) for x in dslist]  # 각 dimension의 최소값
     ddlist = [dx - dn for dx, dn in zip(dxlist, dnlist)]
 
-    for cls in clist :#each class
+    for cls in clist:  # each class
         fsrclist = []
-        for slist in cls.srclist : #each sample
+        for slist in cls.srclist:  # each sample
             fslist = []
-            for dflist, dn, dd in zip(slist, dnlist, ddlist): #each list for feature of dim, dn, dd
+            for dflist, dn, dd in zip(slist, dnlist, ddlist):  # each list for feature of dim, dn, dd
                 fdflist = [0 if df == 0 or dd == 0 or df == dn else (df - dn) / dd for df in dflist]
                 fslist.append(fdflist)
                 pass
@@ -113,14 +115,14 @@ def featurescaling(clist = list) :
         pass
     pass
 
-def plotclsphsp(rph = raph) : 
+def plotclsphsp(rph: raph) :
     print("plotting", rph.name)
     dirname = os.path.join(os.path.dirname(__file__), rph.name)
     if not os.path.exists(dirname) : 
         os.makedirs(dirname)
 
     xps, yps = [], []
-    dsflist = list(zip(*rph.srclist))#dim x smpl x ftr
+    dsflist = list(zip(*rph.srclist))  # dim x smpl x ftr
     for sflist, ftt in list(zip(dsflist, fttlist)) : 
         ftitle = 'PhaseSpace_'+ftt+'_'+rph.name
         fig = plt.figure(ftitle)
@@ -131,18 +133,18 @@ def plotclsphsp(rph = raph) :
             plt.plot(xps, yps, 'k.')
         filename = os.path.join(dirname, ftitle)
         plt.savefig(filename)
-        plt.close(rph.name)#여기서 close 안 해주면 자꾸 뒈짐 ㄷㄷ
+        plt.clf()  # 여기서 close 안 해주면 자꾸 뒈짐 ㄷㄷ
         pass
     pass
 
-def plotclshistogram(rph = raph) : 
+def plotclshistogram(rph: raph) :
     print("histogarmming", rph.name)
 
     dirname = os.path.join(os.path.dirname(__file__), rph.name)
     if not os.path.exists(dirname) : 
         os.makedirs(dirname)
 
-    dsflist = list(zip(*rph.srclist))#dim x smpl x ftr
+    dsflist = list(zip(*rph.srclist))  # dim x smpl x ftr
     for sflist, ftt in list(zip(dsflist, fttlist)) : 
         ftitle = 'HIstogram_'+ftt+'_'+rph.name
         fig = plt.figure(ftitle)
@@ -155,6 +157,6 @@ def plotclshistogram(rph = raph) :
         
         filename = os.path.join(dirname, ftitle)
         plt.savefig(filename)
-        plt.close(rph.name)#여기서 close 안 해주면 자꾸 뒈짐 ㄷㄷ
+        plt.clf()  # 여기서 close 안 해주면 자꾸 뒈짐 ㄷㄷ
         pass
     pass
