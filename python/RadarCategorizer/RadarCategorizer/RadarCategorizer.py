@@ -28,7 +28,8 @@ if __name__ == '__main__':
     # src = 'data_24_fs'
     # src = 'data_24_ddtoa'
     # src = 'data_abs_24_ddtoa'
-    src = 'lig_12'
+    # src = 'lig_12'
+    src = 'data_eb'
     trainer._srcdir = src
     for dirpath, dirnames, filenames in os.walk(src): 
         for filename in filenames: 

@@ -38,12 +38,13 @@ if __name__ == "__main__":
     rph.featurescaling(rrelist)  # for feature scaling
 
     pool = mp.Pool()
-    #pool.map(rph.plotclsphsp, rrelist)
+    pool.map(rph.plotclsphsp, rrelist)
     pool.map(rph.plotclshistogram, rrelist)
     
     print("End py")
     # for rre in rrelist :
-    #    rph.plotclsphsp(rre)
+    #     rph.plotclsphsp(rre)
+    #     rph.plotclshistogram(rre)
     
 
     """
