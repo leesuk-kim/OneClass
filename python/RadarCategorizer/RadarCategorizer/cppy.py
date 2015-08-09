@@ -29,7 +29,7 @@ class cpon:
 
     """
     
-    def __init__(self, fold: 2, srcdir: ''):
+    def __init__(self, fold: 2):
         self._TimeStamp = '%d' % int(time.time())
         self._cslist = []
         self._fmax = fold
@@ -41,7 +41,6 @@ class cpon:
         a map consist of distance between each centroid of class
         """
         self._clfboard = []
-        self._srcdir = srcdir
         pass
 
     def csfactory(self, name: None, tmat: []):
@@ -114,7 +113,8 @@ class cpon:
         tfpntable = []
         emr = 0
         predtable, ytable = [], []
-        for i, cs in enumerate(self._cslist): 
+        for i, cs in enumerate(self._cslist):
+            print("onOARTesting:" + cs._name)
             ylist = []
             pred = []
             resKernelList = self.getRestKernels(cs._name)
@@ -162,7 +162,8 @@ class cpon:
         return ditance on each norm for each kernel
         """
         dmlist = []
-        for i, tcs in enumerate(self._cslist): 
+        for i, tcs in enumerate(self._cslist):
+            print("onTesting:" + tcs._name)
             dmap = []
             for vcs in self._cslist: 
                 kn = vcs._kslist
@@ -377,6 +378,7 @@ class cspace:
     def onTraining(self): 
         # positioning kernel position for kernel size 1
         # if you want to set more kernel, you take method 'dalken(data allocate on kernel)'
+        print("onTraining:"+self._name)
         kpos = self._mean
         ks = kspace(self._mean, self._trdata, self._name)
 

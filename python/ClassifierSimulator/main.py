@@ -10,8 +10,9 @@ import NIPSimulator
 if __name__ == '__main__':
 
     cm = NIPSimulator.ClfSim(fold=10)  # default : 2
-    cm.addclf(NIPSimulator.clffactory('svm'))
-    cm.addclf(NIPSimulator.clffactory('knn'))
+    # cm.addclf(NIPSimulator.clffactory('svm'))
+    # cm.addclf(NIPSimulator.clffactory('knn'))
+    cm.addclf(NIPSimulator.clffactory('cpon'))
 
     iris = datasets.load_iris()
 

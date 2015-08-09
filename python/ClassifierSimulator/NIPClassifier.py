@@ -13,6 +13,7 @@ Lang. ver.: 3.4.3
 from functools import reduce
 import math
 import time
+import operator
 
 import numpy as np
 from scipy.stats import beta
@@ -28,18 +29,21 @@ class CPON:
     """
 
     def __init__(self):
-        self._timestamp = '%d' % int(time.time())  # timestamp
-        self._cslist = []  # list of class space
-        self.__kernel = 1
+        self.timestamp = '%d' % int(time.time())  # timestamp
+        self.cslist = []  # list of class space
+        self.kernel = 1
         pass
-
-    def setkernel(self, kn):
-        self.__kernel = kn
 
     def fit(self, data, target):
         """
         fit
         """
+        fcs = self.factory_cs
+        set_tag = set(target)
+
+        for tag in set_tag:
+            targetdata = [x[1] for x in list(zip(target, data)) if tag == x[0]]  # TODO target이 문자열을 때 추가
+            self.cslist.append(fcs(tag, targetdata))
         pass
 
     def predict(self, target):
@@ -57,22 +61,19 @@ class CPON:
         class space factory
         setting kernel volume from this class
         """
-        cs = ClassSpace(name, data, self.__kernel)
-
-    def regist_cs(self, cs):
-        self._cslist.append(cs)
+        return ClassSpace(name, data, self.kernel)
 
 
 class ClassSpace:
 
     def __init__(self, name, data, kernel: 1):
-        self._name = name
-        self._data = data
-        self._lendata = len(data)
-        self._kernel = kernel
+        self.name = name
+        self.data = data
+        self.lendata = len(data)
+        self.kernel = kernel
 
 
-class ClassKernel:
+class KernelSpace:
     def __init__(self, name: '', centroid, data):
         self._name = name
         self._centroid = centroid

@@ -191,7 +191,7 @@ def ave_stats(simulator_tag: SimTag):
     return simulator_tag
 
 
-form_stats = {'fold':[], 'average': 0.0}  # data structure for statistic measurement
+form_stats = {'fold': [], 'average': 0.0}  # data structure for statistic measurement
 
 
 def update_stats(wiki: dict, key, value):
