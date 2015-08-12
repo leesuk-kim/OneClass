@@ -556,6 +556,7 @@ class kspace:
         Y = [self.kernelizeisw(x, swc) for x in self._data]
 
         Y.sort()
+        Y = featureScaling(Y)
         y_m = np.mean(Y)
         y_v = np.var(Y, ddof = 1)
         if math.isnan(y_v) or y_v == 0: 

@@ -1,4 +1,3 @@
-# -*- coding:CP949 -*-
 __author__ = 'lk'
 
 from sklearn import datasets

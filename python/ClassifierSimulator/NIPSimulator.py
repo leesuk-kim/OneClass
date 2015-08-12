@@ -1,4 +1,3 @@
-#  -*- coding: cp949 -*-
 """
 Manage Learning simulorule
 """
@@ -41,7 +40,7 @@ class ClfSim:
 
     def fit(self, data, target):
         """upload learning resources.
-        °¢ Å¬·¡½ºº°·Î ¾÷·ÎµåµÈ µ¥ÀÌÅÍ¸¦ foldÇÒ ¶§ ÀÏÁ¤ÇÏ°Ô ³ª´²Áöµµ·Ï ºí·£µùÇÑ´Ù.
+        ê° í´ë˜ìŠ¤ë³„ë¡œ ì—…ë¡œë“œëœ ë°ì´í„°ë¥¼ foldí•  ë•Œ ì¼ì •í•˜ê²Œ ë‚˜ëˆ ì§€ë„ë¡ ë¸”ëœë”©í•œë‹¤.
         Parameters
         ----------
         X: {array-like, sparce matrix}, shape = [n_samples, n_features]
@@ -79,7 +78,7 @@ class ClfSim:
         return self
 
     def folding(self):
-        """ºí·£µùÇÑ µ¥ÀÌÅÍ¸¦ fold length¸¸Å­ ³ª´©°í, ¸Å ÅÏ¸¶´Ù ÇØ´ç fold´Â Å×½ºÆ®ÀÚ·á, ³ª¸ÓÁø ÇĞ½ÀÀÚ·á·Î Á¤¸®ÇØ¼­ yieldÇÑ´Ù.
+        """ë¸”ëœë”©í•œ ë°ì´í„°ë¥¼ fold lengthë§Œí¼ ë‚˜ëˆ„ê³ , ë§¤ í„´ë§ˆë‹¤ í•´ë‹¹ foldëŠ” í…ŒìŠ¤íŠ¸ìë£Œ, ë‚˜ë¨¸ì§„ í•™ìŠµìë£Œë¡œ ì •ë¦¬í•´ì„œ yieldí•œë‹¤.
         """
         fold_data, fold_target, f = self._fold_data, self._fold_target, self._fold
         ldata, ltarget = [], []  # learning data
@@ -130,7 +129,7 @@ class SimTag:
         stats = self.statistics
 
         self.predlist.append(pred)
-        # TODO °á°ú°ªÀ» ¼öÁ¤ÇÏ°í ½Í´Ù¸é ¿©±â¼­
+        # TODO ê²°ê³¼ê°’ì„ ìˆ˜ì •í•˜ê³  ì‹¶ë‹¤ë©´ ì—¬ê¸°ì„œ
         update_stats(stats, 'acc', metrics.accuracy_score(pred_target, pred))
         update_stats(stats, 'p_a', metrics.precision_score(pred_target, pred, average='macro'))
         update_stats(stats, 'p_i', metrics.precision_score(pred_target, pred, average='micro'))
@@ -139,7 +138,7 @@ class SimTag:
         # update_stats(stats, 'f_a', metrics.f1_score(pred, pred_target, average='macro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
         # update_stats(stats, 'f_i', metrics.f1_score(pred, pred_target, average='micro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
         update_stats(stats, 'ham', metrics.hamming_loss(pred_target, pred))
-        # TODO EMR ÇÔ¼ö ¸¸µé±â
+        # TODO EMR í•¨ìˆ˜ ë§Œë“¤ê¸°
         # update_stats(stats, 'emr', )
 
         return self
@@ -165,13 +164,13 @@ def clffactory(clfname):
 
     if ('svm' in clfname) or ('svc' in clfname):
         clf = SVC(kernel='rbf', gamma=50)
-        print("[clf factory]clf=\'SVC\', kernel=\''+clf.kernel+'\', gamma=\''+repr(clf.gamma)+'\'")
+        print("[clf factory]clf=â‚©'SVCâ‚©', kernel=â‚©''+clf.kernel+'â‚©', gamma=â‚©''+repr(clf.gamma)+'â‚©'")
     elif 'knn' in clfname:
         clf = KNeighborsClassifier(weights='distance')
-        print("[clf factory]clf=\'kNN\', weights=\''+clf.weights+'\'")
+        print("[clf factory]clf=â‚©'kNNâ‚©', weights=â‚©''+clf.weights+'â‚©'")
     elif 'cpon' in clfname:
         clf = CPON()
-        print("[clf factory]clf=\'CPON\'")
+        print("[clf factory]clf=â‚©'CPONâ‚©'")
     mi = SimTag(clf, clfname)
 
     return mi
@@ -179,7 +178,7 @@ def clffactory(clfname):
 
 def ave_stats(simulator_tag: SimTag):
     """
-    °¢ Åü°èÄ¡ÀÇ Æò±ÕÀ» °è»êÇÏ°í, SimTagÀÇ SimTag.statisticsÀÇ ¸Ç µÚ¿¡ Æò±Õ°ªÀ» ºÙÀÔ´Ï´Ù.
+    ê° í‰ê³„ì¹˜ì˜ í‰ê· ì„ ê³„ì‚°í•˜ê³ , SimTagì˜ SimTag.statisticsì˜ ë§¨ ë’¤ì— í‰ê· ê°’ì„ ë¶™ì…ë‹ˆë‹¤.
     calculate mean of each statistic and append at the end of lsit of statistic.
     :type simulator_tag: SimTag
     :param simulator_tag: object SimTag
@@ -196,7 +195,7 @@ form_stats = {'fold': [], 'average': 0.0}  # data structure for statistic measur
 
 def update_stats(wiki: dict, key, value):
     """
-    ÇØ´ç Åë°èÄ¡¿¡ fold ¸¦ Ãß°¡ÇÕ´Ï´Ù. Åë°èÄ¡°¡ ¾ø´Ù¸é »õ·Î Ãß°¡ÇÑ ÈÄ fold¸¦ Ãß°¡ÇÕ´Ï´Ù.
+    í•´ë‹¹ í†µê³„ì¹˜ì— fold ë¥¼ ì¶”ê°€í•©ë‹ˆë‹¤. í†µê³„ì¹˜ê°€ ì—†ë‹¤ë©´ ìƒˆë¡œ ì¶”ê°€í•œ í›„ foldë¥¼ ì¶”ê°€í•©ë‹ˆë‹¤.
     :param wiki: statistics dictionary of classification
     :param key: abbrivation of measurement
     :param value: measurement function
