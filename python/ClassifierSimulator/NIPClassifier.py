@@ -14,7 +14,6 @@ import time
 # import threading
 
 import numpy as np
-from scipy.spatial import distance
 from scipy.stats import beta
 import scipy.stats as scistats
 
@@ -38,7 +37,7 @@ class CPON:
         fit
         """
         fcs = self.factory_cs
-        set_tag = set(target)
+        set_tag = list(set(target))
 
         for tag in set_tag:
             if type(tag) != 'str':
@@ -51,16 +50,29 @@ class CPON:
             cs.clustering()
         pass
 
-    def predict(self, target):
+    def predict(self, data):
         """predict
         """
+        pred = []
+        for x in data:
+            dcs = self.decision(x)
+            pred.append(dcs)
 
-        pass
+        return pred
 
-    def predict_ovr(self):
-        """predict One vs Rest
+    def decision(self, x):
         """
-        pass
+        feature x를 입력하면 Posterior Probability of Class Membership 을 비교해서
+        가장 Posterior probability가 낮은 Class의 target을 return
+        :param x: 찾을 feature
+        :return: 찾은 class의 target
+        """
+        pp_max, tg_max = 0, 3
+        for cs in self.cslist:
+            pp, tg = cs.post_prob(x)
+            if pp_max < pp:
+                pp_max, tg_max = pp, tg
+        return tg_max
 
     def factory_cs(self, name: None, data):
         """
@@ -96,6 +108,16 @@ class Class:
             self._centroidlist.append(es)
         pass
 
+    def post_prob(self, x):
+        centroidlist = self._centroidlist
+        pval_max = 0
+        for centroid in centroidlist:
+            pval = centroid.discriminant(x)
+            if pval_max < pval:
+                pval_max = pval
+
+        return pval_max, self.name
+
 
 class Centroid:
     def __init__(self, name: '', class_space: Class, centroid: list, data: list):
@@ -106,110 +128,96 @@ class Centroid:
         self.dimension = np.array(list(zip(*data)))
         self.weight = 1.
         self._dimension_m, self._dimension_s = [d.mean() for d in self.dimension], [d.std(ddof=1) for d in self.dimension]
-        self._brv, self._brv_min, self._brv_max = self.__transform_beta__()
+        self._brv, self._data_min, self._data_max = self.__empirical_beta__()
         self._brv_m, self.brv_v = np.mean(self._brv), np.var(self._brv, ddof=1)
-        self._brv_d, self.brv_p = self.__hypothesis_test__()
+        self._brv_d, self._brv_p, self._brv_alpha, self._brv_beta = self.__hypothesis_test__()
+        # self._brv_d is Kolmogorov-Smirnov Statistic
 
     def __hypothesis_test__(self):
         centroid = self.centroid
         brv, brv_m, brv_v = self._brv, self._brv_m, self.brv_v
+        # brv_min, brv_max = min(brv), max(brv)
+        # brv_min *= 0.9
+        # brv_max *= 1.1
 
-        ba = brv_m ** 2 * ((1 - brv_m) / brv_v - 1 / brv_m)
-        bb = ba * (1 - brv_m) / brv_m
+        ba, bb = beta_parameter(brv_m, brv_v, 0, 1)
         ba, bb, floc, fscale = beta.fit(brv, ba, bb)
         bcdf = beta.cdf(brv, ba, bb)
 
         d, pval = scistats.kstest(brv, lambda cdf: bcdf)
-        return d, pval
+        return d, pval, ba, bb
 
-    def __transform_beta__(self):
-        brv = [reduce(lambda x, y: x + y, self.gaussian_feature(x)) for x in self.data]  # GKF
-        # brv = [self.gaussian_data(x) for x in self.data]  # MGF
+    def __empirical_beta__(self):
+        # brv = [reduce(lambda x, y: x + y, self.gaussian_feature(x)) for x in self.data]  # GKF
+        brv = [self.gaussian_data(x) for x in self.data]  # MGF
 
         brv, brv_n, brv_x = featurescaling(brv)
         brv.sort()
 
         return brv, brv_n, brv_x
 
+    def betamapping(self, a):
+        # q = reduce(lambda x, y: x + y, self.gaussian_feature(a))  # GKF
+        q = self.gaussian_data(a)  # MGF
+
+        fq = featurescaling(q, self._data_min, self._data_max)
+
+        return fq
+
     def gaussian_data(self, a):
         """
         gaussian function a.k.a. gaussian kernel function
         """
-        alpha = self.weight
-        amv = list(zip(a, self._dimension_m, self.parent.dimension_std))
-        dsquare = 0.5 * reduce(lambda p, q: p + q, [((x - m) ** 2) / ((alpha * s) ** 2) for x, m, s in amv])
+        w = self.weight
+        ams = list(zip(a, self._dimension_m, self.parent.dimension_std))
+        # TODO combination of kernel하는 곳입니다.
+        # linear combination of kernel
+        dsquare = -1 * 0.5 * reduce(lambda p, q: p + q, [gaussian_kernel_power_formula(x, m, s, w) for x, m, s in ams])
+        gk = math.exp(dsquare)
 
-        gk = math.exp(-1 * dsquare)
         return gk
 
-    def gaussian_feature(self, f):
+    def gaussian_feature(self, a):
         """
         This Gaussian Kernel, exactly, is Multi-dimensional Gaussian Function
         """
         w = self.weight
-        kn = [math.exp(-1 * (((x - m) ** 2) / (2 * (w * s) ** 2))) for m, s, x in zip(self._dimension_m, self._dimension_s, f)]
+        ams = list(zip(a, self._dimension_m, self._dimension_s))
+        kn = [math.exp(gaussian_kernel_power_formula_vertex(x, m, s, w)) for x, m, s in ams]
         return kn
 
-    def discriminant(self):
-        pass
-
-    def __get_beta__(self):
-        # TODO 이게 찾는 거임.
-        b = 0
-        return b
+    def discriminant(self, x):
+        # TODO x값에 해당하는 f_y를 찾고 이에 대응하는 Beta값을 찾아서 리턴
+        beta_x = self.betamapping(x)
+        beta_y = beta.ppf(beta_x, self._brv_alpha, self._brv_beta)
+        return beta_y
 
 
-class PPPC:
+def featurescaling(a, an=0, ax=0):ㄴ
     """
-    Posterior Probability Parameters of Class
+    Min값과 Max값을 return한다는데, 사실은 원래 Min보다 작고 원래 Max보다 큼
+    :param a:
+    :param an:
+    :param ax:
+    :return:
     """
-    def __init__(self, pval, d, Y, sw, ba, bb, ecdf, bcdf):
-        self._pval = pval
-        self._d = d
-        self._Y = Y
-        self._ymin = min(Y)
-        self._ymax = max(Y)
-        self._sw = sw  # sigma weight
-        self._betaA = ba
-        self._betaB = bb
-        self._ecdf = ecdf
-        self._betaCDF = bcdf
-
-    def mapy2beta(self, y):
-        """
-        mapping y to beta
-
-        parameters
-        ----------
-        self: class object
-            hypothesis criteria
-
-        y: array_like
-            Input array
-
-        returns
-        -------
-        pair of beta CDF: Float
-            Returns a float.
-        """
-        a = beta.cdf(y, self._betaA, self._betaB)
-        if y < self._ymin:
-            return 0
-        elif y > self._ymax:
-            return 1
-        else:
-            for i, z in enumerate(self._Y):
-                if y < z:
-                    i = self._Y.index(z)
-                    break
-        return a
-        # return self._betaCDF[i]
-    pass
-
-
-def featurescaling(a, an, ax):
     if type(a) == list:
-        an, ax = min(a), max(a)
-        return [(x - an) / (ax - an) for x in a], an, ax
+        an, ax = min(a) * 0.99, max(a) * 1.01  # 해주면 적어도 이상한 값은 뜨지 않음
+        return [featurescaling_formula(x, an, ax) for x in a], an, ax
     else:
-        return (a - an) / (ax - an)
+        return featurescaling_formula(a, an, ax)
+
+
+gaussian_kernel_power_formula_vertex = lambda x, m, s, w: 0 if x == m else -1 * (((x - m) ** 2) / (2 * (s * w) ** 2))
+gaussian_kernel_power_formula = lambda x, m, s, w: 0 if x == m else ((x - m) ** 2) / ((w * s) ** 2)
+featurescaling_formula = lambda p, n, x: 0 if p == n else (p - n) / (x - n)
+euclidean_norm = lambda a: reduce(lambda x, y: x + y ** 2, a) ** 0.5
+
+
+def beta_parameter(mean, var, lower, upper):
+    ml = mean - lower
+    um = upper - mean
+    ba = (ml / (upper - lower)) * (((ml * um) / var) - 1)
+    bb = ba * (um / ml)
+    return ba, bb
+

@@ -1,4 +1,3 @@
-#  -*- coding: cp949 -*-
 import re
 
 
@@ -23,6 +22,7 @@ class RadarExtractor:
             for d in dlist: 
                 s = re.sub(' +', ' ', d)  # change 1 more whitespaces to a whitespace in the string d
                 s = s[1:].split(' ')
+                # srcbfr.append([float(s[4]), float(s[11]), float(s[10])])  # FREQ, dTOA, PW
                 srcbfr.append([float(s[4]), float(s[8]), float(s[10])])  # FREQ, TOA, PW
         
             self.srclist.append(srcbfr)
@@ -124,7 +124,7 @@ def statfeatures(arr, moments="mvsk"):
 
 
 def featurescaling(clist: list):
-    """AMP´Â ¿Ã¹Ù¸£°Ô ÀÛµ¿ÇÏÁö ¾Ê½À´Ï´Ù.
+    """AMPëŠ” ì˜¬ë°”ë¥´ê²Œ ì‘ë™í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
     """
     """
     cslist: class sample list
@@ -140,10 +140,10 @@ def featurescaling(clist: list):
         print("TYPE INCORRECT")
         return 0
 
-    cdslist = [list(zip(*cls.rawdata)) for cls in clist]  # °¢ class¸¶´Ù ½Ã°£¼øÀ¸·Î Á¤¸®µÈ sampleÀ» dimensionÀ¸·Î Á¤¸®ÇØ¼­ º¹»ç
-    dslist = list(zip(*cdslist))  # °¢ class¼øÀ¸·Î ÀúÀåµÈ list¸¦ dimensionÀ¸·Î Á¤¸®ÇØ¼­ º¹»ç
-    dxlist = [max([max(y) for y in x]) for x in dslist]  # °¢ dimensionÀÇ ÃÖ´ë°ª
-    dnlist = [min([min(y) for y in x]) for x in dslist]  # °¢ dimensionÀÇ ÃÖ¼Ò°ª
+    cdslist = [list(zip(*cls.rawdata)) for cls in clist]  # ê° classë§ˆë‹¤ ì‹œê°„ìˆœìœ¼ë¡œ ì •ë¦¬ëœ sampleì„ dimensionìœ¼ë¡œ ì •ë¦¬í•´ì„œ ë³µì‚¬
+    dslist = list(zip(*cdslist))  # ê° classìˆœìœ¼ë¡œ ì €ì¥ëœ listë¥¼ dimensionìœ¼ë¡œ ì •ë¦¬í•´ì„œ ë³µì‚¬
+    dxlist = [max([max(y) for y in x]) for x in dslist]  # ê° dimensionì˜ ìµœëŒ€ê°’
+    dnlist = [min([min(y) for y in x]) for x in dslist]  # ê° dimensionì˜ ìµœì†Œê°’
     ddlist = [dx - dn for dx, dn in zip(dxlist, dnlist)]
 
     for cls in clist:  # each class
