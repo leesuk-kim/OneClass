@@ -11,6 +11,9 @@ import numpy as np
 import copy
 
 
+default_fold = 2
+
+
 class ClfSim:
     """
     Design Purpose
@@ -19,9 +22,8 @@ class ClfSim:
     2. manage learning simulorules
     3. manage test result of simulorules
     """
-    default_fold = 2
 
-    def __init__(self, fold: default_fold):
+    def __init__(self, fold=2):
         self.simtaglist = []  # list of classifier
         self._fold = fold  # size of fold
         self._data, self._target = None, None
@@ -40,7 +42,7 @@ class ClfSim:
 
     def fit(self, data, target):
         """upload learning resources.
-        각 클래스별로 업로드된 데이터를 fold할 때 일정하게 나눠지도록 블랜딩한다.
+        ? ????? ???? ???? fold? ? ???? ????? ?????.
         Parameters
         ----------
         X: {array-like, sparce matrix}, shape = [n_samples, n_features]
@@ -78,13 +80,11 @@ class ClfSim:
         return self
 
     def folding(self):
-        """블랜딩한 데이터를 fold length만큼 나누고, 매 턴마다 해당 fold는 테스트자료, 나머진 학습자료로 정리해서 yield한다.
-        """
         fold_data, fold_target, f = self._fold_data, self._fold_target, self._fold
-        ldata, ltarget = [], []  # learning data
-        pdata, ptarget = None, None  # predicting data
 
         for j in range(f):
+            ldata, ltarget = [], []  # learning data
+            pdata, ptarget = None, None  # predicting data
             for i in range(f):
                 if i == j:
                     pdata, ptarget = fold_data[i], fold_target[i]
@@ -98,9 +98,12 @@ class ClfSim:
             yield ldata, ltarget, pdata, ptarget
 
     def learn(self):
+        f = 1
         for fld, flt, fpd, fpt in self.folding():
             for simtag in self.simtaglist:
                 simtag.learn(fld, flt, fpd, fpt)
+            print("fold%02d complete" % f)
+            f += 1
 
         for simtag in self.simtaglist:
             ave_stats(simtag)
@@ -113,6 +116,8 @@ class SimTag:
         self.simulor, self.simulorname = simulor, simulorname
         self.predlist = []
         self.statistics = {}
+        self.pval_list = []
+        self.testtarget = []
 
     def learn(self, fit_data, fit_target, pred_data, pred_target):
         """
@@ -127,20 +132,25 @@ class SimTag:
         self.simulor.fit(fit_data, fit_target)
         pred = self.simulor.predict(pred_data)
         stats = self.statistics
+        self.testtarget.append(pred_target)
+        if 'cpon' in self.simulorname:
+            # update_stats(stats, 'emr', emr_score(pred_target, pred))
+            pred_dict = pred
+            self.pval_list.append(pred_dict)
+            pred = [x['target'] for x in pred]
 
         self.predlist.append(pred)
-        # TODO 결과값을 수정하고 싶다면 여기서
+        # TODO measurement regist
         update_stats(stats, 'acc', metrics.accuracy_score(pred_target, pred))
         update_stats(stats, 'p_a', metrics.precision_score(pred_target, pred, average='macro'))
         update_stats(stats, 'p_i', metrics.precision_score(pred_target, pred, average='micro'))
-        # update_stats(stats, 'r_a', metrics.recall_score(pred, pred_target, average='macro'))  # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION)
-        # update_stats(stats, 'r_i', metrics.recall_score(pred, pred_target, average='micro'))  # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION)
-        # update_stats(stats, 'f_a', metrics.f1_score(pred, pred_target, average='macro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
-        # update_stats(stats, 'f_i', metrics.f1_score(pred, pred_target, average='micro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
+        update_stats(stats, 'r_a', metrics.recall_score(pred, pred_target, average='macro'))  # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION)
+        update_stats(stats, 'r_i', metrics.recall_score(pred, pred_target, average='micro'))  # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION)
+        update_stats(stats, 'f_a', metrics.f1_score(pred, pred_target, average='macro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
+        update_stats(stats, 'f_i', metrics.f1_score(pred, pred_target, average='micro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
         update_stats(stats, 'ham', metrics.hamming_loss(pred_target, pred))
-        # TODO EMR 함수 만들기
-        # update_stats(stats, 'emr', )
-
+        # TODO EMR한글을 살려라...
+        update_stats(stats, 'emr', emr_score(pred_target, pred))
         return self
 
     pass
@@ -164,13 +174,13 @@ def clffactory(clfname):
 
     if ('svm' in clfname) or ('svc' in clfname):
         clf = SVC(kernel='rbf', gamma=50)
-        print("[clf factory]clf=₩'SVC₩', kernel=₩''+clf.kernel+'₩', gamma=₩''+repr(clf.gamma)+'₩'")
+        print("[clf factory]clf=\'SVC\', kernel=\'"+clf.kernel+"\', gamma=\'"+repr(clf.gamma)+"\'")
     elif 'knn' in clfname:
         clf = KNeighborsClassifier(weights='distance')
-        print("[clf factory]clf=₩'kNN₩', weights=₩''+clf.weights+'₩'")
+        print("[clf factory]clf=\'kNN\', weights=\'"+clf.weights+"\'")
     elif 'cpon' in clfname:
         clf = CPON()
-        print("[clf factory]clf=₩'CPON₩'")
+        print("[clf factory]clf='CPON\'")
     mi = SimTag(clf, clfname)
 
     return mi
@@ -178,7 +188,7 @@ def clffactory(clfname):
 
 def ave_stats(simulator_tag: SimTag):
     """
-    각 퉁계치의 평균을 계산하고, SimTag의 SimTag.statistics의 맨 뒤에 평균값을 붙입니다.
+    ? ???? ??? ????, SimTag? SimTag.statistics? ? ?? ???? ????.
     calculate mean of each statistic and append at the end of lsit of statistic.
     :type simulator_tag: SimTag
     :param simulator_tag: object SimTag
@@ -195,7 +205,7 @@ form_stats = {'fold': [], 'average': 0.0}  # data structure for statistic measur
 
 def update_stats(wiki: dict, key, value):
     """
-    해당 통계치에 fold 를 추가합니다. 통계치가 없다면 새로 추가한 후 fold를 추가합니다.
+    ?? ???? fold ? ?????. ???? ??? ?? ??? ? fold? ?????.
     :param wiki: statistics dictionary of classification
     :param key: abbrivation of measurement
     :param value: measurement function
@@ -210,5 +220,10 @@ def update_stats(wiki: dict, key, value):
 
 
 def emr_score(target, pred):
-
-    pass
+    total = len(target)
+    tp = 0
+    for t, p in list(zip(target, pred)):
+        if p == t:
+            tp += 1
+    emr = tp / total
+    return emr

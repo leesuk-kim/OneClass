@@ -2,9 +2,9 @@
 <project version="4">
   <component name="Encoding" defaultCharsetForPropertiesFiles="UTF-8">
     <file url="file://$PROJECT_DIR$/NIPClassifier.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/NIPIO.py" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/NIPSimulator.py" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/main.py" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../../../python/MyCluster/mycluster.py" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/main.py" charset="US-ASCII" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

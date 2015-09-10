@@ -1,6 +1,14 @@
 import re
 
 
+attr = {
+    'FREQ':4,
+    'TOA':8,
+    'PW':10,
+    'dTOA':11
+}
+
+
 class RadarExtractor:
 
     def __init__(self, classname): 
@@ -22,8 +30,8 @@ class RadarExtractor:
             for d in dlist: 
                 s = re.sub(' +', ' ', d)  # change 1 more whitespaces to a whitespace in the string d
                 s = s[1:].split(' ')
-                # srcbfr.append([float(s[4]), float(s[11]), float(s[10])])  # FREQ, dTOA, PW
-                srcbfr.append([float(s[4]), float(s[8]), float(s[10])])  # FREQ, TOA, PW
+                # srcbfr.append([float(s[attr['FREQ']]), float(s[attr['dTOA']]), float(s[attr['PW']])])  # FREQ, dTOA, PW
+                srcbfr.append([float(s[attr['FREQ']]), float(s[attr['TOA']]), float(s[attr['PW']])])  # FREQ, TOA, PW
         
             self.srclist.append(srcbfr)
         pass
