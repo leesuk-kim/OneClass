@@ -10,7 +10,7 @@ season = '/july/source/1000'
 # source = '/rawdata_7980'
 source = '/rawdata'
 output = '/inputdata'
-outputfolder = '/july_original_TOA'
+outputfolder = '/july_TOA'
 # outputtag = '/data_7980'
 # outputtag = '/oneten_TOA'
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
             with open(os.path.join(outputpath, c.name + '.csv'), 'wb') as f:
                 for data in c.rawdata:
                     dlen = len(data) - 1
-                    value = c.name + ','
+                    value = c.name[:5] + ','
                     fm.write(value.encode('utf-8'))
                     for i, val in enumerate(data):
                         value = repr(val) + (',' if dlen != i else '\r')

@@ -11,8 +11,9 @@ version = "\\july"
 trails = "\\output\\"
 # dataname = "oneten_TOA"
 # dataname = "originalten_TOA"
-# dataname = "july_original_TOA"
-dataname = "july_originbeam_TOA"
+dataname = "july_original_TOA"
+# dataname = "july_originbeam_TOA"
+# dataname = "july_origin_10beam_TOA"
 timestamp = time.time()
 
 
@@ -151,7 +152,7 @@ def p_value(cponpst: SimTag):
         foldtable = []
         pst = list(zip(*pst))
         for rowvalues in pst:
-            pvalarr = [[x['target'], x['post_prob']] for x in rowvalues[2]['ppdict']]
+            pvalarr = [[x['target'], x['p-value']] for x in rowvalues[2]['ppdict']]
             pvalarr.sort(key=lambda x: x[0])
             pvalarr = [x[1] for x in pvalarr]
             row = [rowvalues[0], rowvalues[1]]

@@ -11,7 +11,9 @@ if __name__ == '__main__':
     # cm = NIPSimulator.ClfSim(fold=10)  # default : 2
     # cm.addclf(NIPSimulator.clffactory('svm'))
     # cm.addclf(NIPSimulator.clffactory('knn'))
-    cm.addclf(NIPSimulator.clffactory('cpon'))
+    cpon = NIPSimulator.clffactory('cpon')
+    cpon.simulor.verbose = True
+    cm.addclf(cpon)
 
     # data, target = NIPIO.load_data()
     data, target = NIPIO.import_data()
