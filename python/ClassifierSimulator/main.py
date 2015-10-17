@@ -7,12 +7,11 @@ import NIPIO
 
 
 if __name__ == '__main__':
-    cm = NIPSimulator.ClfSim()  # default : 2
-    # cm = NIPSimulator.ClfSim(fold=10)  # default : 2
+    # cm = NIPSimulator.ClfSim()  # default : 2
+    cm = NIPSimulator.ClfSim(fold=10)  # default : 2
     # cm.addclf(NIPSimulator.clffactory('svm'))
     # cm.addclf(NIPSimulator.clffactory('knn'))
-    cpon = NIPSimulator.clffactory('cpon')
-    cpon.simulor.verbose = True
+    cpon = NIPSimulator.clffactory('cpon', cluster='lk', beta='scipy', bse='mm', threadable=False)
     cm.addclf(cpon)
 
     # data, target = NIPIO.load_data()
@@ -24,8 +23,15 @@ if __name__ == '__main__':
     pstlist = cm.learn()
 
     NIPIO.measurement(pstlist)
-    cponpstlist = [x for x in pstlist if 'cpon' in x.simulorname]
-    for cponpst in cponpstlist:
-        NIPIO.p_value(cponpst)
+    for cponpst in pstlist:
+        if 'cpon' in cponpst.simulorname:
+            # NIPIO.p_value(cponpst)
+            print(cponpst.simulor.pred_pval)
+            # for i, ppv_fold in enumerate(cponpst.simulor.pred_pval):
+            #     print(("fold %02d" % i) + "p-value result")
+            #     ppvstr = ""
+            #     for ppv_cls in ppv_fold:
+            #         ppvstr += ppv_cls + "\t" + repr(ppv_fold[ppv_cls]) + "\t"
+            #     print(ppvstr)
     # 한글을 살려라!
     print("End py")

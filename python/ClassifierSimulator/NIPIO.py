@@ -9,11 +9,10 @@ from mysql import connector
 directory = "D:\\Document\\niplab\\LIG"
 version = "\\july"
 trails = "\\output\\"
-# dataname = "oneten_TOA"
-# dataname = "originalten_TOA"
-dataname = "july_original_TOA"
-# dataname = "july_originbeam_TOA"
-# dataname = "july_origin_10beam_TOA"
+# dataname = "july_original_TOA"  # 진짜 오리지널 데이터
+# dataname = "july_originbeam_TOA"  # 모든 1번 beam의 데이터
+dataname = "july_original_TOA_0102"  # 1번과 2번만
+# dataname = "july_origin_10beam_TOA"  # 모든 beam을 다 나눈 데이터
 timestamp = time.time()
 
 

@@ -133,30 +133,30 @@ class SimTag:
         pred = self.simulor.predict(pred_data)
         stats = self.statistics
         self.testtarget.append(pred_target)
-        if 'cpon' in self.simulorname:
-            # update_stats(stats, 'emr', emr_score(pred_target, pred))
-            pred_dict = pred
-            self.pval_list.append(pred_dict)
-            pred = [x['target'] for x in pred]
+
+        # if type(self.simulor) == CPON:
+        #     self.simulor.pred_pval
 
         self.predlist.append(pred)
         # TODO measurement regist
         update_stats(stats, 'acc', metrics.accuracy_score(pred_target, pred))
-        update_stats(stats, 'p_a', metrics.precision_score(pred_target, pred, average='macro'))
-        update_stats(stats, 'p_i', metrics.precision_score(pred_target, pred, average='micro'))
-        update_stats(stats, 'r_a', metrics.recall_score(pred, pred_target, average='macro'))  # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION)
-        update_stats(stats, 'r_i', metrics.recall_score(pred, pred_target, average='micro'))  # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION)
-        update_stats(stats, 'f_a', metrics.f1_score(pred, pred_target, average='macro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
-        update_stats(stats, 'f_i', metrics.f1_score(pred, pred_target, average='micro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
-        update_stats(stats, 'ham', metrics.hamming_loss(pred_target, pred))
-        # TODO EMR한글을 살려라...
+        # update_stats(stats, 'p_a', metrics.precision_score(pred_target, pred, average='macro'))
+        # update_stats(stats, 'p_i', metrics.precision_score(pred_target, pred, average='micro'))
+        # update_stats(stats, 'r_a', metrics.recall_score(pred, pred_target, average='macro'))  # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION)
+        # update_stats(stats, 'r_i', metrics.recall_score(pred, pred_target, average='micro'))  # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION)
+        # update_stats(stats, 'f_a', metrics.f1_score(pred, pred_target, average='macro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
+        # update_stats(stats, 'f_i', metrics.f1_score(pred, pred_target, average='micro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
+        update_stats(stats, 'rec', metrics.recall_score(pred, pred_target, average='binary', pos_label=pred_target[0]))  # binary
+        update_stats(stats, 'pre', metrics.precision_score(pred_target, pred, average='binary', pos_label=pred_target[0]))  # binary
+        update_stats(stats, 'f1m', metrics.f1_score(pred, pred_target, average='binary', pos_label=pred_target[0]))   # bianry
+        update_stats(stats, 'scores', confusion_matrix(pred_target, pred))
         update_stats(stats, 'emr', emr_score(pred_target, pred))
         return self
 
     pass
 
 
-def clffactory(clfname):
+def clffactory(clfname, **kwargs):
     """
     generate classifier by name.
     Options are setted on general.
@@ -173,14 +173,22 @@ def clffactory(clfname):
     clf = None
 
     if ('svm' in clfname) or ('svc' in clfname):
-        clf = SVC(kernel='rbf', gamma=50)
-        print("[clf factory]clf=\'SVC\', kernel=\'"+clf.kernel+"\', gamma=\'"+repr(clf.gamma)+"\'")
+        k = kwargs['kernel'] if 'kernel' in kwargs else 'rbf'
+        g = kwargs['gamma'] if 'gamma' in kwargs else 50
+        clf = SVC(kernel=k, gamma=g)
+        print("[clf factory]clf=\'SVC\', kernel=\'" + clf.kernel + "\', gamma=\'" + repr(clf.gamma) + "\'")
     elif 'knn' in clfname:
-        clf = KNeighborsClassifier(weights='distance')
-        print("[clf factory]clf=\'kNN\', weights=\'"+clf.weights+"\'")
+        w = kwargs['weights'] if 'weights' in kwargs else 'distance'
+        clf = KNeighborsClassifier(weights=w)
+        print("[clf factory]clf=\'kNN\', weights=\'" + clf.weights + "\'")
     elif 'cpon' in clfname:
-        clf = CPON()
-        print("[clf factory]clf='CPON\'")
+        c = kwargs['cluster'] if 'cluster' in kwargs else 'lk'
+        s = kwargs['bse'] if 'betashape' in kwargs else 'mm'
+        b = kwargs['beta'] if 'beta' in kwargs else 'scipy'
+        k = kwargs['kernel'] if 'kernel' in kwargs else 'gaussian'
+        t = kwargs['threadable'] if 'threadable' in kwargs else False
+        clf = CPON(cluster=c, beta=b, bse=s, kernel=k, threadable=t)
+        print(clf)
     mi = SimTag(clf, clfname)
 
     return mi
@@ -203,20 +211,20 @@ def ave_stats(simulator_tag: SimTag):
 form_stats = {'fold': [], 'average': 0.0}  # data structure for statistic measurement
 
 
-def update_stats(wiki: dict, key, value):
+def update_stats(pedia: dict, key, value):
     """
     ?? ???? fold ? ?????. ???? ??? ?? ??? ? fold? ?????.
-    :param wiki: statistics dictionary of classification
+    :param pedia: statistics dictionary of classification
     :param key: abbrivation of measurement
     :param value: measurement function
     :return wiki: statistics dictionary of classification
     """
-    if key not in wiki:
-        wiki[key] = copy.deepcopy(form_stats)
+    if key not in pedia:
+        pedia[key] = copy.deepcopy(form_stats)
 
-    wiki[key]['fold'].append(value)
+    pedia[key]['fold'].append(value)
 
-    return wiki
+    return pedia
 
 
 def emr_score(target, pred):
@@ -227,3 +235,75 @@ def emr_score(target, pred):
             tp += 1
     emr = tp / total
     return emr
+
+
+def confusion_matrix(target, pred):
+    """
+    confusion matrix
+    :param target:
+    :param pred:
+    :return:
+    """
+    cm_dict = [ConfusionMatrix(x) for x in set(target)]
+
+    for t, p in zip(target, pred):
+        if t == p:
+            for cm in cm_dict:
+                if cm.name == p:
+                    cm['tp'] += 1
+                else:
+                    cm['tn'] += 1
+        else:
+            for cm in cm_dict:
+                if cm.name == p:
+                    cm['fp'] += 1
+                else:
+                    cm['fn'] += 1
+    return cm_dict
+
+
+def dict_keygen(d):
+    for i in d:
+        yield i
+
+
+class ConfusionMatrix():
+    def __init__(self, name):
+        self.name = name
+        self.matrix = {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}
+
+    def __setitem__(self, key, value):
+        self.matrix[key] = value
+
+    def __getitem__(self, item):
+        return self.matrix[item]
+
+    def measure(self):
+        return self.accuracy(), self.precision(), self.recall(), self.f1measure(), self.exactmatch()
+
+    def accuracy(self):
+        if 'accuracy' in self:
+            acc = (self['tp'] + self['fn']) / (self['tp'] + self['tn'] + self['fp'] + self['fn'])
+            self['accuracy'] = acc
+        return self['accuracy']
+
+    def precision(self):
+        if 'precision' in self:
+            pre = self['tp'] / (self['tp'] + self['fp'])
+            self['precision'] = pre
+        return self['precision']
+
+    def recall(self):
+        if 'recall' in self:
+            rec = self['tp'] / (self['tp'] + self['fn'])
+            self['recall'] = rec
+        return self['recall']
+
+    def f1measure(self):
+        if 'f1measure' in self:
+            f1m = (2 * self['tp']) / (2 * self['tp'] + self['fp'] + self['fn'])
+            self['f1measure'] = f1m
+        return self['f1measure']
+
+    def exactmatch(self):
+        pass
