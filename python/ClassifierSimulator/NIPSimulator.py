@@ -133,6 +133,8 @@ class SimTag:
         pred = self.simulor.predict(pred_data)
         stats = self.statistics
         self.testtarget.append(pred_target)
+        print(len([x for x in pred if 'REJECT' in x]))
+        print(len([x for x, y in zip(pred, pred_target) if 'REJECT' in x and '80' in y]))
 
         # if type(self.simulor) == CPON:
         #     self.simulor.pred_pval

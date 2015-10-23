@@ -16,9 +16,10 @@ import itertools
 import numpy as np
 from scipy.stats import beta as scibeta
 import scipy.stats as scistats
-# import matplotlib
-# matplotlib.use('Qt5Agg')
+import matplotlib
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
+import xlsxwriter as xw
 
 
 class Sample:
@@ -73,111 +74,150 @@ class Sample:
         return format(self.samples[self.x], format_spec=format_spec)
 
     def __lt__(self, other):
-        return self.samples[self.x] < other.samples[other.x]
+        return self.samples[self.x] < type_sample(other)
 
     def __le__(self, other):
-        return self.samples[self.x] <= other.samples[other.x]
+        return self.samples[self.x] <= type_sample(other)
 
     def __eq__(self, other):
-        return self.samples[self.x] == other.samples[other.x]
+        return self.samples[self.x] == type_sample(other)
 
     def __ne__(self, other):
-        return self.samples[self.x] != other.samples[other.x]
+        return self.samples[self.x] != type_sample(other)
 
     def __gt__(self, other):
-        return self.samples[self.x] > other.samples[other.x]
+        return self.samples[self.x] > type_sample(other)
 
     def __ge__(self, other):
-        return self.samples[self.x] >= other.samples[other.x]
+        return self.samples[self.x] >= type_sample(other)
 
     def __hash__(self):
         return hash(self.samples[self.x])
 
     def __add__(self, other):
-        return self.samples[self.x] + other.samples[other.x]
+        return self.samples[self.x] + type_sample(other)
 
     def __sub__(self, other):
-        return self.samples[self.x] - other.samples[other.x]
+        return self.samples[self.x] - type_sample(other)
 
     def __mul__(self, other):
-        return self.samples[self.x] * other.samples[other.x]
+        return self.samples[self.x] * type_sample(other)
 
     def __truediv__(self, other):
-        return self.samples[self.x] / other.samples[other.x]
+        return self.samples[self.x] / type_sample(other)
 
     def __floordiv__(self, other):
-        return self.samples[self.x] // other.samples[other.x]
+        return self.samples[self.x] // type_sample(other)
 
     def __mod__(self, other):
-        return self.samples[self.x] % other.samples[other.x]
+        return self.samples[self.x] % type_sample(other)
 
     def __divmod__(self, other):
-        return divmod(self.samples[self.x], other.samples[other.x])
+        return divmod(self.samples[self.x], type_sample(other))
 
     def __pow__(self, power, modulo=None):
         return pow(self.samples[self.x], power, modulo)
 
     def __lshift__(self, other):
-        return self.samples[self.x] << other.samples[other.x]
+        return self.samples[self.x] << type_sample(other)
 
     def __rshift__(self, other):
-        return self.samples[self.x] >> other.samples[other.x]
+        return self.samples[self.x] >> type_sample(other)
 
     def __and__(self, other):
-        return self.samples[self.x] & other.samples[other.x]
+        return self.samples[self.x] & type_sample(other)
 
     def __xor__(self, other):
-        return self.samples[self.x] ^ other.samples[other.x]
+        return self.samples[self.x] ^ type_sample(other)
 
     def __or__(self, other):
-        return self.samples[self.x] | other.samples[other.x]
+        return self.samples[self.x] | type_sample(other)
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __rsub__(self, other):
+        return self.__sub__(other)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other):
+        return self.__truediv__(other)
+
+    def __rfloordiv__(self, other):
+        return self.__floordiv__(other)
+
+    def __rmod__(self, other):
+        return self.__mod__(other)
+
+    def __rdivmod__(self, other):
+        return self.__divmod__(other)
+
+    def __rpow__(self, power, modulo=None):
+        return self.__pow__(power, modulo)
+
+    def __rlshift__(self, other):
+        return self.__lshift__(other)
+
+    def __rrshift__(self, other):
+        return self.__rshift__(other)
+
+    def __rand__(self, other):
+        return self.__and__(other)
+
+    def __rxor__(self, other):
+        return self.__xor__(other)
+
+    def __ror__(self, other):
+        return self.__or__(other)
 
     def __iadd__(self, other):
-        self.samples[self.x] += other.samples[other.x]
+        self.samples[self.x] += type_sample(other)
         return self
 
     def __isub__(self, other):
-        self.samples[self.x] -= other.samples[other.x]
+        self.samples[self.x] -= type_sample(other)
         return self
 
     def __imul__(self, other):
-        self.samples[self.x] *= other.samples[other.x]
+        self.samples[self.x] *= type_sample(other)
         return self
 
     def __itruediv__(self, other):
-        self.samples[self.x] /= other.samples[other.x]
+        self.samples[self.x] /= type_sample(other)
         return self
 
     def __ifloordiv__(self, other):
-        self.samples[self.x] //= other.samples[other.x]
+        self.samples[self.x] //= type_sample(other)
         return self
 
     def __imod__(self, other):
-        self.samples[self.x] %= other.samples[other.x]
+        self.samples[self.x] %= type_sample(other)
         return self
 
     def __ipow__(self, other):
-        self.samples[self.x] **= other.samples[other.x]
+        self.samples[self.x] **= type_sample(other)
         return self
 
     def __ilshift__(self, other):
-        self.samples[self.x] <<= other.samples[other.x]
+        self.samples[self.x] <<= type_sample(other)
         return self
 
     def __irshift__(self, other):
-        self.samples[self.x] >>= other.samples[other.x]
+        self.samples[self.x] >>= type_sample(other)
         return self
 
     def __iand__(self, other):
-        self.samples[self.x] &= other.samples[other.x]
+        self.samples[self.x] &= type_sample(other)
         return self
 
     def __ixor__(self, other):
-        self.samples[self.x] ^= other.samples[other.x]
+        self.samples[self.x] ^= type_sample(other)
         return self
 
     def __ior__(self, other):
-        self.samples[self.x] |= other.samples[other.x]
+        self.samples[self.x] |= type_sample(other)
         return self
 
     def __neg__(self):
@@ -203,6 +243,10 @@ class Sample:
 
     def __getitem__(self, item):
         return self.raw[item]
+
+
+def type_sample(samp):
+    return samp.samples[samp.x] if type(samp) == Sample else samp
 
 
 class Statistic:
@@ -265,15 +309,15 @@ class BetaFunction(Statistic):
         self.samples = []
         super().__init__()
 
-    # TODO CRITICAL
     def kstest(self, x):
         s = Sample(x).set(self.centroid['mean'], self.centroid['std'])
         fss = featurescaling(s, x_min=self._stats_['min'], x_max=self._stats_['max'])
         p = scibeta.cdf(fss, self.alpha, self.beta)
+        if Sample.x == Sample.m or Sample.x == Sample.c:
+            p = 1. - p
 
         return 0 if math.isnan(p) else p
 
-    # TODO CRITICAL
     def kernelize(self, x):
         s = Sample(x).set(self.centroid['mean'], self.centroid['std'])
         fss = featurescaling(s, x_min=self._stats_['min'], x_max=self._stats_['max'])
@@ -284,7 +328,6 @@ class BetaFunction(Statistic):
     def aprx_betashape(self, data):
         """beta distribution을 추정"""
         samples = [Sample(sample).set(self.centroid['mean'], self.centroid['std']) for sample in data]
-        # samples = [self.kernel.quantize(sample) for sample in data]
         # 모든 data를 이 kernel을 통해 생성된 sample로 변환
         samp_fs, self['min'], self['max'] = featurescaling(samples)
         self.samples = samples
@@ -297,10 +340,8 @@ class BetaFunction(Statistic):
         # 통계치로 beta shape parameter 계산
         # self.alpha, self.beta, _, _ = scibeta.fit(self['betaECDF'], self.alpha, self.beta)
         # TODO beta fitting 안 했습니다.
-        betacdf = scibeta.cdf(self['betaECDF'], self.alpha, self.beta)
-        d, pval = scistats.ks_2samp(betacdf, self['betaECDF'])
+        d, pval = scistats.kstest(self['betaECDF'], scibeta.cdf, args=(self.alpha, self.beta))
         self['p-value'], self['D'] = pval, d
-        # self.plot_beta()
 
         # CDF start
         hist, bins = histogram(self.data, 100)
@@ -317,29 +358,6 @@ class BetaFunction(Statistic):
                    dict(name='Beta CDF', x=np.arange(0., 1.1, 0.01), y=scibeta.cdf(np.arange(0., 1.1, 0.01), self.alpha, self.beta)
                         ), dict(name='empirical CDF', x=bins, y=cdf_))
         return self
-
-    def plot_beta(self):
-        fig, ax = plt.subplots()
-        title = ("p=%1.8lf\t" % self['p-value']) + (r"$\alpha$=%1.8lf" % self.alpha) + "\t" + (r"$\beta$=%1.8lf" % self.beta)
-        plt.title(title)
-        x = np.arange(0., 1.1, 0.01)
-        y = scibeta.cdf(x, self.alpha, self.beta)
-        plt.plot(x, y)
-        # CDF start
-        hist, bins = histogram(self.data, 100)
-        # print(hist)
-        k = 0.
-        cdf_ = []
-        samplan = len(self.data)
-        for h in hist:
-            k += h / samplan
-            cdf_.append(k)
-        # CDF END
-        plt.plot(bins, cdf_)
-        fig.savefig(self.centroid.name + "beta.png")
-        plt.clf()
-
-        pass
 
     def moment_match(self):
         """Moment Matching"""
@@ -438,15 +456,14 @@ class Class(Statistic):
         """
         for bf in self.bfp:
             bf.aprx_betashape(totaldata)
-            # bf.measure(totaldata)
 
-            print("CLASS:" + self.name)
-            print("Mahalanobis\tEuclidean\tGaussian\tEpanechnikov\tlog(Mahalanobis)\tlog(Euclidean)\tlog(Gaussian)\tlog(Epanechnikov)")
-            ds, os = 0., 0.
-            for sample in bf.samples:
-                print("%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf" %
-                      (sample.get(Sample.m),sample.get(Sample.c),sample.get(Sample.g), sample.get(Sample.p),
-                       sample.get(Sample.ml),sample.get(Sample.cl),sample.get(Sample.gl), sample.get(Sample.pl)))
+            # print("CLASS:" + self.name)
+            # print("Mahalanobis\tEuclidean\tGaussian\tEpanechnikov\tlog(Mahalanobis)\tlog(Euclidean)\tlog(Gaussian)\tlog(Epanechnikov)")
+            # for sample in bf.samples:
+            #     print("%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf\t%16.15lf" %
+            #           (sample.get(Sample.m),sample.get(Sample.c),sample.get(Sample.g), sample.get(Sample.p),
+            #            sample.get(Sample.ml),sample.get(Sample.cl),sample.get(Sample.gl), sample.get(Sample.pl)))
+
         print(self.name + "fit complete")
         return self
 
@@ -467,7 +484,7 @@ class Class(Statistic):
 
         # pval이 다들 높으면 이걸 사용
         # pvp, pvn = sum(bf.kstest(x) for bf in self.bfp) / len(self.bfp), sum(bf.kstest(x) for bf in self.bfn) / len(self.bfn)
-        # pval = 0. if pvp == 0. else pvp / (pvp - pvn + 1)
+        # pval = 0. if pvp == 0. or pvn == 1. else pvp / (pvp - pvn + 1)
         return pval
 
 
@@ -486,41 +503,84 @@ class CPON:
 
         for t in dataset:
             self._classes_[t] = Class(opts=self.kwargs, name=t, data=dataset[t]).fit(dataset[t])
+
+        if len(self._classes_) == 2:
+            targets = list(self._classes_)
+            opdist = {targets[0]: dict(name=targets[0], x=[]), targets[1]: dict(name=targets[1], x=[])}
+            outputs = []
+            for name in self._classes_:
+                outputs = [self.output(x) for x in self._classes_[name].data]
+                preds = [x[name] for x in outputs]
+                h, s = histogram(preds, 100)
+                freqsum = sum(h)
+                h = [x / freqsum for x in h]
+                width = s[1] - s[0]
+                if width < 1e-5:  # 너무 작으면 아얘 고정해서 보정
+                    s = [x / 100 for x in range(100)]
+                    width = 0.01
+                opdist[name]['w'] = width / 2
+                opdist[name]['y'], opdist[name]['x'] = h, s
+            opdist[targets[1]]['x'] = [1. - x for x in opdist[targets[1]]['x']]  # '-' 클래스는 inverse
+            plot_bars('od_' + targets[0] + targets[1], "OutputDist.-" + targets[0] + " and " + targets[1], opdist[targets[0]], opdist[targets[1]])
+
+            opdist = {targets[0]: dict(name=targets[0], x=[], y=[]), targets[1]: dict(name=targets[1], x=[], y=[])}
+            for name in self._classes_:
+                outputs = [self.output(x) for x in self._classes_[name].data]
+                for x in outputs:
+                    for p in x:
+                        if p == name:
+                            opdist[p]['x'].append(x[p])
+                        else:
+                            opdist[p]['y'].append(x[p])
+            temp = opdist[targets[1]]['y']
+            opdist[targets[1]]['y'] = opdist[targets[1]]['x']
+            opdist[targets[1]]['x'] = temp
+            plot_dots('od2d' + targets[0] + targets[1], "OD2D-" + targets[0] + " and " + targets[1], opdist[targets[0]], opdist[targets[1]])
+
         # 커널들을 각 class에 negative로 setting
-        for posclsname in self._classes_:
-            self.share_betafunctions(posclsname)
-        if not self.kwargs['threadable']:
-            # 여기가 끝
-            pass
-        else:
-            with Pool(processes=4) as pool:
-                for t in dataset:
-                    c = Class(opts=self.kwargs, name=t, data=dataset[t])
-                    res = pool.apply_async(c.fit, (data, ))
-                    self._classes_[t] = res.get()
-            with ThreadPoolExecutor(5) as tpool:
-                for name in self._classes_:
-                    thread = tpool.submit(self.share_betafunctions, name)
-                    thread.result()
-                    # self._classes_
+        # for posclsname in self._classes_:
+        #     self.share_betafunctions(posclsname)
+        # if not self.kwargs['threadable']:
+        #     # 여기가 끝
+        #     pass
+        # else:
+        #     with Pool(processes=4) as pool:
+        #         for t in dataset:
+        #             c = Class(opts=self.kwargs, name=t, data=dataset[t])
+        #             res = pool.apply_async(c.fit, (data, ))
+        #             self._classes_[t] = res.get()
+        #     with ThreadPoolExecutor(5) as tpool:
+        #         for name in self._classes_:
+        #             thread = tpool.submit(self.share_betafunctions, name)
+        #             thread.result()
+        #             # self._classes_
+            a = 1
             pass
 
+    def output(self, sample):
+        """
+        :param sample: one of data
+        :return: p-value
+        """
+        """
+        이걸 좀 더 카와이하게 바꿔보자고.
+        일단 모든 Class에 대해서 kstest를 하면 각 clas마다 p-value가 나오겠지?
+        그러면 그 p-value들을 모아서 '여.기.에.서. 각 class의 output을 만드는거야.
+        이를 통해 각 class는 bfn을 가져야할 이유를 없앨 수 있지.
+        게다가 연산속도는 n^n에서 n으로 줄어드니 이게 정답이지.
+        """
+        clspval = self.__predict__(sample)
+        pval_sum = sum(clspval[k] for k in clspval)
+        if pval_sum != 1. and pval_sum != 0.:
+            for k in clspval:
+                clspval[k] /= pval_sum
+
+        return clspval
+
+    def __predict__(self, sample):
+        return {k: self._classes_[k].predict(sample) for k in self._classes_}
+
     def predict(self, data):
-        # 2개의 Class일 때만 사용하는 코드
-        if len(self._classes_) == 2:
-            arr_k = []
-            for cls in self._classes_:
-                temp = [self._classes_[cls].bfp[0].kernelize(x) for x in data]
-                h, s = histogram(temp, 100)
-                w_ = s[0] / 2
-                arr_k.append(dict(name=cls, x=s, y=h, w=w_))
-            # y = [_ for _ in arr_k[1]['y']]
-            for i in range(len(arr_k[1]['x'])):
-                # y[i] = arr_k[1]['y'][-1 - i]
-                arr_k[1]['x'][i] = 1 - arr_k[1]['x'][i]
-            # arr_k[1]['y'] = y
-            plot_bars('dataPDF', arr_k[0]['name'] + 'and' + arr_k[1]['name'], arr_k[0], arr_k[1])
-        # 2개의 Class일 때만 사용하는 코드 끝
         pred = []
 
         # MULTIPROCESSING
@@ -548,8 +608,14 @@ class CPON:
 
         for pval in self.pred_pval:
             predcls = max(pval, key=lambda x: pval[x])
+            # print('predict: ', predcls, ', pval=', pval[predcls])
+            # if pval[predcls] < 0.05:
+            #     predcls = 'REJECT'
             pred.append(predcls)
 
+        # 2개의 Class일 때만 사용하는 코드
+
+        # 2개의 Class일 때만 사용하는 코드 끝
         return pred
 
     def share_betafunctions(self, posclsname):
@@ -616,7 +682,10 @@ def histogram(x: list, bins: int):
     if len(histo) == bins:
         histo[-1] += i
     else:
-        histo.append(i)
+        # histo.append(i)
+           while len(histo) < bins:
+            histo.append(i)
+            i = 0
     steps = []
     box = xn + step
     for _ in range(bins):
@@ -647,6 +716,7 @@ def formula_student(x, mean, std):
 
 
 def student(x, **kwargs):
+    """Student's statistic"""
     if 'mean' in kwargs and 'std' in kwargs:
         return x if type(x) == str else formula_student(x, kwargs['mean'], kwargs['std'])
     else:
@@ -677,15 +747,6 @@ def kernel_weight(size):
         yield 2 ** (i - mid)
 
 
-def formular_mahalanobis(val, mean, std):
-    return 0 if val == mean or std == 0 else ((val - mean) ** 2) / (std ** 2)
-
-
-def formula_gaussian(mahalanobis):
-    return math.exp(-0.5 * (mahalanobis ** 2))
-    # return 1 / ((2 * math.pi) ** 0.5) * math.exp(-0.5 * (mahalanobis ** 2))  # ORIGINAL
-
-
 def distance_euclidean(x, m):
     """
     Euclidean distance를 계산합니다.
@@ -693,8 +754,12 @@ def distance_euclidean(x, m):
     :param m: array-like, 기준점(평균)
     :return: float-like
     """
-    d = sum((a - b) ** 2 for a, b in zip(x, m)) ** 0.5
+    d = (sum((a - b) ** 2 for a, b in zip(x, m)) ** 0.5) / 12
     return d
+
+
+def formular_mahalanobis(val, mean, std):
+    return 0 if val == mean or std == 0 else ((val - mean) ** 2) / (std ** 2)
 
 
 def distance_mahalanobis(x, mean, std):
@@ -705,13 +770,18 @@ def distance_mahalanobis(x, mean, std):
     :param std: array-like, 표준 편차
     :return: float-like
     """
-    d = sum(formular_mahalanobis(a, m, s) for a, m, s in zip(x, mean, std))
+    d = sum(formular_mahalanobis(a, m, s) for a, m, s in zip(x, mean, std)) / 12
     d **= 0.5
     return d
 
 
+def formula_gaussian(mahalanobis):
+    return math.exp(-0.5 * (mahalanobis ** 2))
+    # return 1 / ((2 * math.pi) ** 0.5) * math.exp(-0.5 * (mahalanobis ** 2))  # ORIGINAL
+
+
 def kernel_gaussian(iter_x, iter_m, iter_s):
-    x = sum(formular_mahalanobis(x, m, v) for x, m, v in zip(iter_x, iter_m, iter_s))
+    x = distance_mahalanobis(iter_x, iter_m, iter_s)
     x = formula_gaussian(x)
     return x
 
@@ -765,7 +835,32 @@ def plot_bars(filename, title, *args):
         y = xyw['y']
         w = xyw['w']
         plt.bar(x, y, width=w, color=color, label=xyw['name'])
+    plt.xlim([-0.1, 1.1])
     plt.legend()
+    fig.savefig(filename + '.png')
+    plt.clf()
+    pass
+
+
+def plot_dots(filename, title, *args):
+    """
+    그래프를 선으로 그립니다.
+    :param filename: 파일명
+    :param title: 그래프 제목
+    :param args: 그래프를 그릴 자료
+    이 자료는 dictionary이며, key로 'x', 'y', 'name'을 받습니다.
+    :return:엄ㅋ슴ㅋ
+    """
+    fig, ax = plt.subplots()
+    plt.title(title)
+    palette = ['r.', 'b+']
+    for xy, cl in zip(args, palette):
+        x = xy['x']
+        y = xy['y']
+        plt.plot(x, y, cl, label=xy['name'])
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
+    plt.xlim(-0.05, 1.05)
+    plt.ylim(-0.05, 1.05)
     fig.savefig(filename + '.png')
     plt.clf()
     pass

@@ -1,6 +1,6 @@
 #pragma once
 #include"vsheader.h"
-#include "Oneclass.h"
+#include "cpon.h"
 #include "Utility.h"
 #include <math.h>
 #ifdef _WIN32
