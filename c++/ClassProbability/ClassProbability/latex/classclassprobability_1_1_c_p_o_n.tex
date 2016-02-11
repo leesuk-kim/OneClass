@@ -1,0 +1,122 @@
+\hypertarget{classclassprobability_1_1_c_p_o_n}{}\section{classprobability\+:\+:C\+P\+ON Class Reference}
+\label{classclassprobability_1_1_c_p_o_n}\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+
+
+{\ttfamily \#include $<$classprobability.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classclassprobability_1_1_c_p_o_n_a601ad865675106d4a8b307a17aec4c23}{C\+P\+ON} ()
+\item 
+\hyperlink{classclassprobability_1_1_c_p_o_n_ade30348622c337e028f3aed5bbaacd37}{$\sim$\+C\+P\+ON} ()
+\item 
+\hyperlink{classclassprobability_1_1_c_p_o_n_ac012705da1b133b2a3d82630d532180f}{C\+P\+ON} (\hyperlink{namespaceclassprobability_a9b76324c0524b1c0c9d52954f83ad037}{cpon\+\_\+map} $\ast$cpmap)
+\item 
+\hyperlink{namespaceclassprobability_a9b76324c0524b1c0c9d52954f83ad037}{cpon\+\_\+map} $\ast$ \hyperlink{classclassprobability_1_1_c_p_o_n_ac98ec4140046f9b6b4169617c63855f7}{get\+Cpmap} ()
+\item 
+void \hyperlink{classclassprobability_1_1_c_p_o_n_a818ff197e0e111a9f72931c47fd29e23}{insert} (std\+::string key, std\+::vector$<$ double $>$ value)
+\item 
+void \hyperlink{classclassprobability_1_1_c_p_o_n_a7eeda7fbd7619106e069937f51330541}{insert} (std\+::map$<$ std\+::string, std\+::vector$<$ double $>$$>$ $\ast$kvmap)
+\item 
+void \hyperlink{classclassprobability_1_1_c_p_o_n_a127a7d9e09a4ed3e0905a638c244e84e}{insert} (\hyperlink{classclassprobability_1_1_probaclass}{Probaclass} cp)
+\item 
+void \hyperlink{classclassprobability_1_1_c_p_o_n_a55a08788a294e49bd3f11c8d2493f474}{insert} (\hyperlink{namespaceclassprobability_af9fe3e67e0088680cf2535772e5f5139}{cpon\+\_\+map\+\_\+pair} pair)
+\item 
+void \hyperlink{classclassprobability_1_1_c_p_o_n_a71785e865d4e82e5193888dc0d31ee5c}{update} (std\+::string key, std\+::vector$<$ double $>$ value)
+\item 
+void \hyperlink{classclassprobability_1_1_c_p_o_n_af388fec40ceb8832c9c6ef8b5df006f0}{update} (std\+::map$<$ std\+::string, std\+::vector$<$ double $>$$>$ $\ast$kvmap)
+\item 
+void \hyperlink{classclassprobability_1_1_c_p_o_n_a4d240acccf8436e2ce784368aff1e062}{build\+\_\+network} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!C\+P\+ON@{C\+P\+ON}}
+\index{C\+P\+ON@{C\+P\+ON}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{C\+P\+O\+N()}{CPON()}}]{\setlength{\rightskip}{0pt plus 5cm}C\+P\+O\+N\+::\+C\+P\+ON (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_a601ad865675106d4a8b307a17aec4c23}{}\label{classclassprobability_1_1_c_p_o_n_a601ad865675106d4a8b307a17aec4c23}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!````~C\+P\+ON@{$\sim$\+C\+P\+ON}}
+\index{````~C\+P\+ON@{$\sim$\+C\+P\+ON}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{$\sim$\+C\+P\+O\+N()}{~CPON()}}]{\setlength{\rightskip}{0pt plus 5cm}C\+P\+O\+N\+::$\sim$\+C\+P\+ON (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_ade30348622c337e028f3aed5bbaacd37}{}\label{classclassprobability_1_1_c_p_o_n_ade30348622c337e028f3aed5bbaacd37}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!C\+P\+ON@{C\+P\+ON}}
+\index{C\+P\+ON@{C\+P\+ON}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{C\+P\+O\+N(cpon\+\_\+map $\ast$cpmap)}{CPON(cpon_map *cpmap)}}]{\setlength{\rightskip}{0pt plus 5cm}C\+P\+O\+N\+::\+C\+P\+ON (
+\begin{DoxyParamCaption}
+\item[{{\bf cpon\+\_\+map} $\ast$}]{cpmap}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_ac012705da1b133b2a3d82630d532180f}{}\label{classclassprobability_1_1_c_p_o_n_ac012705da1b133b2a3d82630d532180f}
+
+
+\subsection{Member Function Documentation}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!build\+\_\+network@{build\+\_\+network}}
+\index{build\+\_\+network@{build\+\_\+network}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{build\+\_\+network()}{build_network()}}]{\setlength{\rightskip}{0pt plus 5cm}void C\+P\+O\+N\+::build\+\_\+network (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_a4d240acccf8436e2ce784368aff1e062}{}\label{classclassprobability_1_1_c_p_o_n_a4d240acccf8436e2ce784368aff1e062}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!get\+Cpmap@{get\+Cpmap}}
+\index{get\+Cpmap@{get\+Cpmap}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{get\+Cpmap()}{getCpmap()}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf cpon\+\_\+map} $\ast$ C\+P\+O\+N\+::get\+Cpmap (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_ac98ec4140046f9b6b4169617c63855f7}{}\label{classclassprobability_1_1_c_p_o_n_ac98ec4140046f9b6b4169617c63855f7}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!insert@{insert}}
+\index{insert@{insert}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{insert(std\+::string key, std\+::vector$<$ double $>$ value)}{insert(std::string key, std::vector< double > value)}}]{\setlength{\rightskip}{0pt plus 5cm}void C\+P\+O\+N\+::insert (
+\begin{DoxyParamCaption}
+\item[{std\+::string}]{key, }
+\item[{std\+::vector$<$ double $>$}]{value}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_a818ff197e0e111a9f72931c47fd29e23}{}\label{classclassprobability_1_1_c_p_o_n_a818ff197e0e111a9f72931c47fd29e23}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!insert@{insert}}
+\index{insert@{insert}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{insert(std\+::map$<$ std\+::string, std\+::vector$<$ double $>$$>$ $\ast$kvmap)}{insert(std::map< std::string, std::vector< double >> *kvmap)}}]{\setlength{\rightskip}{0pt plus 5cm}void C\+P\+O\+N\+::insert (
+\begin{DoxyParamCaption}
+\item[{std\+::map$<$ std\+::string, std\+::vector$<$ double $>$$>$ $\ast$}]{kvmap}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_a7eeda7fbd7619106e069937f51330541}{}\label{classclassprobability_1_1_c_p_o_n_a7eeda7fbd7619106e069937f51330541}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!insert@{insert}}
+\index{insert@{insert}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{insert(\+Probaclass cp)}{insert(Probaclass cp)}}]{\setlength{\rightskip}{0pt plus 5cm}void C\+P\+O\+N\+::insert (
+\begin{DoxyParamCaption}
+\item[{{\bf Probaclass}}]{cp}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_a127a7d9e09a4ed3e0905a638c244e84e}{}\label{classclassprobability_1_1_c_p_o_n_a127a7d9e09a4ed3e0905a638c244e84e}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!insert@{insert}}
+\index{insert@{insert}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{insert(cpon\+\_\+map\+\_\+pair pair)}{insert(cpon_map_pair pair)}}]{\setlength{\rightskip}{0pt plus 5cm}void classprobability\+::\+C\+P\+O\+N\+::insert (
+\begin{DoxyParamCaption}
+\item[{{\bf cpon\+\_\+map\+\_\+pair}}]{pair}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_a55a08788a294e49bd3f11c8d2493f474}{}\label{classclassprobability_1_1_c_p_o_n_a55a08788a294e49bd3f11c8d2493f474}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!update@{update}}
+\index{update@{update}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{update(std\+::string key, std\+::vector$<$ double $>$ value)}{update(std::string key, std::vector< double > value)}}]{\setlength{\rightskip}{0pt plus 5cm}void C\+P\+O\+N\+::update (
+\begin{DoxyParamCaption}
+\item[{std\+::string}]{key, }
+\item[{std\+::vector$<$ double $>$}]{value}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_a71785e865d4e82e5193888dc0d31ee5c}{}\label{classclassprobability_1_1_c_p_o_n_a71785e865d4e82e5193888dc0d31ee5c}
+\index{classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}!update@{update}}
+\index{update@{update}!classprobability\+::\+C\+P\+ON@{classprobability\+::\+C\+P\+ON}}
+\subsubsection[{\texorpdfstring{update(std\+::map$<$ std\+::string, std\+::vector$<$ double $>$$>$ $\ast$kvmap)}{update(std::map< std::string, std::vector< double >> *kvmap)}}]{\setlength{\rightskip}{0pt plus 5cm}void C\+P\+O\+N\+::update (
+\begin{DoxyParamCaption}
+\item[{std\+::map$<$ std\+::string, std\+::vector$<$ double $>$$>$ $\ast$}]{kvmap}
+\end{DoxyParamCaption}
+)}\hypertarget{classclassprobability_1_1_c_p_o_n_af388fec40ceb8832c9c6ef8b5df006f0}{}\label{classclassprobability_1_1_c_p_o_n_af388fec40ceb8832c9c6ef8b5df006f0}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classprobability_8h}{classprobability.\+h}\item 
+\hyperlink{classprobability_8cpp}{classprobability.\+cpp}\end{DoxyCompactItemize}
