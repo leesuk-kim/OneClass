@@ -9,9 +9,6 @@ Lang. ver.: 3.4.3
 """
 import math
 import time
-from multiprocessing import Pool
-from concurrent.futures import ThreadPoolExecutor
-import itertools
 
 import numpy as np
 from scipy.stats import beta as scibeta
@@ -19,7 +16,6 @@ import scipy.stats as scistats
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
-import xlsxwriter as xw
 
 
 class Sample:
@@ -300,7 +296,7 @@ class BetaFunction(Statistic):
             'mm': self.moment_match
         }
         self.name = name
-        self.engine_beta = opts['beta']
+        # self.engine_beta = opts['beta']
         self.engine_shape = opts['bse']
         # self.__beta__ = beta_engines[self.engine_beta]
         self.__betashape__ = shape_engines[self.engine_shape]
@@ -325,9 +321,12 @@ class BetaFunction(Statistic):
             fss = 0
         return fss
 
-    def aprx_betashape(self, data):
+    def samplify(self, data):
+        return [Sample(sample).set(self.centroid['mean'], self.centroid['std']) for sample in data]
+
+    def aprx_betashape(self, samples):
         """beta distribution을 추정"""
-        samples = [Sample(sample).set(self.centroid['mean'], self.centroid['std']) for sample in data]
+        # samples = [Sample(sample).set(self.centroid['mean'], self.centroid['std']) for sample in data]
         # 모든 data를 이 kernel을 통해 생성된 sample로 변환
         samp_fs, self['min'], self['max'] = featurescaling(samples)
         self.samples = samples
@@ -335,17 +334,9 @@ class BetaFunction(Statistic):
         super().measure(samp_fs)
         # 평균, 분산 등 각종 통계치 계산
         self.alpha, self.beta = self.__betashape__()
-        self['betaECDF'] = [x for x in sorted(set(self.data))]
-
-        # 통계치로 beta shape parameter 계산
-        # self.alpha, self.beta, _, _ = scibeta.fit(self['betaECDF'], self.alpha, self.beta)
-        # TODO beta fitting 안 했습니다.
-        d, pval = scistats.kstest(self['betaECDF'], scibeta.cdf, args=(self.alpha, self.beta))
-        self['p-value'], self['D'] = pval, d
 
         # CDF start
-        hist, bins = histogram(self.data, 100)
-        # print(hist)
+        hist, bins = histogram(samp_fs, 100)
         k = 0.
         cdf_ = []
         samplan = len(self.data)
@@ -353,10 +344,35 @@ class BetaFunction(Statistic):
             k += h / samplan
             cdf_.append(k)
         # CDF END
+        self['betaECDF'] = cdf_
 
-        plot_lines('beta_' + self.name, ("p=%1.8lf\t" % self['p-value']) + (r"$\alpha$=%1.8lf" % self.alpha) + "\t" + (r"$\beta$=%1.8lf" % self.beta),
-                   dict(name='Beta CDF', x=np.arange(0., 1.1, 0.01), y=scibeta.cdf(np.arange(0., 1.1, 0.01), self.alpha, self.beta)
-                        ), dict(name='empirical CDF', x=bins, y=cdf_))
+        # self['betaECDF'] = [x for x in sorted(set(self.data))]
+
+        # 통계치로 beta shape parameter 계산
+        # self.alpha, self.beta, _, _ = scibeta.fit(self['betaECDF'], self.alpha, self.beta)
+        # TODO beta fitting 안 했습니다.
+        pval = 0.
+#        unpack = fit_betaparam_search(self['betaECDF'], self.alpha, self.beta)
+#         unpack = search_betaparam(self['betaECDF'], self.alpha, self.beta)
+#        d, pval, self.alpha, self.beta = unpack[0], unpack[1], unpack[2], unpack[3]
+        d, pval = scistats.kstest(self['betaECDF'], scibeta.cdf, args=(self.alpha, self.beta))
+        self['p-value'], self['D'] = pval, d
+
+        # CDF start
+        # hist, bins = histogram(self['betaECDF'], 100)
+        # k = 0.
+        # cdf_ = []
+        # samplan = len(self.data)
+        # for h in hist:
+        #     k += h / samplan
+        #     cdf_.append(k)
+        # CDF END
+        # d, pval = scistats.kstest(cdf_, scibeta.cdf, args=(self.alpha, self.beta))
+        # self['p-value'], self['D'] = pval, d
+        # plotname = '[hist]nofit)beta_' + self.name
+        # plot_lines(plotname, ("p=%1.8lf\t" % self['p-value']) + (r"$\alpha$=%1.8lf" % self.alpha) + "\t" + (r"$\beta$=%1.8lf" % self.beta),
+        #            dict(name='Beta CDF', x=bins, y=scibeta.cdf(bins, self.alpha, self.beta)
+        #                 ), dict(name='empirical CDF', x=bins, y=cdf_))
         return self
 
     def moment_match(self):
@@ -444,7 +460,6 @@ class Class(Statistic):
         # kernels = [Kernel(name, c, kernel=opts['kernel']) for c in centroids]
         self.alpha, self.beta = 0., 0.
         self.bfp = [BetaFunction(self.name, c, opts=self.opts) for c in centroids]
-        self.bfn = []
 
     def fit(self, totaldata):
         """
@@ -455,7 +470,7 @@ class Class(Statistic):
         kstest해서 pvalue 만들면 끝.
         """
         for bf in self.bfp:
-            bf.aprx_betashape(totaldata)
+            bf.aprx_betashape(bf.samplify(totaldata))
 
             # print("CLASS:" + self.name)
             # print("Mahalanobis\tEuclidean\tGaussian\tEpanechnikov\tlog(Mahalanobis)\tlog(Euclidean)\tlog(Gaussian)\tlog(Epanechnikov)")
@@ -482,9 +497,6 @@ class Class(Statistic):
         # 그런데 그 weight도 kernel에 붙이는거라 귀찮아서 그냥 넘김.
         pval = sum(bf.kstest(x) for bf in self.bfp)
 
-        # pval이 다들 높으면 이걸 사용
-        # pvp, pvn = sum(bf.kstest(x) for bf in self.bfp) / len(self.bfp), sum(bf.kstest(x) for bf in self.bfn) / len(self.bfn)
-        # pval = 0. if pvp == 0. or pvn == 1. else pvp / (pvp - pvn + 1)
         return pval
 
 
@@ -494,6 +506,12 @@ class CPON:
     """
     def fit(self, data, target):
         """fit"""
+        self._classes_ = {}
+        self.predicts = []
+        self._data_ = []
+        self._target_ = []
+        self.pred_pval = []
+
         self._data_, self._target_ = data, target
         dataset = {}
         for d, t in zip(data, target):
@@ -507,7 +525,6 @@ class CPON:
         if len(self._classes_) == 2:
             targets = list(self._classes_)
             opdist = {targets[0]: dict(name=targets[0], x=[]), targets[1]: dict(name=targets[1], x=[])}
-            outputs = []
             for name in self._classes_:
                 outputs = [self.output(x) for x in self._classes_[name].data]
                 preds = [x[name] for x in outputs]
@@ -529,32 +546,17 @@ class CPON:
                 for x in outputs:
                     for p in x:
                         if p == name:
-                            opdist[p]['x'].append(x[p])
+                            opdist[p].get('x').append(x[p])
+                            # opdist[p]['x'].append(x[p])
                         else:
-                            opdist[p]['y'].append(x[p])
+                            opdist[p].get('y').append(x[p])
+                            # opdist[p]['y'].append(x[p])
             temp = opdist[targets[1]]['y']
             opdist[targets[1]]['y'] = opdist[targets[1]]['x']
             opdist[targets[1]]['x'] = temp
-            plot_dots('od2d' + targets[0] + targets[1], "OD2D-" + targets[0] + " and " + targets[1], opdist[targets[0]], opdist[targets[1]])
+            # TODO 2차원 그래프로 트레이닝 데이터의 분포를 나타냄
+            # plot_dots('od2d' + targets[0] + targets[1], "OD2D-" + targets[0] + " and " + targets[1], opdist[targets[0]], opdist[targets[1]])
 
-        # 커널들을 각 class에 negative로 setting
-        # for posclsname in self._classes_:
-        #     self.share_betafunctions(posclsname)
-        # if not self.kwargs['threadable']:
-        #     # 여기가 끝
-        #     pass
-        # else:
-        #     with Pool(processes=4) as pool:
-        #         for t in dataset:
-        #             c = Class(opts=self.kwargs, name=t, data=dataset[t])
-        #             res = pool.apply_async(c.fit, (data, ))
-        #             self._classes_[t] = res.get()
-        #     with ThreadPoolExecutor(5) as tpool:
-        #         for name in self._classes_:
-        #             thread = tpool.submit(self.share_betafunctions, name)
-        #             thread.result()
-        #             # self._classes_
-            a = 1
             pass
 
     def output(self, sample):
@@ -571,6 +573,15 @@ class CPON:
         """
         clspval = self.__predict__(sample)
         pval_sum = sum(clspval[k] for k in clspval)
+
+        # pvalue_dict = {}
+        # # TODO 아래의 코드는 에러가 있습니다
+        # for k in clspval:
+        #     k_neg = [x for x in clspval if k not in clspval]
+        #     demoni = clspval[k] - k_neg + 1
+        #     pvalue_dict[k] = clspval[k] / demoni
+        # clspval = max(pvalue_dict, key=lambda x: pvalue_dict[x])
+
         if pval_sum != 1. and pval_sum != 0.:
             for k in clspval:
                 clspval[k] /= pval_sum
@@ -582,49 +593,21 @@ class CPON:
 
     def predict(self, data):
         pred = []
-
-        # MULTIPROCESSING
-        # self.pred_pval = {}
-
-        # with Pool(processes=4) as pool:
-        #     for name in self._classes_:
-        #         res = pool.apply_async(process_predict, (self._classes_[name], data, ))
-        #         a = res.get()
-        #         self.pred_pval[a[0]] = a[1]
-
-        # THREAD
-        # self.pred_pval = {}
-        # with ThreadPoolExecutor(100) as tpool:
-        #     for name in self._classes_:
-        #         # self.thread_predict(name, data)
-        #         thread = tpool.submit(self.thread_predict, name, data)
-        #         thread.result()
-
-        # NON PARALLEL
         self.pred_pval = [{} for _ in data]
         for i, sample in enumerate(data):
             for name in self._classes_:
                 self.pred_pval[i][name] = self._classes_[name].predict(sample)
 
+            # for k in self._classes_:
+            #     k_neg = [self.pred_pval[i][x] for x in self.pred_pval[i].keys() if k not in self.pred_pval[i].keys()]
+            #     demoni = self.pred_pval[i][k] - sum(k_neg) + 1
+
         for pval in self.pred_pval:
-            predcls = max(pval, key=lambda x: pval[x])
-            # print('predict: ', predcls, ', pval=', pval[predcls])
-            # if pval[predcls] < 0.05:
-            #     predcls = 'REJECT'
+            # predcls = max(pval, key=lambda x: pval[x], default="unknown")
+            predcls = mymax(pval, key=lambda x: pval[x], default="unknown", underbound=0.05)
             pred.append(predcls)
 
-        # 2개의 Class일 때만 사용하는 코드
-
-        # 2개의 Class일 때만 사용하는 코드 끝
         return pred
-
-    def share_betafunctions(self, posclsname):
-        """다른 class의 betasample들을 neg의 betasample로 등록
-        이를 통해 One Against Rest의 Rest를 구성"""
-        bfn = [self._classes_[key].bfp for key in self._classes_ if key != posclsname]
-        bfn = list(itertools.chain(*bfn))
-        self._classes_[posclsname].bfn = bfn
-        return self._classes_[posclsname]
 
     def thread_predict(self, clsname, data):
         for i, sample in enumerate(data):
@@ -683,7 +666,7 @@ def histogram(x: list, bins: int):
         histo[-1] += i
     else:
         # histo.append(i)
-           while len(histo) < bins:
+        while len(histo) < bins:
             histo.append(i)
             i = 0
     steps = []
@@ -829,14 +812,14 @@ def plot_bars(filename, title, *args):
     """
     fig, ax = plt.subplots()
     plt.title(title)
-    palette = ['r', 'b', 'g', 'k']
+    palette = ['k', 'w', 'y', 'r']
     for xyw, color in zip(args, palette):
         x = xyw['x']
         y = xyw['y']
         w = xyw['w']
         plt.bar(x, y, width=w, color=color, label=xyw['name'])
     plt.xlim([-0.1, 1.1])
-    plt.legend()
+    # plt.legend()
     fig.savefig(filename + '.png')
     plt.clf()
     pass
@@ -858,9 +841,78 @@ def plot_dots(filename, title, *args):
         x = xy['x']
         y = xy['y']
         plt.plot(x, y, cl, label=xy['name'])
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
+    # plt.legend(bbox_to_anchor=(1.05, 1), loc=2)
     plt.xlim(-0.05, 1.05)
     plt.ylim(-0.05, 1.05)
     fig.savefig(filename + '.png')
     plt.clf()
     pass
+
+
+def mymax(itervar, **kwargs):
+    """
+    max인데, max의 결과가 일정 기준 이하면 default를 리턴
+    :param itervar:
+    :param kwargs:
+    :return:
+    """
+    if 'key' in kwargs:
+        mval = max(itervar, key=kwargs['key'])
+    else:
+        mval = max(itervar)
+    default = kwargs['default'] if 'default' in kwargs else ValueError
+    if 'underbound' in kwargs:
+        mval = default if itervar[mval] < kwargs['underbound'] else mval
+    return mval
+
+
+def search_betaparam(empirical_cdf, alpha, beta):
+    a, b = alpha, beta
+    prevd, postd, prevp, postp = 0., 0., 0., 0.
+    step_a, step_b = alpha / 1000, beta / 1000
+    prevd, pval = scistats.kstest(empirical_cdf, scibeta.cdf, args=(a, b))
+
+    # alpha 값 searching
+
+    while True:
+        a -= step_a
+        postd, pval = scistats.kstest(empirical_cdf, scibeta.cdf, args=(a, b))
+        if prevd < postd:
+            step_a *= -0.1
+        elif postd / prevd > 0.99999999:
+            break
+        elif pval >= 0.05:
+            return postd, pval, a, b
+        prevd = postd
+
+    # beta 값 searching
+
+    while True:
+        b -= step_b
+        postd, pval = scistats.kstest(empirical_cdf, scibeta.cdf, args=(a, b))
+        if prevd < postd:
+            step_b *= -0.1
+        elif postd / prevd > 0.99999999:
+            break
+        elif pval >= 0.05:
+            return postd, pval, a, b
+        prevd = postd
+
+    # if pval < 1e-5:
+    #     postd, pval = search_betaparam(empirical_cdf, alpha, beta)
+
+    return postd, pval, a, b
+
+
+def fit_betaparam_search(empirical_cdf, alpha, beta):
+    # 앞에서부터 p-value가 0.05미만으로 떨어질 때마다 search로 맞춰준다.
+    a, b = alpha, beta
+    len_ecdf = len(empirical_cdf)
+    stub_d, stub_pval = 0., 0.
+    for i in range(1, len_ecdf + 1):
+        ecdf_stub = empirical_cdf[:i]
+        stub_d, stub_pval = scistats.kstest(ecdf_stub, scibeta.cdf, args=(a, b))
+        if stub_pval > 0.05:
+            continue
+        # stub_d, stub_pval, a, b = search_betaparam(ecdf_stub, a, b)
+    return stub_d, stub_pval, a, b

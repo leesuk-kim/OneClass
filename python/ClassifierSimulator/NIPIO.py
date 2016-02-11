@@ -11,9 +11,11 @@ version = "\\july"
 trails = "\\output\\"
 # dataname = "july_original_TOA"  # 진짜 오리지널 데이터
 # dataname = "july_originbeam_TOA"  # 모든 1번 beam의 데이터
-dataname = "july_original_TOA_0102"  # 1번과 2번만
+# dataname = "july_original_TOA_0102"  # 1번과 2번만
 # dataname = "july_original_TOA_7980"  # 1번과 2번만
 # dataname = "july_origin_10beam_TOA"  # 모든 beam을 다 나눈 데이터
+# dataname = "`naeultech-151208`"  # 나을텍에서 제공해준 output data들
+dataname = "april50"  # 맨 처음에 받았던 50개 data
 timestamp = time.time()
 
 
@@ -105,7 +107,6 @@ def initbook(bookname):
 
 def attr_listup(msmtdict: dict, attrname: str):
     """
-    ?? ?? ??? ?? ???
     :param msmtdict:
     :return:
     """

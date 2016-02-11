@@ -30,9 +30,13 @@ class ClfSim:
         self._fold_data, self._fold_target = None, None
         self._learn_data, self._learn_target = None, None
         self._pred_data, self._pred_target = None, None
+        self.unknown = False
 
     def addclf(self, simtag):
-        """add classifier simulorule with passing by object type check.
+        """
+        add classifier simulorule with passing by object type check.
+        :param simtag:
+        :return:
         """
         if isinstance(simtag, SimTag):
             self.simtaglist.append(simtag)
@@ -41,25 +45,17 @@ class ClfSim:
         pass
 
     def fit(self, data, target):
-        """upload learning resources.
-        ? ????? ???? ???? fold? ? ???? ????? ?????.
-        Parameters
-        ----------
-        X: {array-like, sparce matrix}, shape = [n_samples, n_features]
+        """
+        :param data:{array-like, sparce matrix}, shape = [n_samples, n_features]
             For kernel="precomputed", the expected shape of X is
             [n_samples_test, n_samples_train]
 
-        y: array-like, shape (n_samples,)
+        :param target:array-like, shape (n_samples,)
             Target values (class labels in classification, real numbers in
             regression)
-        Returns
-        _______
-        self: object
-            Returns self.
+        :return: ClfSim
         """
         lendata, lentarget = len(data), len(target)
-
-        f = self._fold
 
         if lendata != lentarget:
             print('Length of X and y are different.')
@@ -67,12 +63,41 @@ class ClfSim:
         elif lendata % self._fold != 0:
             print('Length of data is not compitible with fold. modulus is dropped.')
 
+        f = self._fold
         fold_data, fold_target = [[] for _ in range(f)], [[] for _ in range(f)]
 
-        for i, zxy in enumerate(list(zip(data, target))):
-            ii = i % f
-            fold_data[ii].append(zxy[0])
-            fold_target[ii].append(zxy[1])
+        if self.unknown:
+            f, self._fold = 6, 6
+            # 먼저 반반으로 나눠서 training과 testing이란 이름으로 저장하고
+            # 첫번째껀 그냥 저장하고 2번째부터 6번째까지는 5개씩 줄여서 저장
+            # 따라서 첫번째는 50개의 class, 6번째는 25개의 class가 저장됨
+            # 이젠 여기서 folding을 과정을 모두 처리함
+            fold_data, fold_target = [[list(), list()] for _ in range(f)], [[list(), list()] for _ in range(f)]
+            targetbuffer = [x for x in set(target)]
+            targetbuffer.sort()
+
+            inputdict = {t:[] for t in targetbuffer}
+            for d, t in zip(data, target):
+                inputdict[t].append(d)
+
+            for i, t in enumerate(targetbuffer):
+                lend = len(inputdict[t])
+                learndata, testdata = inputdict[t][:int(lend / 2)], inputdict[t][int(lend / 2):]
+                targetindex = int(t)  # 구버전용
+                # targetindex = int(t[2:])  # 구버전용(EPxxxx로 naming된 data)
+                foldindex_upbound = int(i / 5) + 1
+                # index of second-level array: 0 is training, 1 is testing data or target.
+                for foldindex in range(6):
+                    fold_data[foldindex][1].extend(learndata)
+                    fold_target[foldindex][1].extend([t for _ in learndata])
+                    if foldindex < foldindex_upbound:
+                        fold_data[foldindex][0].extend(learndata)
+                        fold_target[foldindex][0].extend([t for _ in learndata])
+        else:
+            for target_index, zxy in enumerate(list(zip(data, target))):
+                foldindex = target_index % f
+                fold_data[foldindex].append(zxy[0])
+                fold_target[foldindex].append(zxy[1])
 
         self._fold_data, self._fold_target = fold_data, fold_target
         self._data, self._target = data, target
@@ -82,20 +107,26 @@ class ClfSim:
     def folding(self):
         fold_data, fold_target, f = self._fold_data, self._fold_target, self._fold
 
-        for j in range(f):
-            ldata, ltarget = [], []  # learning data
-            pdata, ptarget = None, None  # predicting data
-            for i in range(f):
-                if i == j:
-                    pdata, ptarget = fold_data[i], fold_target[i]
-                else:
-                    ldata.extend(fold_data[i])
-                    ltarget.extend(fold_target[i])
+        if self.unknown:
+            for j in range(f):
+                # index of second-level array: 0 is training, 1 is testing data or target.
+                ldata, ltarget = fold_data[j][0], fold_target[j][0]  # learning data
+                known_target = set(ltarget)
+                pdata, ptarget = fold_data[j][1], [x if x in known_target else 'unknown' for x in fold_target[j][1]]  # predicting data
 
-            self._learn_data, self._learn_target = ldata, ltarget
-            self._pred_data, self._pred_target = pdata, ptarget
+                self._learn_data, self._learn_target = ldata, ltarget
+                self._pred_data, self._pred_target = pdata, ptarget
 
-            yield ldata, ltarget, pdata, ptarget
+                yield ldata, ltarget, pdata, ptarget
+        else:
+            for j in range(f):
+                ldata, ltarget = [], []  # learning data
+                pdata, ptarget = None, None  # predicting data
+
+                self._learn_data, self._learn_target = ldata, ltarget
+                self._pred_data, self._pred_target = pdata, ptarget
+
+                yield ldata, ltarget, pdata, ptarget
 
     def learn(self):
         f = 1
@@ -148,11 +179,27 @@ class SimTag:
         # update_stats(stats, 'r_i', metrics.recall_score(pred, pred_target, average='micro'))  # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION)
         # update_stats(stats, 'f_a', metrics.f1_score(pred, pred_target, average='macro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
         # update_stats(stats, 'f_i', metrics.f1_score(pred, pred_target, average='micro'))   # NOT COMPITIBLE FOR MULTI-CLASS CLASSIFICATION
-        update_stats(stats, 'rec', metrics.recall_score(pred, pred_target, average='binary', pos_label=pred_target[0]))  # binary
-        update_stats(stats, 'pre', metrics.precision_score(pred_target, pred, average='binary', pos_label=pred_target[0]))  # binary
-        update_stats(stats, 'f1m', metrics.f1_score(pred, pred_target, average='binary', pos_label=pred_target[0]))   # bianry
-        update_stats(stats, 'scores', confusion_matrix(pred_target, pred))
-        update_stats(stats, 'emr', emr_score(pred_target, pred))
+        # update_stats(stats, 'rec', metrics.recall_score(pred, pred_target, average='binary', pos_label=pred_target[0]))  # binary
+        # update_stats(stats, 'pre', metrics.precision_score(pred_target, pred, average='binary', pos_label=pred_target[0]))  # binary
+        # update_stats(stats, 'f1m', metrics.f1_score(pred, pred_target, average='binary', pos_label=pred_target[0]))   # bianry
+        # update_stats(stats, 'scores', confusion_matrix(pred_target, pred))
+        # update_stats(stats, 'emr', emr_score(pred_target, pred))
+        update_stats(stats, 'dtd', detectability(pred_target, pred))
+        update_stats(stats, 'unp', unknown_precision(pred_target, pred))
+
+        if type(self.simulor) == CPON:
+            pred_pval = self.simulor.pred_pval
+            sequences = {x: [] for x in set(pred_target)}
+            for t, p in zip(pred_target, pred_pval):
+                if t == 'unknown':
+                    sequences[t].append(p[max(p, key=lambda x: p[x])])
+                else:
+                    sequences[t].append(p[t])
+                pass
+
+            with open('sequence_of_pvalue' + "_{}".format(repr(len(stats['acc']['fold']))) + '.csv', 'w') as f:
+                for sequence in sequences:
+                    f.write(sequence + ',' + ','.join(repr(x) for x in sequences[sequence]) + '\n')
         return self
 
     pass
@@ -198,7 +245,7 @@ def clffactory(clfname, **kwargs):
 
 def ave_stats(simulator_tag: SimTag):
     """
-    ? ???? ??? ????, SimTag? SimTag.statistics? ? ?? ???? ????.
+
     calculate mean of each statistic and append at the end of lsit of statistic.
     :type simulator_tag: SimTag
     :param simulator_tag: object SimTag
@@ -215,7 +262,6 @@ form_stats = {'fold': [], 'average': 0.0}  # data structure for statistic measur
 
 def update_stats(pedia: dict, key, value):
     """
-    ?? ???? fold ? ?????. ???? ??? ?? ??? ? fold? ?????.
     :param pedia: statistics dictionary of classification
     :param key: abbrivation of measurement
     :param value: measurement function
@@ -264,12 +310,11 @@ def confusion_matrix(target, pred):
     return cm_dict
 
 
-def dict_keygen(d):
-    for i in d:
-        yield i
-
-
-class ConfusionMatrix():
+class ConfusionMatrix:
+    """
+    TP, TN, FP, FN을 계산합니다.
+    그리고 이를 통해 AFPR을 계산합니다.
+    """
     def __init__(self, name):
         self.name = name
         self.matrix = {'tp': 0, 'tn': 0, 'fp': 0, 'fn': 0}
@@ -309,3 +354,41 @@ class ConfusionMatrix():
 
     def exactmatch(self):
         pass
+
+
+def detectability(test_target, pred_target):
+    """
+    unknown 중에서 올바르게 unknown으로 분류된 비율
+    :param test_target:
+    :param pred_target:
+    :return:
+    """
+    unknown_pair = [[tt, dt]for tt, dt in zip(test_target, pred_target) if tt in 'unknown']
+
+    len_unknown = len(unknown_pair)
+    len_predunknown = len([x for x in unknown_pair if x[1] == 'unknown'])
+    if len_unknown < 1:
+        return 0.
+    dtd = len_predunknown / len_unknown
+    return dtd
+
+
+def unknown_precision(test_target, pred_target):
+    """
+    unknown으로 분류된 target 중에서 원래 unknown이 분류된 비율
+    :param test_target:
+    :param pred_target:
+    :return:
+    """
+    tp, fp = [], []
+    for tt, dt in zip(test_target, pred_target):
+        if dt in 'unknown':
+            if tt in 'unknown':
+                tp.append([tt, dt])
+            else:
+                fp.append([tt, dt])
+    lentp, lenfp = len(tp), len(fp)
+
+    unp = lentp / (lentp + lenfp)
+
+    return unp
