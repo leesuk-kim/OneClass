@@ -9,7 +9,16 @@
 #include <boost\accumulators\statistics\mean.hpp>
 #include <boost\accumulators\statistics\variance.hpp>
 
+/**
+\namespace classprobability
+\brief namespace classprobability
+*/
 namespace classprobability {
+	/**
+	\brief struct pattern
+	\details pattern 관련 정보를 저장합니다.
+	\author Leesuk kim, lktime\skku.edu
+	*/
 	struct pattern_t {
 		std::vector<double> data;
 		std::vector<double> ecdf;
@@ -18,13 +27,29 @@ namespace classprobability {
 		double mean, var;
 	};
 
+	/**
+	\namespace beta
+	\brief namespace beta
+	*/
 	namespace beta {
+		/**
+		\brief struct for contatining parameters of beta function.
+		\details Boost Library의 beta 함수는 random variable과 paramter를 동시에 입력해야 beta output이 출력됩니다.
+		random variable은 사용할 때마다 달라지니, 결국 특정 class의 shape of beta function을 결정하는 것은 beta parameter입니다.
+		따라서 beta parameter인 alpha와 beta값을 하나의 struct로 묶어서 관리합니다.
+		*/
 		struct betaparam_t {
-			double alpha, beta;
+			/**the beta parameter 'alpha'*/
+			double alpha;
+			/**the beta parameter 'beta'*/
+			double beta;
 		};
 
 		struct ksresult_t {
-			double d, pval;
+			/**Kolmogorov-Smirnov statistic*/
+			double d;
+			/**p-value*/
+			double pval;
 		};
 
 		//kstest할 때 기본적으로 필요한 data들

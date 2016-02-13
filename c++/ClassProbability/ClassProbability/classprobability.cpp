@@ -1,21 +1,29 @@
-﻿#include "classprobability.h"
+﻿/**
+@file classprobability.cpp
+@brief class probability for CPON
+@details 
+*/
+
+#include "classprobability.h"
 
 using namespace classprobability;
 
 
-/*
+/**
+\brief histrogram을 그립니다.
+
+\details
 Computes the histogram of the parameter 'data' with the parameter 'bins'.
 The 'bins' is larger than 30, proper size is 100.
 It returns a vector<int> which indicates the size of equally divided bounds.
 before use this method, please std::sort first.
-Designer: Leesuk Kim
 
-parameter:
-std::vector<double>* data: The target data of pointer of vector<double> instance.
-unsigned int bins: bin size
-return:
-std::vector<int>: histogram
-Designer: Leesuk Kim (lktime@skku.edu)
+\param data the type of this parameter is 'std::vector<int>'.
+\param bins the type of this parameter is 'unsigned int'.
+
+\return a histogram. the type of this parameter is 'std::vector<int>'.
+
+\author Leesuk Kim, lktime@skku.edu
 */
 std::vector<int> beta::histogram(const std::vector<double>& data, unsigned int bins){
 	std::vector<int> hist(0);
