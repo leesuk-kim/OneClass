@@ -1,11 +1,4 @@
-﻿#pragma warning(disable : 4251)
-
-#include "classprobability.h"
-#include "mysql_connection.h"
-#include <cppconn\driver.h>
-#include <cppconn\exception.h>
-#include <cppconn\resultset.h>
-#include <cppconn\statement.h>
+﻿#include "classprobability.h"
 #include <stdlib.h>
 #include <fstream>
 
@@ -19,8 +12,6 @@ struct sqlres_t
 };
 
 
-void loadData(std::map<std::string, std::vector<double>>* data_map);
-void loadData(std::map<std::string, std::vector<double>>* data_map, std::string key);
 void fpval(classprobability::CPON cpon);
 
 
@@ -29,8 +20,6 @@ int main()
 	classprobability::CPON mycpon;
 
 	classprobability::datamap* src_map = new classprobability::datamap;
-	loadData(src_map);//전체 데이터
-	//loadData(src_map, "E0061");//특정 데이터만
 
 	mycpon.insert(src_map);
 	mycpon.build_network();
@@ -38,66 +27,6 @@ int main()
 	fpval(mycpon);
 	//predict_result(mycpon, src_map);
 	delete src_map;
-}
-
-
-void loadData(std::map<std::string, std::vector<double>>* data_map)
-{
-	try {
-		sql::Driver *driver;
-		sql::Connection *con;
-		sql::Statement *stmt;
-		sql::ResultSet *res;
-
-		/* Create a connection */
-		driver = get_driver_instance();
-		con = driver->connect("221.153.219.220:8806", "niplab", "qwqw`12");
-		/* Connect to the MySQL test database */
-		con->setSchema("LIG");
-
-		stmt = con->createStatement();
-		res = stmt->executeQuery("SELECT * from `naeultech-151208`");
-		while (res->next()) {
-			std::string str = res->getString(2).c_str();
-			double d = res->getDouble(3);
-			std::map<std::string, std::vector<double>>::iterator fres = data_map->find(str);
-			if (fres == data_map->end())
-			{
-				std::vector<double> vec;
-				vec.push_back(d);
-				data_map->insert(std::map<std::string, std::vector<double>>::value_type(str, vec));
-			}
-			else
-			{
-				fres->second.push_back(d);
-			}
-			/* Access column data by alias or column name */
-		}
-		delete res;
-		delete stmt;
-		delete con;
-
-	}catch (sql::SQLException &e) {
-		cout << "# ERR: SQLException in " << __FILE__;
-		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
-		cout << "# ERR: " << e.what();
-		cout << " (MySQL error code: " << e.getErrorCode();
-		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
-	}
-}
-
-
-/*원하는 key의 data만 받음
-*/
-void loadData(std::map<std::string, std::vector<double>>* data_map, std::string key)
-{
-	loadData(data_map);
-	std::vector<double> sub;
-	std::map<std::string, std::vector<double>>::iterator iter;
-	iter = data_map->find(key);
-	sub = std::vector<double>(iter->second);
-	data_map->clear();
-	(*data_map)[key] = sub;
 }
 
 
