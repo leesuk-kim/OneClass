@@ -1,26 +1,20 @@
 ﻿#include "classprobability.h"
 #include <stdlib.h>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 
-
-struct sqlres_t
-{
-	std::string name;
-	std::vector<double> data;
-};
-
-
-void fpval(classprobability::CPON cpon);
-
+std::vector<std::string> tokelizer(std::istream& str);
+void load_data(kil::datamap* dm);
+void fpval(kil::cpnetwork cpon);
 
 int main()
 {
-	classprobability::CPON mycpon;
+	kil::cpnetwork mycpon;
 
-	classprobability::datamap* src_map = new classprobability::datamap;
-
+	kil::datamap* src_map = new kil::datamap;
+	load_data(src_map);
 	mycpon.insert(src_map);
 	mycpon.build_network();
 
@@ -30,19 +24,49 @@ int main()
 }
 
 
+void load_data(kil::datamap* dm)
+{
+	ifstream load("output.csv", ios::in);
+	string str;
+
+	while (getline(load, str, ','))
+	{
+		/*
+		이제 각 줄마다 각 클래스로 보내줘야 하는데 이거 너무 거지같은듯...
+		*/
+	}
+}
+
+
+std::vector<std::string> tokelizer(std::istream& str)
+{
+	std::vector<std::string> result;
+	std::string line;
+	std::getline(str, line);
+	std::stringstream lineStream(line);
+	std::string cell;
+
+	while (std::getline(lineStream, cell, ','))
+	{
+		result.push_back(cell);
+	}
+	return result;
+}
+
+
 /*KS-test의 결과값인 D와 p-value, 그리고 tolerance를 출력
 ECDF와 BCDF를 출력
 */
-void fpval(classprobability::CPON cpon)
+void fpval(kil::cpnetwork cpon)
 {
-	classprobability::cpon_map_iter iter;
+	kil::cpnmap_iter iter;
 	for (iter = cpon.getCpmap()->begin(); iter != cpon.getCpmap()->end(); ++iter)
 	{
-		classprobability::Probaclass cp = iter->second;
+		kil::probaclass cp = iter->second;
 		ofstream of(string("scaled_pvalue\\") + string(cp.m_name) + string("_pvalue.csv"));
 
 		//cpon::betasketch_t abpr = cp.map_beta();
-		classprobability::beta::betasketch_t abpr = cp.get_betasketch();
+		kil::beta::betasketch_t abpr = cp.get_betasketch();
 		string comma = string(","), endline = string("\n");
 		
 		of << cp.m_name << comma << abpr.ksr.d << comma << abpr.ksr.pval << endl;

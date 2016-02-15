@@ -1,30 +1,8 @@
-﻿/**
-@file classprobability.cpp
-@brief class probability for CPON
-@details 
-*/
+﻿#include "classprobability.h"
 
-#include "classprobability.h"
-
-using namespace classprobability;
+using namespace kil;
 
 
-/**
-\brief histrogram을 그립니다.
-
-\details
-Computes the histogram of the parameter 'data' with the parameter 'bins'.
-The 'bins' is larger than 30, proper size is 100.
-It returns a vector<int> which indicates the size of equally divided bounds.
-before use this method, please std::sort first.
-
-\param data the type of this parameter is 'std::vector<int>'.
-\param bins the type of this parameter is 'unsigned int'.
-
-\return a histogram. the type of this parameter is 'std::vector<int>'.
-
-\author Leesuk Kim, lktime@skku.edu
-*/
 std::vector<int> beta::histogram(const std::vector<double>& data, unsigned int bins){
 	std::vector<int> hist(0);
 	double step = 1 / ((double)bins);
@@ -55,17 +33,6 @@ std::vector<int> beta::histogram(const std::vector<double>& data, unsigned int b
 }
 
 
-/*
-Computes the data of cumulative histogram. It depends on classprobability::histogram.
-It cumulates The return of classprobability::histogram and nomalizes from 0 to 1.
-Designer: Leesuk Kim
-parameter:
-std::vector<double>* data: The target data of pointer of vector<double> instance.
-unsigned int bins: bin size
-return:
-std::vector<double>: empirical CDF
-Designer: Leesuk Kim (lktime@skku.edu)
-*/
 std::vector<double> beta::cumulahisto(std::vector<int>& hist_ui, unsigned int bins){
 	std::vector<double> hist;
 	std::sort(hist_ui.begin(), hist_ui.end());
@@ -81,11 +48,6 @@ std::vector<double> beta::cumulahisto(std::vector<int>& hist_ui, unsigned int bi
 	return hist;
 }
 
-
-/*
-Computes beta parameter using method of moment matching.
-Designer: Leesuk Kim (lktime@skku.edu)
-*/
 struct beta::betaparam_t beta::moment_match(const double& mean, const double& var){
 	static const double upper = 1., lower = 0.;
 	struct beta::betaparam_t bp;
@@ -98,10 +60,6 @@ struct beta::betaparam_t beta::moment_match(const double& mean, const double& va
 }
 
 
-/*
-Calculates p-value of hypothesis test of between ecdf and beta.
-Cited from Numerical Recipes in C, 2nd edition, p.626
-*/
 double beta::qks(const double& alam) {
 	//Return complementary cumulative distribution function.
 	static const double EPS1 = 0.001;
@@ -123,11 +81,6 @@ double beta::qks(const double& alam) {
 }
 
 
-/*
-Kolmogorov-Smirnov Test on two sample.
-This test tests two sample for learning phase.
-Cited from numerical recipies ASC, 3rd edithion, p.737-738
-*/
 struct beta::ksresult_t beta::kstest(std::vector<double>& sample1, std::vector<double>& sample2){
 	struct beta::ksresult_t ksr = { 0., 0.};
 	unsigned int j1 = 0, j2 = 0, n1 = sample1.size(), n2 = sample2.size();
@@ -147,13 +100,6 @@ struct beta::ksresult_t beta::kstest(std::vector<double>& sample1, std::vector<d
 }
 
 
-/*partial kstest
-일반적인 KS Test지만 parameter로 struct betaparam_t를 사용하며,
-주어진 구간까지만 KS test한다는 점이 다릅니다. (참고: 본래 KS test는 0부터 1까지 모두 확인합니다.)
-특히 이 함수는 0부터가 아닌 front부터, 1까지가 아닌 rear까지만 test합니다.
-이를 통해 fitting이 불가능한 불연속점에서는 새로운 beta를 찾을 수 있는 기준을 제공합니다.
-Designer: Leesuk Kim (lktime@skku.edu)
-*/
 void beta::partial_kstest(struct beta::kstest_t& kst, struct beta::betaparam_t& bp){
 	double d = 0., dt, ff, fn, fo = 0., rv;
 	
@@ -170,10 +116,6 @@ void beta::partial_kstest(struct beta::kstest_t& kst, struct beta::betaparam_t& 
 }
 
 
-/*
-beta parameters를 searching으로 찾습니다.
-Designer: Leesuk Kim (lktime@skku.edu)
-*/
 void beta::search_beta(struct beta::kstest_t& kst, struct beta::betaparam_t& bp){
 	double asign = 1., bsign = 1.;
 	double pd = kst.result.d;
@@ -210,9 +152,6 @@ void beta::search_beta(struct beta::kstest_t& kst, struct beta::betaparam_t& bp)
 }
 
 
-/*beta 를 pivot하며 search(=fitting) 해서 mapping 합니다.
-Designer: Leesuk Kim (lktime@skku.edu)
-*/
 struct beta::ksresult_t beta::search_betamap(std::map<double, struct beta::betaparam_t>& betamap, const std::vector<double>& ecdf, struct pattern_t& ptn){
 	unsigned int ecdf_size = ecdf.size();
 	double en_sqrt = sqrt((double)ecdf_size);
@@ -248,39 +187,36 @@ struct beta::ksresult_t beta::search_betamap(std::map<double, struct beta::betap
 }
 
 
-Probaclass::Probaclass(std::string name){
+probaclass::probaclass(std::string name){
 	m_name = name;
 }
 
-Probaclass::Probaclass(std::string name, std::vector<double> data){
+probaclass::probaclass(std::string name, std::vector<double> data){
 	m_name = name;
 	insert(data);
 }
 
 
 //rawdata를 입력합니다. 기존의 데이터는 모두 사라집니다.
-void Probaclass::insert(std::vector<double> data){
+void probaclass::insert(std::vector<double> data){
 	m_pattern.data = std::vector<double>(data);
 }
 
 
 //기존 데이터에 새 데이터를 뒤에 추가합니다.
-void Probaclass::update(const std::vector<double>& data){
+void probaclass::update(const std::vector<double>& data){
 	for (unsigned int i = 0, size = data.size(); i < size; i++)
 		m_pattern.data.push_back(data[i]);
 }
 
 
-double Probaclass::scale(double rv){
+double probaclass::scale(double rv){
 	double r = rv < (double)m_pattern.imin ? 0. : rv >(double)m_pattern.imax ? 99. : (rv - m_pattern.imin + 1) * m_pattern.iratio;
 	return r;
 }
 
 
-/*maps Beta Shape from samples.
-Designer: Leesuk Kim (lktime@skku.edu)
-*/
-void Probaclass::map_beta(){
+void probaclass::map_beta(){
 	struct beta::ksresult_t ksr = { 0., 0. };
 
 	//statistics 계산
@@ -353,19 +289,20 @@ void Probaclass::map_beta(){
 }
 
 
-struct beta::betasketch_t Probaclass::get_betasketch(){
+struct beta::betasketch_t probaclass::get_betasketch(){
 	return m_betasketch;
 }
 
 
 /*
-하나의 class에 대한 class probability를 계산합니다.
-positive 또는 negative class의 class probability를 계산합니다.
+\brief 하나의 class에 대한 class probability를 계산합니다.
+\details positive 또는 negative class의 class probability를 계산합니다.
 probability of positive class밖에 구할 수가 없어서 Probaclass에는 probability of negative class를 저장하는 변수가 없습니다만,
 만약 만들 경우 이 함수를 사용하여 각 negative class별 probability를 구할 수 있습니다.
-Designer: Leesuk Kim (lktime@skku.edu)
+
+\author Leesuk Kim, lktime@skku.edu
 */
-double Probaclass::cls_prob_signed(std::map<double, beta::betaparam_t>& betamap, const double& rv){
+double probaclass::cls_prob_signed(std::map<double, beta::betaparam_t>& betamap, const double& rv){
 	double prob = 0.;
 	std::map<double, beta::betaparam_t>::iterator iter;
 	bool isend = true;
@@ -378,15 +315,7 @@ double Probaclass::cls_prob_signed(std::map<double, beta::betaparam_t>& betamap,
 }
 
 
-/*
-이 식은 엄밀히 말해서 잘못되었습니다.
-원래는 postive beta와 negitive beta distribution을 구한 후
-각각의 class probability를 계산한 뒤 산술평균을 내야 합니다.
-하지만 kernel을 알 수 없는 상황에서 negative beta를 알 수 없으므로 정확도가 떨어지지만
-어느정도 기능을 하므로 작성하였습니다.
-Designer: Leesuk Kim (lktime@skku.edu)
-*/
-double Probaclass::cls_prob(const double& rv){
+double probaclass::cls_prob(const double& rv){
 	return cls_prob_signed(m_betamap, rv);
 }
 
@@ -396,51 +325,51 @@ double Probaclass::cls_prob(const double& rv){
 //EXAMPLE CLASS MEMBERS DECLARATIONS//
 //////////////////////////////////////
 //////////////////////////////////////
-CPON::CPON(){
-	m_cpmap = new std::map<std::string, Probaclass>;
+cpnetwork::cpnetwork(){
+	m_cpmap = new std::map<std::string, probaclass>;
 }
 
-CPON::~CPON(){
+cpnetwork::~cpnetwork(){
 }
 
-CPON::CPON(cpon_map* cpmap){
+cpnetwork::cpnetwork(cpnmap* cpmap){
 	m_cpmap = cpmap;
 }
 
 
-cpon_map* CPON::getCpmap(){
+cpnmap* cpnetwork::getCpmap(){
 	return m_cpmap;
 }
 
 
-void CPON::insert(std::string key, std::vector<double> value){
+void cpnetwork::insert(std::string key, std::vector<double> value){
 	//If learning data is to Large, this methods prunes 100 the data from front.
 	//std::vector<double> vec(&value[0], &value[100]);
 	//Probaclass cp(key, vec);
 
-	Probaclass cp(key, value);
+	probaclass cp(key, value);
 	insert(cp);
 }
 
-void CPON::insert(std::map<std::string, std::vector<double>>* kvmap){
+void cpnetwork::insert(std::map<std::string, std::vector<double>>* kvmap){
 	for (std::map<std::string, std::vector<double>>::iterator mapiter = kvmap->begin(); mapiter != kvmap->end(); ++mapiter)
 		insert(mapiter->first, mapiter->second);
 }
 
-void CPON::insert(Probaclass cp){	//if the element of the key exists
+void cpnetwork::insert(probaclass cp){	//if the element of the key exists
 	if (m_cpmap->find(cp.m_name) != m_cpmap->end()) m_cpmap->erase(cp.m_name);
 	m_cpmap->emplace(cp.m_name, cp);
 }
 
 
-void CPON::update(std::string key, std::vector<double> value){
-	cpon_map_iter mi = m_cpmap->find(key);
+void cpnetwork::update(std::string key, std::vector<double> value){
+	cpnmap_iter mi = m_cpmap->find(key);
 	if (mi == m_cpmap->end())
 		throw("The learning class %s does not exist. please use the method \'insert()\'.", key);
 	(*mi).second.update(value);
 }
 
-void CPON::update(std::map<std::string, std::vector<double>>* kvmap){
+void cpnetwork::update(std::map<std::string, std::vector<double>>* kvmap){
 	std::map<std::string, std::vector<double>>::iterator vi;
 	for (vi = kvmap->begin(); vi != kvmap->end(); ++vi)
 		update(vi->first, vi->second);
@@ -450,8 +379,8 @@ void CPON::update(std::map<std::string, std::vector<double>>* kvmap){
 /*Class Network를 구성합니다.
 Designer: Leesuk Kim (lktime@skku.edu)
 */
-void CPON::build_network(){
-	for (cpon_map_iter mapiter = m_cpmap->begin(); mapiter != m_cpmap->end(); ++mapiter)
+void cpnetwork::build_network(){
+	for (cpnmap_iter mapiter = m_cpmap->begin(); mapiter != m_cpmap->end(); ++mapiter)
 	{
 		std::cout << mapiter->first << std::endl;
 		mapiter->second.map_beta();
