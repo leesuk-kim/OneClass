@@ -5,12 +5,15 @@ from lkpy import LkIo
 
 
 trail = 'D:/Document/niplab/LIG'
-season = '/july/source/1000'
+# season = '/july/source/1000'
+season = '/april/source'
+# D:\Document\niplab\LIG\april\source\rawdata\ep
 # source = '/rawdata_oneten'
 # source = '/rawdata_7980'
-source = '/rawdata'
+source = '/rawdata/ep'
 output = '/inputdata'
-outputfolder = '/july_TOA'
+# outputfolder = '/july_TOA'
+outputfolder = '/april'
 # outputtag = '/data_7980'
 # outputtag = '/oneten_TOA'
 
@@ -18,7 +21,7 @@ outputfolder = '/july_TOA'
 if __name__ == "__main__":
     # a = LkIo()
 
-    # b = a.mysql_export_inputdata('test', 'a')
+    # walk = trail + season + source
     rrelist = []
     for dirname, dirnames, filenames in os.walk(trail + season + source):
 

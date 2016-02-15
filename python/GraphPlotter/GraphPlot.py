@@ -3,7 +3,6 @@ from numpy.core.multiarray import arange
 __author__ = 'lk'
 
 
-import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.neighbors.kde import KernelDensity

@@ -22,3 +22,23 @@ Document
 rfdata
 data_eb
 /python/RadarCategorizer/RadarCategorizer/data_oneten
+scaled_pvalue
+/c++/ClassProbability/ClassProbability/pvalue
+/c++/ClassProbability/ClassProbability/inv_pvalue
+/c++/ClassProbability/ClassProbability/E_pvalue
+/c++/ClassProbability/ClassProbability/100E_pvalue
+/python/ClassifierSimulator/110_\[ls\]-1+log(1+x)
+/python/ClassifierSimulator/110_\[ls\]-log(x^0.5+1,2)
+/python/ClassifierSimulator/110_\[ls\]-log(x+1, 2)
+/python/ClassifierSimulator/110_betafit
+/python/ClassifierSimulator/110_nofit
+/python/ClassifierSimulator/previous_betagraph
+/python/ClassifierSimulator/sample100
+/python/ClassifierSimulator/어떻게 그린거니
+/python/ClassifierSimulator/\[search\]beta
+/python/ClassifierSimulator/\[searchB\]beta
+/python/ClassifierSimulator/\[seasrchBA\]beta
+/python/ClassifierSimulator/__pycache__
+/python/ClassifierSimulator/110_\[ls\]-1+-1xlog(log(-1xlog(x,10),10)+3,5)\[조건만남\]
+/c++/ClassProbability/ClassProbability/latex
+/c++/ClassProbability/ClassProbability/html
