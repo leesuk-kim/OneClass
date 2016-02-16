@@ -13,7 +13,7 @@
 \namespace kil
 \brief 본 프로젝트의 모든 내용을 담고 있는 namespace입니다.
 
-\author Leesuk kim, lktime@skkuw.edu
+\author Leesuk kim, lktime@skku.edu
 */
 namespace kil {
 	/**

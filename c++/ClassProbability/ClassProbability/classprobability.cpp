@@ -3,7 +3,7 @@
 using namespace kil;
 
 
-std::vector<int> beta::histogram(const std::vector<double>& data, unsigned int bins){
+std::vector<int> beta::histogram(const std::vector<double>& data, unsigned int bins) {
 	std::vector<int> hist(0);
 	double step = 1 / ((double)bins);
 	double area = step, x;
@@ -33,7 +33,7 @@ std::vector<int> beta::histogram(const std::vector<double>& data, unsigned int b
 }
 
 
-std::vector<double> beta::cumulahisto(std::vector<int>& hist_ui, unsigned int bins){
+std::vector<double> beta::cumulahisto(std::vector<int>& hist_ui, unsigned int bins) {
 	std::vector<double> hist;
 	std::sort(hist_ui.begin(), hist_ui.end());
 	int size = std::accumulate(hist_ui.begin(), hist_ui.end(), 0);
@@ -48,7 +48,7 @@ std::vector<double> beta::cumulahisto(std::vector<int>& hist_ui, unsigned int bi
 	return hist;
 }
 
-struct beta::betaparam_t beta::moment_match(const double& mean, const double& var){
+struct beta::betaparam_t beta::moment_match(const double& mean, const double& var) {
 	static const double upper = 1., lower = 0.;
 	struct beta::betaparam_t bp;
 	double ml = mean - lower;
@@ -81,7 +81,7 @@ double beta::qks(const double& alam) {
 }
 
 
-struct beta::ksresult_t beta::kstest(std::vector<double>& sample1, std::vector<double>& sample2){
+struct beta::ksresult_t beta::kstest(std::vector<double>& sample1, std::vector<double>& sample2) {
 	struct beta::ksresult_t ksr = { 0., 0.};
 	unsigned int j1 = 0, j2 = 0, n1 = sample1.size(), n2 = sample2.size();
 	double d = 0., v1, v2, en = sqrt((double)(n1 * n2) / (double)(n1 + n2)), dt;
@@ -100,7 +100,7 @@ struct beta::ksresult_t beta::kstest(std::vector<double>& sample1, std::vector<d
 }
 
 
-void beta::partial_kstest(struct beta::kstest_t& kst, struct beta::betaparam_t& bp){
+void beta::partial_kstest(struct beta::kstest_t& kst, struct beta::betaparam_t& bp) {
 	double d = 0., dt, ff, fn, fo = 0., rv;
 	
 	for (unsigned int j = kst.front; j < kst.rear; j++)
@@ -116,7 +116,7 @@ void beta::partial_kstest(struct beta::kstest_t& kst, struct beta::betaparam_t& 
 }
 
 
-void beta::search_beta(struct beta::kstest_t& kst, struct beta::betaparam_t& bp){
+void beta::search_beta(struct beta::kstest_t& kst, struct beta::betaparam_t& bp) {
 	double asign = 1., bsign = 1.;
 	double pd = kst.result.d;
 
@@ -152,7 +152,7 @@ void beta::search_beta(struct beta::kstest_t& kst, struct beta::betaparam_t& bp)
 }
 
 
-struct beta::ksresult_t beta::search_betamap(std::map<double, struct beta::betaparam_t>& betamap, const std::vector<double>& ecdf, struct pattern_t& ptn){
+struct beta::ksresult_t beta::search_betamap(std::map<double, struct beta::betaparam_t>& betamap, const std::vector<double>& ecdf, struct pattern_t& ptn) {
 	unsigned int ecdf_size = ecdf.size();
 	double en_sqrt = sqrt((double)ecdf_size);
 	struct beta::kstest_t kst = {ecdf, ecdf_size, en_sqrt, 0, 1};
@@ -187,36 +187,36 @@ struct beta::ksresult_t beta::search_betamap(std::map<double, struct beta::betap
 }
 
 
-probaclass::probaclass(std::string name){
+probaclass::probaclass(std::string name) {
 	m_name = name;
 }
 
-probaclass::probaclass(std::string name, std::vector<double> data){
+probaclass::probaclass(std::string name, std::vector<double> data) {
 	m_name = name;
 	insert(data);
 }
 
 
 //rawdata를 입력합니다. 기존의 데이터는 모두 사라집니다.
-void probaclass::insert(std::vector<double> data){
+void probaclass::insert(std::vector<double> data) {
 	m_pattern.data = std::vector<double>(data);
 }
 
 
 //기존 데이터에 새 데이터를 뒤에 추가합니다.
-void probaclass::update(const std::vector<double>& data){
+void probaclass::update(const std::vector<double>& data) {
 	for (unsigned int i = 0, size = data.size(); i < size; i++)
 		m_pattern.data.push_back(data[i]);
 }
 
 
-double probaclass::scale(double rv){
+double probaclass::scale(double rv) {
 	double r = rv < (double)m_pattern.imin ? 0. : rv >(double)m_pattern.imax ? 99. : (rv - m_pattern.imin + 1) * m_pattern.iratio;
 	return r;
 }
 
 
-void probaclass::map_beta(){
+void probaclass::map_beta() {
 	struct beta::ksresult_t ksr = { 0., 0. };
 
 	//statistics 계산
@@ -224,7 +224,7 @@ void probaclass::map_beta(){
 	//m_pattern.mean = (double)(std::accumulate(m_pattern.data.begin(), m_pattern.data.end(), 0.) / ((double)m_pattern.data.size()));
 
 	//double std = 0.;
-	//for (unsigned int i = 0; i < m_pattern.data.size(); i++){
+	//for (unsigned int i = 0; i < m_pattern.data.size(); i++) {
 	//	std += pow((m_pattern.data[i] - m_pattern.mean), 2);
 	//}
 	//m_pattern.var = std / ((double)(m_pattern.data.size() - 1));
@@ -235,12 +235,12 @@ void probaclass::map_beta(){
 	//ecdf에 대한 featurescaling을 합니다.
 	
 	for (unsigned int i = 0; i < m_pattern.ecdf.size(); i++)
-		if (m_pattern.ecdf[i] > 0.){
+		if (m_pattern.ecdf[i] > 0.) {
 			m_pattern.imin = i;
 			break;
 		}
 	for (int i = (int)m_pattern.ecdf.size() - 1; i >= 0; i--)
-		if (m_pattern.ecdf[i] < 1.){
+		if (m_pattern.ecdf[i] < 1.) {
 			m_pattern.imax= i;
 			break;
 		}
@@ -252,7 +252,7 @@ void probaclass::map_beta(){
 	unsigned int size = m_pattern.ecdf.size();
 	scaledecdf.assign(size, 0.);
 	int k;
-	for (unsigned int i = m_pattern.imin; i <= m_pattern.imax; i++){
+	for (unsigned int i = m_pattern.imin; i <= m_pattern.imax; i++) {
 		srv = scale((double)i);
 		k = (int) srv;
 		for (int j = (int)size - 1; j >= k; j--)
@@ -289,7 +289,7 @@ void probaclass::map_beta(){
 }
 
 
-struct beta::betasketch_t probaclass::get_betasketch(){
+struct beta::betasketch_t probaclass::get_betasketch() {
 	return m_betasketch;
 }
 
@@ -302,7 +302,7 @@ probability of positive class밖에 구할 수가 없어서 Probaclass에는 pro
 
 \author Leesuk Kim, lktime@skku.edu
 */
-double probaclass::cls_prob_signed(std::map<double, beta::betaparam_t>& betamap, const double& rv){
+double probaclass::cls_prob_signed(std::map<double, beta::betaparam_t>& betamap, const double& rv) {
 	double prob = 0.;
 	std::map<double, beta::betaparam_t>::iterator iter;
 	bool isend = true;
@@ -315,7 +315,7 @@ double probaclass::cls_prob_signed(std::map<double, beta::betaparam_t>& betamap,
 }
 
 
-double probaclass::cls_prob(const double& rv){
+double probaclass::cls_prob(const double& rv) {
 	return cls_prob_signed(m_betamap, rv);
 }
 
@@ -325,24 +325,24 @@ double probaclass::cls_prob(const double& rv){
 //EXAMPLE CLASS MEMBERS DECLARATIONS//
 //////////////////////////////////////
 //////////////////////////////////////
-cpnetwork::cpnetwork(){
+cpnetwork::cpnetwork() {
 	m_cpmap = new std::map<std::string, probaclass>;
 }
 
-cpnetwork::~cpnetwork(){
+cpnetwork::~cpnetwork() {
 }
 
-cpnetwork::cpnetwork(cpnmap* cpmap){
+cpnetwork::cpnetwork(cpnmap* cpmap) {
 	m_cpmap = cpmap;
 }
 
 
-cpnmap* cpnetwork::getCpmap(){
+cpnmap* cpnetwork::getCpmap() {
 	return m_cpmap;
 }
 
 
-void cpnetwork::insert(std::string key, std::vector<double> value){
+void cpnetwork::insert(std::string key, std::vector<double> value) {
 	//If learning data is to Large, this methods prunes 100 the data from front.
 	//std::vector<double> vec(&value[0], &value[100]);
 	//Probaclass cp(key, vec);
@@ -351,25 +351,25 @@ void cpnetwork::insert(std::string key, std::vector<double> value){
 	insert(cp);
 }
 
-void cpnetwork::insert(std::map<std::string, std::vector<double>>* kvmap){
+void cpnetwork::insert(std::map<std::string, std::vector<double>>* kvmap) {
 	for (std::map<std::string, std::vector<double>>::iterator mapiter = kvmap->begin(); mapiter != kvmap->end(); ++mapiter)
 		insert(mapiter->first, mapiter->second);
 }
 
-void cpnetwork::insert(probaclass cp){	//if the element of the key exists
+void cpnetwork::insert(probaclass cp) {	//if the element of the key exists
 	if (m_cpmap->find(cp.m_name) != m_cpmap->end()) m_cpmap->erase(cp.m_name);
 	m_cpmap->emplace(cp.m_name, cp);
 }
 
 
-void cpnetwork::update(std::string key, std::vector<double> value){
+void cpnetwork::update(std::string key, std::vector<double> value) {
 	cpnmap_iter mi = m_cpmap->find(key);
 	if (mi == m_cpmap->end())
 		throw("The learning class %s does not exist. please use the method \'insert()\'.", key);
 	(*mi).second.update(value);
 }
 
-void cpnetwork::update(std::map<std::string, std::vector<double>>* kvmap){
+void cpnetwork::update(std::map<std::string, std::vector<double>>* kvmap) {
 	std::map<std::string, std::vector<double>>::iterator vi;
 	for (vi = kvmap->begin(); vi != kvmap->end(); ++vi)
 		update(vi->first, vi->second);
@@ -379,7 +379,7 @@ void cpnetwork::update(std::map<std::string, std::vector<double>>* kvmap){
 /*Class Network를 구성합니다.
 Designer: Leesuk Kim (lktime@skku.edu)
 */
-void cpnetwork::build_network(){
+void cpnetwork::build_network() {
 	for (cpnmap_iter mapiter = m_cpmap->begin(); mapiter != m_cpmap->end(); ++mapiter)
 	{
 		std::cout << mapiter->first << std::endl;

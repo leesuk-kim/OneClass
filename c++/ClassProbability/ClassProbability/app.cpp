@@ -4,13 +4,27 @@
 #include <sstream>
 
 using namespace std;
+const char* path_data = "output.csv";
 
+
+/**
+\brief
+\author Leesuk kim, lktime@skku.edu
+*/
 std::vector<std::string> tokelizer(std::istream& str);
+/**
+\brief
+\author Leesuk kim, lktime@skku.edu
+*/
 void load_data(kil::datamap* dm);
+/**
+\brief
+\author Leesuk kim, lktime@skku.edu
+*/
 void fpval(kil::cpnetwork cpon);
 
-int main()
-{
+
+int main() {
 	kil::cpnetwork mycpon;
 
 	kil::datamap* src_map = new kil::datamap;
@@ -19,49 +33,44 @@ int main()
 	mycpon.build_network();
 
 	fpval(mycpon);
-	//predict_result(mycpon, src_map);
 	delete src_map;
 }
 
 
-void load_data(kil::datamap* dm)
-{
-	ifstream load("output.csv", ios::in);
-	string str;
+void load_data(kil::datamap* dm) {
+	ifstream load(path_data, ios::in);
+	std::vector<std::vector<double>> result;
+	std::string line, cell;
 
-	while (getline(load, str, ','))
-	{
-		/*
-		이제 각 줄마다 각 클래스로 보내줘야 하는데 이거 너무 거지같은듯...
-		*/
+	while (std::getline(load, line)) {
+		std::stringstream lineStream(line);
+		std::vector<double> row;
+
+		while(std::getline(lineStream, cell, ',')) row.push_back(stod(cell));
+		result.push_back(row);
 	}
-}
 
+	unsigned int clssize = result[0].size();
+	std::vector<std::vector<double>>::iterator vvditer;
 
-std::vector<std::string> tokelizer(std::istream& str)
-{
-	std::vector<std::string> result;
-	std::string line;
-	std::getline(str, line);
-	std::stringstream lineStream(line);
-	std::string cell;
+	for (unsigned int i = 0; i < clssize; i++) {
+		std::vector<double> col;
+		for (vvditer = result.begin(); vvditer != result.end(); vvditer++) col.push_back((*vvditer)[i]);
 
-	while (std::getline(lineStream, cell, ','))
-	{
-		result.push_back(cell);
+		char buf[9] = {'0' , };
+		std::sprintf(buf, "%08d", i + 1);
+		cell = std::string(buf);
+		dm->insert(kil::datamap_pair(cell , col));
 	}
-	return result;
 }
 
 
 /*KS-test의 결과값인 D와 p-value, 그리고 tolerance를 출력
 ECDF와 BCDF를 출력
 */
-void fpval(kil::cpnetwork cpon)
-{
+void fpval(kil::cpnetwork cpon) {
 	kil::cpnmap_iter iter;
-	for (iter = cpon.getCpmap()->begin(); iter != cpon.getCpmap()->end(); ++iter)
-	{
+	for (iter = cpon.getCpmap()->begin(); iter != cpon.getCpmap()->end(); ++iter) 	{
 		kil::probaclass cp = iter->second;
 		ofstream of(string("scaled_pvalue\\") + string(cp.m_name) + string("_pvalue.csv"));
 
