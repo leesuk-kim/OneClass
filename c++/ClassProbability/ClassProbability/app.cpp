@@ -6,7 +6,6 @@
 using namespace std;
 const char* path_data = "output.csv";
 
-
 /**
 \brief
 \author Leesuk kim, lktime@skku.edu
@@ -16,7 +15,7 @@ std::vector<std::string> tokelizer(std::istream& str);
 \brief
 \author Leesuk kim, lktime@skku.edu
 */
-void load_data(kil::datamap* dm);
+void load_data(const char* path, kil::datamap* dm);
 /**
 \brief
 \author Leesuk kim, lktime@skku.edu
@@ -25,11 +24,9 @@ void fpval(kil::cpnetwork cpon);
 
 
 int main() {
-	kil::cpnetwork mycpon;
-
 	kil::datamap* src_map = new kil::datamap;
-	load_data(src_map);
-	mycpon.insert(src_map);
+	load_data(path_data, src_map);
+	kil::cpnetwork mycpon(src_map);
 	mycpon.build_network();
 
 	fpval(mycpon);
@@ -37,7 +34,7 @@ int main() {
 }
 
 
-void load_data(kil::datamap* dm) {
+void load_data(const char* path, kil::datamap* dm) {
 	ifstream load(path_data, ios::in);
 	std::vector<std::vector<double>> result;
 	std::string line, cell;

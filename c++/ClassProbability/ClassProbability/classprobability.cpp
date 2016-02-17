@@ -336,6 +336,11 @@ cpnetwork::cpnetwork(cpnmap* cpmap) {
 	m_cpmap = cpmap;
 }
 
+cpnetwork::cpnetwork(datamap* dm) {
+	for (datamap_iter mapiter = dm->begin(); mapiter != dm->end(); ++mapiter)
+		insert(mapiter->first, mapiter->second);
+}
+
 
 cpnmap* cpnetwork::getCpmap() {
 	return m_cpmap;
@@ -351,10 +356,6 @@ void cpnetwork::insert(std::string key, std::vector<double> value) {
 	insert(cp);
 }
 
-void cpnetwork::insert(std::map<std::string, std::vector<double>>* kvmap) {
-	for (std::map<std::string, std::vector<double>>::iterator mapiter = kvmap->begin(); mapiter != kvmap->end(); ++mapiter)
-		insert(mapiter->first, mapiter->second);
-}
 
 void cpnetwork::insert(probaclass cp) {	//if the element of the key exists
 	if (m_cpmap->find(cp.m_name) != m_cpmap->end()) m_cpmap->erase(cp.m_name);
@@ -367,12 +368,6 @@ void cpnetwork::update(std::string key, std::vector<double> value) {
 	if (mi == m_cpmap->end())
 		throw("The learning class %s does not exist. please use the method \'insert()\'.", key);
 	(*mi).second.update(value);
-}
-
-void cpnetwork::update(std::map<std::string, std::vector<double>>* kvmap) {
-	std::map<std::string, std::vector<double>>::iterator vi;
-	for (vi = kvmap->begin(); vi != kvmap->end(); ++vi)
-		update(vi->first, vi->second);
 }
 
 

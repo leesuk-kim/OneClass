@@ -258,6 +258,7 @@ namespace kil {
 	typedef std::map<std::string, probaclass> cpnmap;
 	typedef std::pair<std::string, probaclass> cpnmap_pair;
 	typedef std::map<std::string, probaclass>::iterator cpnmap_iter;
+
 	typedef std::map<std::string, std::vector<double>> datamap;
 	typedef std::map<std::string, std::vector<double>>::iterator datamap_iter;
 	typedef std::pair<std::string, std::vector<double>> datamap_pair;
@@ -275,14 +276,13 @@ namespace kil {
 		cpnetwork();
 		~cpnetwork();
 		cpnetwork(cpnmap* cpmap);
+		cpnetwork(datamap* dm);
 		cpnmap* getCpmap();
 
 		void insert(std::string key, std::vector<double> value);
-		void insert(std::map<std::string, std::vector<double>>* kvmap);
 		void insert(probaclass cp);
 
 		void update(std::string key, std::vector<double> value);
-		void update(std::map<std::string, std::vector<double>>* kvmap);
 
 		/**
 		\brief cpon을 구성합니다.
