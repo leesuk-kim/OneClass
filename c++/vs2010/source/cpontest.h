@@ -46,6 +46,7 @@ namespace kil{
 	class tcpnet {
 	private:
 		cptmap* mCPTmap;
+		const char* path_import;
 	public:
 		tcpnet();
 		~tcpnet();
@@ -54,15 +55,16 @@ namespace kil{
 		class output을 구합니다.
 		받았던 vector 그대로 반환합니다.
 		*/
-		void test(comap* res, double tdata);
+		void test(double* res, double tdata);
 		/**
 		\brief learning result를 읽습니다.
 		\details
 		lcpnet을 통해 학습된 결과를 담고 있는 learning result를 읽습니다.
 		learning result는 lcpnet의 \see{exportResult}를 통해 출력됩니다.
+
 		\param path 경로입니다. (const char*)
 		\param tcpon test cpon입니다.
 		*/
-		void importdata(const char* path, tcpnet* tcpon);
+		void importdata(const char* path);
 	};
 }

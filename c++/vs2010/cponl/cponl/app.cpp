@@ -1,8 +1,8 @@
 #include "../../source/cponlearn.h"
 
 using namespace std;
-char* path_import = "output.csv";
-char* path_export = "learning_result.csv";
+char* path_import = "cpon/output.csv";
+char* path_export = "cpon/learning_result.csv";
 
 //string dtos(double d);
 ///**
@@ -31,9 +31,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	kil::lcpnet cpon;
-	cpon.load(path_import);
 	cpon.buildnetwork();
-
 	cpon.exportcpnet(path_export);
 }
 

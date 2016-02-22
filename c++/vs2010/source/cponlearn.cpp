@@ -206,14 +206,36 @@ double kil::pclearn::output(double& randomvariable){
 	return prob;
 }
 
-kil::lcpnet::lcpnet(kil::datamap* dm){
-	mCPLmap = new cplmap;
-	for(kil::datamap_iter di = dm->begin(); di != dm->end(); di++)
-		insert(di->first, di->second);
-}
-
 kil::lcpnet::lcpnet(){
 	mCPLmap = new cplmap;
+	path_load = "cpon/output.csv";
+	path_export = "cpon/learning_result.csv";
+
+	std::ifstream load(path_load, std::ios::in);
+	std::vector<std::vector<double>> result;
+	std::string line, cell;
+
+	while (std::getline(load, line)) {
+		std::stringstream lineStream(line);
+		std::vector<double> row;
+
+		while(std::getline(lineStream, cell, ',')) row.push_back(stod(cell));
+		result.push_back(row);
+	}
+
+	unsigned int clssize = result[0].size();
+	std::vector<std::vector<double>>::iterator vvditer;
+
+	for (unsigned int i = 0; i < clssize; i++) {
+		std::vector<double> col;
+		for (vvditer = result.begin(); vvditer != result.end(); vvditer++) col.push_back((*vvditer)[i]);
+
+		char buf[9] = {'0' , };
+		std::sprintf(buf, "%08d", i + 1);
+		cell = std::string(buf);
+		insert(cell , col);
+	}
+
 }
 
 kil::lcpnet::~lcpnet(){
@@ -252,31 +274,4 @@ void kil::lcpnet::exportcpnet(const char* path){
 			str += std::dtos(*vi);
 	}
 	ofs << str;
-}
-
-void kil::lcpnet::load(const char* path) {//TODO 이거 만들다 말았음!!
-	std::ifstream load(path, std::ios::in);
-	std::vector<std::vector<double>> result;
-	std::string line, cell;
-
-	while (std::getline(load, line)) {
-		std::stringstream lineStream(line);
-		std::vector<double> row;
-
-		while(std::getline(lineStream, cell, ',')) row.push_back(stod(cell));
-		result.push_back(row);
-	}
-
-	unsigned int clssize = result[0].size();
-	std::vector<std::vector<double>>::iterator vvditer;
-
-	for (unsigned int i = 0; i < clssize; i++) {
-		std::vector<double> col;
-		for (vvditer = result.begin(); vvditer != result.end(); vvditer++) col.push_back((*vvditer)[i]);
-
-		char buf[9] = {'0' , };
-		std::sprintf(buf, "%08d", i + 1);
-		cell = std::string(buf);
-		insert(cell , col);
-	}
 }

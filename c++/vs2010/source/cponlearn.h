@@ -164,11 +164,18 @@ namespace kil {
 	private:
 		cplmap* mCPLmap;
 		void insert(std::string key, std::vector<double> values);
+		const char* path_load;
+		const char* path_export;
 	public:
 		cplmap* getcplmap(){
 			return mCPLmap;
 		};
-		lcpnet(datamap* dm);
+
+		/**
+		\brief 
+		\details NN의 출력물(output.csv)을 읽어서 CPON을 build할 수 있는 데이터 구조로 가져옵니다.
+		\author Leesuk Kim, lktime@skku.edu
+		*/
 		lcpnet();
 		~lcpnet();
 		/**
@@ -182,13 +189,6 @@ namespace kil {
 		*/
 		void buildnetwork();
 		
-		/**
-		\brief 
-		\details NN의 출력물(output.csv)을 읽어서 CPON을 build할 수 있는 데이터 구조로 가져옵니다.
-		\author Leesuk Kim, lktime@skku.edu
-		*/
-		void kil::lcpnet::load(const char* path);
-
 		/**
 		\brief 주어진 pattern으로 학습합니다.
 		\details
