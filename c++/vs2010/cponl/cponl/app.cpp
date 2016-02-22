@@ -4,15 +4,15 @@ using namespace std;
 char* path_import = "output.csv";
 char* path_export = "learning_result.csv";
 
-string dtos(double d);
-/**
-\brief
-\author Leesuk kim, lktime@skku.edu
-*/
-//이건 learning
-void importdata(const char* path, kil::datamap* dm);
-/***/
-//void exportdata(const char* path, kil::lcpnet& cpoutput);
+//string dtos(double d);
+///**
+//\brief
+//\author Leesuk kim, lktime@skku.edu
+//*/
+////이건 learning
+//void importdata(const char* path, kil::datamap* dm);
+///***/
+////void exportdata(const char* path, kil::lcpnet& cpoutput);
 
 int main(int argc, char* argv[]) {
 	if(argc > 2){
@@ -30,14 +30,11 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
-
-	kil::datamap* src_map = new kil::datamap;
-	importdata(path_import, src_map);
-	kil::lcpnet cpon(src_map);
+	kil::lcpnet cpon;
+	cpon.load(path_import);
 	cpon.buildnetwork();
 
 	cpon.exportcpnet(path_export);
-	delete src_map;
 }
 
 

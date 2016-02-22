@@ -212,10 +212,13 @@ kil::lcpnet::lcpnet(kil::datamap* dm){
 		insert(di->first, di->second);
 }
 
+kil::lcpnet::lcpnet(){
+	mCPLmap = new cplmap;
+}
+
 kil::lcpnet::~lcpnet(){
 	std::map_fptr_iter<std::string, pclearn*>(mCPLmap, std::del<pclearn*>);
-	for(cplmap_iter cpmi = mCPLmap->begin(); cpmi != mCPLmap->end(); cpmi++)
-		cpmi->second->mapBeta();
+	delete mCPLmap;
 }
 
 void kil::lcpnet::insert(std::string key, std::vector<double> values){
@@ -249,4 +252,31 @@ void kil::lcpnet::exportcpnet(const char* path){
 			str += std::dtos(*vi);
 	}
 	ofs << str;
+}
+
+void kil::lcpnet::load(const char* path) {//TODO 이거 만들다 말았음!!
+	std::ifstream load(path, std::ios::in);
+	std::vector<std::vector<double>> result;
+	std::string line, cell;
+
+	while (std::getline(load, line)) {
+		std::stringstream lineStream(line);
+		std::vector<double> row;
+
+		while(std::getline(lineStream, cell, ',')) row.push_back(stod(cell));
+		result.push_back(row);
+	}
+
+	unsigned int clssize = result[0].size();
+	std::vector<std::vector<double>>::iterator vvditer;
+
+	for (unsigned int i = 0; i < clssize; i++) {
+		std::vector<double> col;
+		for (vvditer = result.begin(); vvditer != result.end(); vvditer++) col.push_back((*vvditer)[i]);
+
+		char buf[9] = {'0' , };
+		std::sprintf(buf, "%08d", i + 1);
+		cell = std::string(buf);
+		insert(cell , col);
+	}
 }
