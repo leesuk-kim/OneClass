@@ -49,6 +49,26 @@ namespace kil {
 			double alpha;
 			double beta;
 		};
+		
+		/**
+		\brief linear combination gaussian kernel
+		\details
+		선형 결합 가우시안 함수입니다.
+		contruction때 mear과 variance를 받습니다.
+
+		\author Leesuk Kim, lktime@skku.edu
+		*/
+		class lcgk {
+		private:
+			double mean;
+			double var;
+		public:
+			lcgk(std::vector<double> samples);
+			~lcgk();
+			double get_mean();
+			double get_var();
+			double kernelize(double samples);
+		};
 
 		/**
 		\brief kstest 결과를 저장합니다.
