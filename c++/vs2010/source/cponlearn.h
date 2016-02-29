@@ -36,6 +36,7 @@ namespace kil {
 		/**
 		- data, feature-scaled data, kernel data 저장
 		- data의 min, max, mean, var 계산
+		\author Leesuk Kim, lktime@skku.edu
 		*/
 		pattern(std::vector<double> data);
 		~pattern();
@@ -142,6 +143,8 @@ namespace kil {
 		~pclearn();
 		/**
 		\brief beta function을 만듭니다.
+		\details 
+		\author Leesuk Kim, lktime@skku.edu
 		*/
 		std::vector<double> mapBeta();
 		double output(double& randomvariable);

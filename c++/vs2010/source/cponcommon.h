@@ -36,7 +36,9 @@ namespace std{
 	}
 
 	/**
-	\brief double to string
+	\brief double to std::string
+	\details double 형 변수를 std::string으로 변환합니다.
+	\author Leesuk kim, lktime@skku.edu
 	*/
 	std::string dtos(double d);
 }
@@ -44,8 +46,12 @@ namespace std{
 namespace kil{
 	/**
 	\brief double type의 std::vector의 mean을 계산합니다.
+	\details
+	평균을 계산합니다. 정말입니다!(미국 개그)
+	\author Leesuk Kim, lktime@skku.edu
 	*/
 	double mean(std::vector<double> doublevec);
+
 	/**
 	\brief double type의 std:;vector의 variance를 계산합니다.
 	\details
@@ -94,30 +100,65 @@ namespace kil{
 		double mMean;
 		double mVar;
 	public:
+		/**
+		\brief private field인 mean의 getter입니다.
+		\details GoF의 objective oriented programming design concept에 맞춘 getter입니다.
+		\author Leesuk Kim, lktime@skku.edu
+		*/
 		double getMean(){
 			return mMean;
 		};
+
+		/**
+		\brief private field인 var의 getter입니다.
+		\details  여기서 var는 variance(분산)을 의미합니다.
+		GoF의 objective oriented programming design concept에 맞춘 getter입니다.
+		
+		\author Leesuk Kim, lktime@skku.edu
+		*/
 		double getVar(){
 			return mVar;
 		};
+		
+		/**
+		\brief kernelizer의 생성자입니다.
+		\details
+		그 기능은 많지 않습니다. 그저 argument로 받은 mean과 var를 저장합니다.
+
+		\author Leesuk kim, lktime@skku.edu
+		*/
 		kernelizer(double mean, double var);
+
 		/**
 		\brief 수학적인 의미의 kernel function입니다.
 		\details
 		https://en.wikipedia.org/wiki/Kernel_(statistics)#In_non-parametric_statistics 에 언급된 kernel function을 의미합니다. 
 		여기서는 Gaussian kernel function을 구현하였습니다.
+
+		\author Leesuk kim, lktime@skku.edu
 		*/
 		double _kernel(double& randomvariable);
+
 		/**
 		\brief kernelize합니다.
 		\details
-		data가 특정 범위 내에서 통계적인 값을 가지며, 그 값 중 평균이 통계적으로 가장 높은 확률을 가진다고 가정해보겠습니다.
-		이 때 data의 확률값을 표현할 수 있는 함수가 kernel입니다.
+		kernel의 가장 기본적인 목표는 random variable의 공간을 특정 범위 한으로 제한하는 것입니다. 
+		이를 통해 특정 범위의 중앙에 가까울수록 kernel의 출력값은 높아지고, 멀수록 낮아집니다. 
+		이 함수는 gaussian distribution을 따르는 gaussian kernel function처럼 작동합니다.		
+		random variable이 어떤 class의 kernel에 input되느냐에 따라 결과는 모두 다릅니다.
+		각각의 class가 갖는 kernel의 범위가 다르기 때문입니다.
 		자세한 내용은 https://en.wikipedia.org/wiki/Kernel_(statistics) 을 참조하십시오.
 		*/
 		double output(double& randomvariable);
 	};
 
+	/**
+	\namespace beta
+	\brief beta function과 관련된 함수 또는 객체가 있습니다.
+	특히, CPON의 model은 beta function에 의해 결정되기 때문에 매우 중요합니다.
+
+	\author Leesuk Kim, lktime@skku.wdu
+	*/
 	namespace beta {
 		/**
 		\brief struct for contatining parameters of beta function.
