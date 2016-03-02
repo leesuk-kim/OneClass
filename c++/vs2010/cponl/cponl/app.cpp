@@ -1,43 +1,16 @@
-#include "../../source/cponlearn.h"
+#include "cponlearn.h"
+#include <stdlib.h>
 
 using namespace std;
 char* path_import = "cpon/output.csv";
 char* path_export = "cpon/learning_result.csv";
-
-//string dtos(double d);
-///**
-//\brief
-//\author Leesuk kim, lktime@skku.edu
-//*/
-////이건 learning
-//void importdata(const char* path, kil::datamap* dm);
-///***/
-////void exportdata(const char* path, kil::lcpnet& cpoutput);
-
+/*
+해야될 일
+1. double**로 learning data 받기
+2. 
+*/
 int main(int argc, char* argv[]) {
-	if(argc > 2){
-		for(int i = 1 ; i < argc; i += 2){
-			if(argv[i] == "-i") 
-				path_import = argv[i + 1];
-			else if(argv[i] == "-o")
-				path_export = argv[i + 1];
-		}
-	} else if(argc == 2){
-		if(!std::strcmp(argv[1],"-h"))
-			printf("set input path: -i\nset output path: -o\nhelp: -h\n");
-		else
-			throw("wrong option!");
-		return 0;
-	}
-
-	kil::lcpnet cpon;
-	cpon.buildnetwork();
-	cpon.exportcpnet(path_export);
-}
-
-
-void importdata(const char* path, kil::datamap* dm) {
-	ifstream load(path_import, ios::in);
+	std::ifstream load("cpon/output.csv", std::ios::in);
 	std::vector<std::vector<double>> result;
 	std::string line, cell;
 
@@ -49,16 +22,12 @@ void importdata(const char* path, kil::datamap* dm) {
 		result.push_back(row);
 	}
 
-	unsigned int clssize = result[0].size();
-	std::vector<std::vector<double>>::iterator vvditer;
+	unsigned int row = result.size(), col = result[0].size();
+	double** dresult = (double**)calloc(col, sizeof(double*));
+	for(unsigned int i = 0 ; i < row ; i++)
+		dresult[i] = (double*) calloc(result[i].size(), sizeof(double));
+	//여기까지는 output.csv를 forward network의 output처럼 만들기 위해 작성한 코드입니다.
 
-	for (unsigned int i = 0; i < clssize; i++) {
-		std::vector<double> col;
-		for (vvditer = result.begin(); vvditer != result.end(); vvditer++) col.push_back((*vvditer)[i]);
+	kil::lcpnet* cpon_learn = kil::lcpnet::getInstance();
 
-		char buf[9] = {'0' , };
-		std::sprintf(buf, "%08d", i + 1);
-		cell = std::string(buf);
-		dm->insert(kil::datamap_pair(cell , col));
-	}
 }

@@ -65,13 +65,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\cponcommon.cpp" />
-    <ClCompile Include="..\..\source\cponlearn.cpp" />
     <ClCompile Include="app.cpp" />
+    <ClCompile Include="clcpon.c" />
+    <ClCompile Include="cponcommon.cpp" />
+    <ClCompile Include="cponlearn.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\cponcommon.h" />
-    <ClInclude Include="..\..\source\cponlearn.h" />
+    <ClInclude Include="clcpon.h" />
+    <ClInclude Include="cponcommon.h" />
+    <ClInclude Include="cponlearn.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
