@@ -1,4 +1,4 @@
-#include "../../source/cpontest.h"
+#include "cpontest.h"
 #include <stdlib.h>
 
 using namespace std;

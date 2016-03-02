@@ -18,18 +18,18 @@
     <ClCompile Include="app.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\cponcommon.cpp">
+    <ClCompile Include="..\..\cponl\cponl\cponcommon.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\cpontest.cpp">
+    <ClCompile Include="cpontest.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\cpontest.h">
+    <ClInclude Include="..\..\cponl\cponl\cponcommon.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\cponcommon.h">
+    <ClInclude Include="cpontest.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
