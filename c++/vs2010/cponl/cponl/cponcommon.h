@@ -4,10 +4,11 @@
 #include <vector>
 #include <map>
 #include <numeric>
-#include <algorithm>
 #include <string>
 #include <fstream>
 #include <sstream>
+#include "incgammabeta.h"
+#include "rapidjson\document.h"
 
 
 namespace std{
@@ -41,6 +42,13 @@ namespace std{
 	\author Leesuk kim, lktime@skku.edu
 	*/
 	std::string dtos(double d);
+
+	/**
+	\brief int to 8 character string
+	\details int형 변수를 8글자짜리 std::string으로 변환합니다.
+	\author Leesuk kim, lktime@skku.edu
+	*/
+	std::string ito8s(int i);
 }
 
 namespace kil{
@@ -175,6 +183,10 @@ namespace kil{
 		double output(double& randomvariable);
 	};
 
+	typedef std::map<std::string, std::vector<double>> datamap;
+	typedef std::map<std::string, std::vector<double>>::iterator datamap_iter;
+	typedef std::pair<std::string, std::vector<double>> datamap_pair;
+
 	/**
 	\namespace beta
 	\brief beta function과 관련된 함수 또는 객체가 있습니다.
@@ -238,16 +250,19 @@ namespace kil{
 		\brief quantile k-sample
 		\details
 		Calculates p-value of hypothesis test of between ecdf and beta.
+		Cited from Numerical Recipes in C, 2nd edition, p.626
 		\param alam
-
-		\author Cited from Numerical Recipes in C, 2nd edition, p.626
+		
+		\author Leesuk kim, lktime@skku.edu
 		*/
 		double qks(const double& alam);
 		/*
 		\brief Kolmogorov-Smirnov Test on two sample.
-		\details This test tests two sample for learning phase.
+		\details 
+		This test tests two sample for learning phase.
+		Cited from numerical recipies ASC, 3rd edithion, p.737-738
 
-		\author Cited from numerical recipies ASC, 3rd edithion, p.737-738
+		\author Leesuk kim, lktime@skku.edu
 		*/
 		struct ksresult_t kstest(std::vector<double>& sample1, std::vector<double>& sample2);
 	}
@@ -256,7 +271,7 @@ namespace kil{
 	\brief CPON의 super class입니다.
 	\details 학습용/분류용 cpon은 각각의 필요한 기능을 추가적으로 갖습니다. 이 클래스는 공통적인 기능을 가지고 있는 class입니다. 
 
-	Leesuk kim, lktime@skku.edu
+	\author Leesuk kim, lktime@skku.edu
 	*/
 	class probaclass {
 	protected:
@@ -267,14 +282,15 @@ namespace kil{
 		\details
 		각 객체는 고유의 이름을 가집니다. 해당 이름은 subclass에서 overload할 constructor에서 어떻게 처리할 지 결정할 수 있습니다.
 
-		Leesuk kim, lktime@skku.edu
+		\author Leesuk kim, lktime@skku.edu
 		*/
 		probaclass(std::string name);
 
 		/**
 		\brief 이름을 가져옵니다.b
 		\details GoF의 objective oriented programming design concept에 맞춘 getter입니다.
-		Leesuk kim, lktime@skku.edu
+
+		\author Leesuk kim, lktime@skku.edu
 		*/
 		std::string getName();
 	};

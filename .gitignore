@@ -42,3 +42,10 @@ scaled_pvalue
 /python/ClassifierSimulator/110_\[ls\]-1+-1xlog(log(-1xlog(x,10),10)+3,5)\[조건만남\]
 /c++/ClassProbability/ClassProbability/latex
 /c++/ClassProbability/ClassProbability/html
+/c++/vs2010/cponl/html
+/c++/vs2010/cponl/latex
+/c++/vs2010/cpont/html
+/c++/vs2010/cpont/latex
+/c++/vs2010.zzip
+/c++/vs2010/cponl/*.suo
+/c++/vs2010/cpont/*.suo

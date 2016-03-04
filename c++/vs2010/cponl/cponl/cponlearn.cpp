@@ -64,7 +64,7 @@ void beta::partial_kstest(struct beta::kstest_t& kst, struct beta::betaparam_t& 
 	{
 		fn = kst.ecdf[j];
 		rv = (double)(j + 1) / (double)kst.size;
-		ff = boost::math::ibeta(bp.alpha, bp.beta, rv);
+		ff = Beta::betai(bp.alpha, bp.beta, rv);
 		dt = fabs(fn - ff);
 		if (dt > d) d = dt;
 	}
@@ -166,6 +166,7 @@ kil::pattern::~pattern(){
 kil::pclearn::pclearn(std::string name, std::vector<double> pcptn): kil::probaclass(name){
 	mPattern = new kil::pattern(pcptn);
 }
+
 kil::pclearn::~pclearn(){
 	delete mPattern;
 }
@@ -200,57 +201,57 @@ double kil::pclearn::output(double& randomvariable){
 	for (iter = mBetamap.begin(); randomvariable > iter->first && iter != mBetamap.end(); iter++);
 
 	beta::betaparam_t bp = iter->second;
-	prob = boost::math::ibeta(bp.alpha, bp.beta, randomvariable);
+	prob = Beta::betai(bp.alpha, bp.beta, randomvariable);
 
 	return prob;
 }
 
+
 kil::lcpnet::lcpnet(){
 	mCPLmap = new cplmap;
-
-	std::ifstream load("cpon/output.csv", std::ios::in);
-	std::vector<std::vector<double>> result;
-	std::string line, cell;
-
-	while (std::getline(load, line)) {
-		std::stringstream lineStream(line);
-		std::vector<double> row;
-
-		while(std::getline(lineStream, cell, ',')) row.push_back(stod(cell));
-		result.push_back(row);
-	}
-
-	unsigned int clssize = result[0].size();
-	std::vector<std::vector<double>>::iterator vvditer;
-
-	for (unsigned int i = 0; i < clssize; i++) {
-		std::vector<double> col;
-		for (vvditer = result.begin(); vvditer != result.end(); vvditer++) col.push_back((*vvditer)[i]);
-
-		char buf[9] = {'0' , };
-		std::sprintf(buf, "%08d", i + 1);
-		cell = std::string(buf);
-		insert(cell , col);
-	}
 }
 
 kil::lcpnet::~lcpnet(){
 	std::map_fptr_iter<std::string, pclearn*>(mCPLmap, std::del<pclearn*>);
+	m_instance = NULL;
 	delete mCPLmap;
 }
 
 lcpnet* lcpnet::m_instance = NULL;
 
+void kil::lcpnet::fit(kil::datamap* dm){
+	for(datamap_iter dmi = dm->begin(); dmi != dm->end(); dmi++)
+		insert(dmi->first, dmi->second);
+}
+
+void kil::lcpnet::fit(unsigned int row, unsigned int col, double** data){
+	datamap* dm = new datamap;
+	std::string colindex;
+
+	for(unsigned int i = 0 ; i < col; i++){
+		colindex = std::ito8s(i);
+
+		std::vector<double> coldata;
+		for(unsigned int j = 0; j < row; j++)
+			coldata.push_back(data[j][i]);
+
+		dm->insert(datamap_pair(colindex, coldata));
+	}
+	fit(dm);
+}
+
 void kil::lcpnet::insert(std::string key, std::vector<double> values){
 	mCPLmap->insert(cplmap_pair(key, new pclearn(key, values)));
 }
 
-void kil::lcpnet::buildnetwork(){
+void kil::lcpnet::learn(){
 	for(cplmap_iter cpmi = mCPLmap->begin(); cpmi != mCPLmap->end(); cpmi++)
 		cpmi->second->mapBeta();
+
+	exportModel(mModelPath.c_str());
 }
 
-void kil::lcpnet::exportcpnet(const char* path){
+void kil::lcpnet::exportModel(const char* path){
 	std::ofstream ofs(path, std::ios::out);
 	std::string str = "";
 	str = "name,fmin,fmax,kmean,kvar,";
@@ -260,7 +261,7 @@ void kil::lcpnet::exportcpnet(const char* path){
 		str += betagauge;
 	}
 
-	for(kil::cplmap_iter cpmi = getcplmap()->begin(); cpmi != getcplmap()->end(); cpmi++){
+	for(kil::cplmap_iter cpmi = mCPLmap->begin(); cpmi != mCPLmap->end(); cpmi++){
 		str += cpmi->first + ',';
 		str += std::dtos(cpmi->second->getPattern()->getFeaturescaler()->getMin()) + ',';
 		str += std::dtos(cpmi->second->getPattern()->getFeaturescaler()->getMax()) + ',';

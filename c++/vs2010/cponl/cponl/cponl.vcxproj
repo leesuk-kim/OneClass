@@ -37,10 +37,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\boost\boost_1_58_0;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LibraryPath>C:\boost\boost_1_58_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -66,14 +66,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="app.cpp" />
-    <ClCompile Include="clcpon.c" />
+    <ClCompile Include="clcpon.cpp" />
     <ClCompile Include="cponcommon.cpp" />
     <ClCompile Include="cponlearn.cpp" />
+    <ClCompile Include="cpontest.cpp" />
+    <ClCompile Include="incgammabeta.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="clcpon.h" />
     <ClInclude Include="cponcommon.h" />
     <ClInclude Include="cponlearn.h" />
+    <ClInclude Include="cpontest.h" />
+    <ClInclude Include="incgammabeta.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

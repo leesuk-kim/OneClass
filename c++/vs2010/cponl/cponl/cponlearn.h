@@ -1,11 +1,6 @@
 #include "cponcommon.h"
 
-#include <boost\math\distributions\beta.hpp>
-
 namespace kil {
-	typedef std::map<std::string, std::vector<double>> datamap;
-	typedef std::map<std::string, std::vector<double>>::iterator datamap_iter;
-	typedef std::pair<std::string, std::vector<double>> datamap_pair;
 
 	/**
 	\brief pattern을 저장하고 관리합니다.
@@ -167,8 +162,7 @@ namespace kil {
 	private:
 		cplmap* mCPLmap;
 		void insert(std::string key, std::vector<double> values);
-		static char* path_load;
-		static char* path_export;
+		std::string mModelPath;
 		
 		/**
 		\brief 
@@ -179,10 +173,6 @@ namespace kil {
 
 		static lcpnet* m_instance;
 	public:
-		cplmap* getcplmap(){//TODO 삭제 요망
-			return mCPLmap;
-		};
-
 		/**
 		\brief lcpnet의 instance를 가져옵니다.
 		\details
@@ -192,7 +182,11 @@ namespace kil {
 			if(lcpnet::m_instance == NULL) lcpnet::m_instance = new lcpnet();
 			return lcpnet::m_instance;
 		}
-
+		/**
+		\brief CPON 모델을 출력할 경로를 설정합니다.
+		*/
+		inline void setModelPath(const char* modelpath){mModelPath = modelpath;};
+		double measure(int row, int col, double** testdata, int* index);
 		~lcpnet();
 		/**
 		\brief 주어진 datamap으로 cpn을 생성합니다.
@@ -203,7 +197,7 @@ namespace kil {
 		- lcgk 계산
 		- lcgk statistics 계산
 		*/
-		void buildnetwork();
+		void learn();
 		
 		/**
 		\brief 주어진 pattern으로 학습합니다.
@@ -214,23 +208,14 @@ namespace kil {
 		- beta fitting
 		출력 포멧은 datamap*입니다.
 		*/
-		datamap* learn();
-
-		void exportcpnet(const char* path);
-
+		void fit(datamap* dm);
+		void fit(unsigned int row, unsigned int col, double** data);
 		/**
-		\brief 모든 작업을 한 번에 수행하는 함수입니다.
-		\details lcpnet(Learning ClassProbibility output NETwork)은 다음의 순서로 함수들이 호출되어야 합니다.
-		1. constructor
-		2. buildnetwork
-		3. exportdata
-		이 함수는 상기된 함수들을 default로 설정된 값대로 처리합니다.
+		\brief tcpnet을 구성할 수 있는 cpon model을 출력합니다.
 		*/
-		static void kil::lcpnet::factory(){
-			lcpnet cpon;
-			cpon.buildnetwork();
-			cpon.exportcpnet("cpon/learning_result.csv");
-		};
+		void exportModel(const char* path);
 	};
 
 }
+
+//typedef kil::lcpnet lcpnet;

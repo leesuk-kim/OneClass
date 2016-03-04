@@ -1,17 +1,18 @@
-#include "cponlearn.h"
+#include "clcpon.h"
 #include <stdlib.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <sstream>
 
-using namespace std;
-char* path_import = "cpon/output.csv";
-char* path_export = "cpon/learning_result.csv";
-/*
-해야될 일
-1. double**로 learning data 받기
-2. 
-*/
+char* modelpath = "cpon/learning_result.csv";
+
+void loadTestData();
+
 int main(int argc, char* argv[]) {
 	std::ifstream load("cpon/output.csv", std::ios::in);
-	std::vector<std::vector<double>> result;
+	std::vector<std::vector<double>> vdata;
 	std::string line, cell;
 
 	while (std::getline(load, line)) {
@@ -19,15 +20,39 @@ int main(int argc, char* argv[]) {
 		std::vector<double> row;
 
 		while(std::getline(lineStream, cell, ',')) row.push_back(stod(cell));
-		result.push_back(row);
+		vdata.push_back(row);
 	}
 
-	unsigned int row = result.size(), col = result[0].size();
-	double** dresult = (double**)calloc(col, sizeof(double*));
-	for(unsigned int i = 0 ; i < row ; i++)
-		dresult[i] = (double*) calloc(result[i].size(), sizeof(double));
+	unsigned int row = vdata.size(), col = vdata[0].size();
+	double** data = (double**)calloc(row, sizeof(double*));
+	for(unsigned int i = 0 ; i < row ; i++){
+		data[i] = (double*) calloc(col, sizeof(double));
+		for(unsigned int j = 0 ; j < col ; j++)
+			data[i][j] = vdata[i][j];
+	}
+	int* index = (int*)calloc(col, sizeof(int));
+	for(unsigned int i = 0 ; i < col ; index[i++] = i);
 	//여기까지는 output.csv를 forward network의 output처럼 만들기 위해 작성한 코드입니다.
+	struct lcpnet* cpon = lcpon_initialize(modelpath);
+	lcpon_learn(row, col, data);
+	lcpon_release();
+//	cpon_learn->fit(row, col, data, index); // importdata, buildnetwork, exportmodel, mesure를 수행한다. 이건 clcpon에서 learn이 됨.
+//	cpon_learn->learn();
+//	delete cpon_learn; // 이건 clcpon에서 release가 됨.
+}
 
-	kil::lcpnet* cpon_learn = kil::lcpnet::getInstance();
+void loadTestData(){
+	const char* path = "0096test.txt";
 
+	std::ifstream load(path, std::ios::in);
+	std::vector<std::vector<double>> tdata;
+	std::string line, cell;
+
+	while(std::getline(load, line)){
+		std::stringstream lineStream(line);
+		std::vector<double> row;
+
+		while(std::getline(lineStream, cell, ' ')) row.push_back(stod(cell));
+		tdata.push_back(row);
+	}
 }
