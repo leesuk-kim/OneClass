@@ -27,6 +27,9 @@
     <ClCompile Include="ctcpon.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="incgammabeta.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\cponl\cponl\cponcommon.h">
@@ -36,6 +39,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="ctcpon.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="incgammabeta.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

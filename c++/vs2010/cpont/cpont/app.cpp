@@ -32,12 +32,13 @@ int main(int argc, char* argv[]) {
 										//100개짜리 인식 결과(cpoutput)를 반환합니다.
 
 	free(cpoutput);
+	tcpon_release();
 }
 
 static double* getTestData(){
 	static std::ifstream ttstream(testdatapath, ios::in);
 	static string line, cell;
-	static double* fwoutput = (double*)calloc(c, sizeof(double));
+	static double* fwoutput;
 	static vector<double> row;
 	row.clear();
 
@@ -47,7 +48,6 @@ static double* getTestData(){
 		while(getline(lineStream, cell, ' ')) row.push_back(stod(cell));
 		fwoutput = &row[0];
 	}else{
-		free(fwoutput);
 		fwoutput = NULL;
 	}
 	return fwoutput;

@@ -4,36 +4,13 @@
 #include <vector>
 #include <map>
 #include <numeric>
-#include <algorithm>
 #include <string>
 #include <fstream>
 #include <sstream>
+#include "incgammabeta.h"
 
 
 namespace std{
-	/**
-	\brief delete의 함수형입니다.
-	\details
-	이 함수는 단순히 typename T를 delete합니다. 하지만 delete는 예약어기때문에 function pointer로 넘겨줄 수 없습니다.
-	따라서 function pointer로 넘겨주기 위해 templete function를 추가적으로 만들었습니다.
-	사실 별 쓸모는 없고 template를 모른다고 친구가 놀려서 한 번 만들어 봤습니다...
-	*/
-	template <typename T> void del(typename T t){
-		delete t;
-	}
-
-	/**
-	\brief std::map에 대한 반복적인 작업을 처리합니다.
-	\details
-	typename T로 정의된 std::map가 있다면, std::map에 속한 각각의 element에 대한 작업을 처리할 때 사용합니다.
-	사실 별 쓸모는 없고 template를 모른다고 친구가 놀려서 한 번 만들어 봤습니다...
-	*/
-	template <typename T1, typename T2> void map_fptr_iter(std::map<typename T1, typename T2>* mappist, void(*fptr)(typename T2 t2)){
-		typename std::map<T1, T2>::iterator iter;
-		for(iter = mappist->begin(); iter!= mappist->end(); iter++){
-			(*fptr)(iter->second);
-		}
-	}
 
 	/**
 	\brief double to std::string
@@ -41,6 +18,13 @@ namespace std{
 	\author Leesuk kim, lktime@skku.edu
 	*/
 	std::string dtos(double d);
+
+	/**
+	\brief int to 8 character string
+	\details int형 변수를 8글자짜리 std::string으로 변환합니다.
+	\author Leesuk kim, lktime@skku.edu
+	*/
+	std::string ito8s(int i);
 }
 
 namespace kil{
@@ -149,7 +133,6 @@ namespace kil{
 		\author Leesuk kim, lktime@skku.edu
 		*/
 		kernelizer(double mean, double var);
-
 		/**
 		\brief 수학적인 의미의 kernel function입니다.
 		\details
@@ -174,6 +157,10 @@ namespace kil{
 		*/
 		double output(double& randomvariable);
 	};
+
+	typedef std::map<int, std::vector<double>> datamap;
+	typedef std::map<int, std::vector<double>>::iterator datamap_iter;
+	typedef std::pair<int, std::vector<double>> datamap_pair;
 
 	/**
 	\namespace beta
@@ -234,20 +221,24 @@ namespace kil{
 			std::vector<double> ecdf, beta, xaxis;
 			struct ksresult_t ksr;
 		};
+
 		/*
 		\brief quantile k-sample
 		\details
 		Calculates p-value of hypothesis test of between ecdf and beta.
+		Cited from Numerical Recipes in C, 2nd edition, p.626
 		\param alam
-
-		\author Cited from Numerical Recipes in C, 2nd edition, p.626
+		
+		\author Leesuk kim, lktime@skku.edu
 		*/
 		double qks(const double& alam);
 		/*
 		\brief Kolmogorov-Smirnov Test on two sample.
-		\details This test tests two sample for learning phase.
+		\details 
+		This test tests two sample for learning phase.
+		Cited from numerical recipies ASC, 3rd edithion, p.737-738
 
-		\author Cited from numerical recipies ASC, 3rd edithion, p.737-738
+		\author Leesuk kim, lktime@skku.edu
 		*/
 		struct ksresult_t kstest(std::vector<double>& sample1, std::vector<double>& sample2);
 	}
@@ -256,26 +247,31 @@ namespace kil{
 	\brief CPON의 super class입니다.
 	\details 학습용/분류용 cpon은 각각의 필요한 기능을 추가적으로 갖습니다. 이 클래스는 공통적인 기능을 가지고 있는 class입니다. 
 
-	Leesuk kim, lktime@skku.edu
+	\author Leesuk kim, lktime@skku.edu
 	*/
 	class probaclass {
 	protected:
-		std::string mName;
+		int index;
 	public:
 		/**
 		\brief Constructor입니다. 
 		\details
 		각 객체는 고유의 이름을 가집니다. 해당 이름은 subclass에서 overload할 constructor에서 어떻게 처리할 지 결정할 수 있습니다.
 
-		Leesuk kim, lktime@skku.edu
+		\author Leesuk kim, lktime@skku.edu
 		*/
-		probaclass(std::string name);
+		inline probaclass(int idx){
+			index = idx;
+		};
 
 		/**
-		\brief 이름을 가져옵니다.b
+		\brief 이름을 가져옵니다.
 		\details GoF의 objective oriented programming design concept에 맞춘 getter입니다.
-		Leesuk kim, lktime@skku.edu
+
+		\author Leesuk kim, lktime@skku.edu
 		*/
-		std::string getName();
+		inline int getIndex(){
+			return index;
+		}
 	};
 }

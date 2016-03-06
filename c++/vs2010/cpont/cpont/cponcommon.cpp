@@ -7,6 +7,15 @@ std::string std::dtos(double d){
 	oss<<d;
 	return oss.str();
 }
+
+std::string std::ito8s(int i){
+	char buf[9] = {'0', };
+	std::sprintf(buf, "%08d", i);
+	std::string s = buf;//이거 되나? api보니까 된다던데...
+	return s;
+}
+
+
 double kil::mean(std::vector<double> doublevec){
 	double m = 0.;
 	for(std::vector<double>::iterator vi = doublevec.begin(); vi != doublevec.end() ; vi++)
@@ -79,7 +88,6 @@ double kil::featurescaler::output(const double& randomvariable){
 }
 
 
-
 kil::kernelizer::kernelizer(double mean, double var){
 	mMean = mean, mVar = var;
 }
@@ -92,13 +100,4 @@ double kil::kernelizer::output(double& randomvariable){
 	double k = 0.;
 	k = exp(-0.5 * _kernel(randomvariable));
 	return k;
-}
-
-
-kil::probaclass::probaclass(std::string name){
-	mName = name;
-}
-
-std::string kil::probaclass::getName(){
-	return mName;
 }

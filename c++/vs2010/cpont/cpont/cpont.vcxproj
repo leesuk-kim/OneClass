@@ -69,11 +69,13 @@
     <ClCompile Include="app.cpp" />
     <ClCompile Include="cpontest.cpp" />
     <ClCompile Include="ctcpon.cpp" />
+    <ClCompile Include="incgammabeta.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\cponl\cponl\cponcommon.h" />
     <ClInclude Include="cpontest.h" />
     <ClInclude Include="ctcpon.h" />
+    <ClInclude Include="incgammabeta.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
