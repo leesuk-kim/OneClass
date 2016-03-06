@@ -9,7 +9,16 @@ extern "C" {
 
 	\author Leesuk Kim, lktime@skku.edu
 	*/
-	struct tcpnet* tcpon_initialize(char* modelpath);
+	struct tcpnet* tcpon_initialize();
+
+	/**
+	\brief 학습기에서 작성한 model의 경로를 설정합니다.
+	\details
+	학습기에서 작성한 "cponmodel.csv"의 경로를 설정합니다. 기본값은 "cpon/cponmodel.csv"입니다.
+
+	\author Leesuk Kim, lktime@skku.edu
+	*/
+	void tcpon_setmodelpath(char* modelpath);
 	
 	/**
 	\brief 인식합니다.

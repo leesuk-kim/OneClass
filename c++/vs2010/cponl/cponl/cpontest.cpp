@@ -1,7 +1,8 @@
 #include "cpontest.h"
 
+char* kil::tcpnet::mModelPath = "cpon/cponmodel.csv";
 
-kil::pctest::pctest(std::string name, double fmin, double fmax, double kmean, double kvar, std::vector<double> betagauge): kil::probaclass(name){
+kil::pctest::pctest(int index, double fmin, double fmax, double kmean, double kvar, std::vector<double> betagauge): kil::probaclass(index){
 	mFeaturescaler = new featurescaler(fmin, fmax);
 	mKernelizer = new kernelizer(kmean, kvar);
 	mBetagauge = betagauge;
@@ -21,52 +22,32 @@ kil::pctest::~pctest(){
 
 kil::tcpnet::tcpnet(){
 	mCPTmap = new cptmap;
-
-	path_import = "cpon/learning_result.csv";	
-	std::ifstream load(path_import, std::ios::in);
-	std::string line, cell, name;
-	double fmin, fmax, kmean, kvar;
-	std::getline(load, line);
-
-	while (std::getline(load, line)) {
-		std::stringstream lineStream(line);
-		std::vector<double> betagauge;
-
-		std::getline(lineStream, name, ',');
-		std::getline(lineStream, cell, ',');
-		fmin = stod(cell);
-		std::getline(lineStream, cell, ',');
-		fmax = stod(cell);
-		std::getline(lineStream, cell, ',');
-		kmean = stod(cell);
-		std::getline(lineStream, cell, ',');
-		kvar = stod(cell);
-		while(std::getline(lineStream, cell, ',')) betagauge.push_back(stod(cell));
-
-		kil::pctest* pct = new kil::pctest(name, fmin, fmax, kmean, kvar, betagauge);
-		insert(pct);
-	}
 }
 
 kil::tcpnet::~tcpnet(){
-	for(cptmap_iter cpti = mCPTmap->begin(); cpti != mCPTmap->end(); delete cpti->second, cpti++);
+	for(cptmap_iter cpti = mCPTmap->begin(); cpti != mCPTmap->end();){
+		pctest* pct = cpti->second;
+		cpti++;
+		delete pct;
+	}
+	mCPTmap->clear();
+	delete mCPTmap;
 }
 
 void kil::tcpnet::insert(kil::pctest* pct){
-	mCPTmap->insert(cptmap_pair(pct->getName(), pct));
+	mCPTmap->insert(cptmap_pair(pct->getIndex(), pct));
 }
 
-void kil::tcpnet::test(double* res, double tdata){
+void kil::tcpnet::test(double* res, double* fwoutput){
 	unsigned int i = 0;
-	for(cptmap_iter cpmi = mCPTmap->begin(); cpmi != mCPTmap->end(); cpmi++){
-		double cp = cpmi->second->output(tdata);
-		res[i++] = cp;
-	}
+	for(cptmap_iter cpmi = mCPTmap->begin(); cpmi != mCPTmap->end(); cpmi++, i++)
+		res[i] = cpmi->second->output(fwoutput[i]);
 }
 
-void kil::tcpnet::importdata(const char* path){
-	std::ifstream load(path, std::ios::in);
+void kil::tcpnet::importModel(const char* modelpath){
+	std::ifstream load(modelpath, std::ios::in);
 	std::string line, cell, name;
+	int index;
 	double fmin, fmax, kmean, kvar;
 	std::getline(load, line);
 
@@ -75,6 +56,7 @@ void kil::tcpnet::importdata(const char* path){
 		std::vector<double> betagauge;
 
 		std::getline(lineStream, name, ',');
+		index = std::stoi(name);
 		std::getline(lineStream, cell, ',');
 		fmin = stod(cell);
 		std::getline(lineStream, cell, ',');
@@ -85,7 +67,7 @@ void kil::tcpnet::importdata(const char* path){
 		kvar = stod(cell);
 		while(std::getline(lineStream, cell, ',')) betagauge.push_back(stod(cell));
 
-		kil::pctest* pct = new kil::pctest(name, fmin, fmax, kmean, kvar, betagauge);
+		kil::pctest* pct = new kil::pctest(index, fmin, fmax, kmean, kvar, betagauge);
 		insert(pct);
 	}
 }

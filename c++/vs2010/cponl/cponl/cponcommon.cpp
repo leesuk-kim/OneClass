@@ -88,7 +88,6 @@ double kil::featurescaler::output(const double& randomvariable){
 }
 
 
-
 kil::kernelizer::kernelizer(double mean, double var){
 	mMean = mean, mVar = var;
 }
@@ -101,13 +100,4 @@ double kil::kernelizer::output(double& randomvariable){
 	double k = 0.;
 	k = exp(-0.5 * _kernel(randomvariable));
 	return k;
-}
-
-
-kil::probaclass::probaclass(std::string name){
-	mName = name;
-}
-
-std::string kil::probaclass::getName(){
-	return mName;
 }

@@ -1,6 +1,4 @@
 #include "cponcommon.h"
-#include <fstream>
-#include <sstream>
 
 namespace kil{
 	class pctest: public kil::probaclass{
@@ -18,7 +16,7 @@ namespace kil{
 		};
 
 		pctest();
-		pctest(std::string name, double fmin, double fmax, double kmean, double kvar, std::vector<double> betagauge);
+		pctest(int index, double fmin, double fmax, double kmean, double kvar, std::vector<double> betagauge);
 		~pctest();
 		
 		/**
@@ -27,14 +25,14 @@ namespace kil{
 		double output(double& randomvariable);
 	};
 
-	typedef std::map<std::string, pctest*> cptmap;
-	typedef std::pair<std::string, pctest*> cptmap_pair;
-	typedef std::map<std::string, pctest*>::iterator cptmap_iter;
+	typedef std::map<int, pctest*> cptmap;
+	typedef std::pair<int, pctest*> cptmap_pair;
+	typedef std::map<int, pctest*>::iterator cptmap_iter;
 	
 	/**\brief string-double map*/
-	typedef std::map<std::string, double> sdmap;
-	typedef std::map<std::string, double>::iterator sdmap_iter;
-	typedef std::pair<std::string, double> sdmap_pair;
+	typedef std::map<int, double> sdmap;
+	typedef std::map<int, double>::iterator sdmap_iter;
+	typedef std::pair<int, double> sdmap_pair;
 
 	/**
 	\brief class probability output network
@@ -46,19 +44,19 @@ namespace kil{
 	class tcpnet {
 	private:
 		cptmap* mCPTmap;
-		char* mModelPath;
+		static char* mModelPath;
 		static tcpnet* m_instance;
 	public:
 		tcpnet();
 		~tcpnet();
 		void insert(pctest* pct);
 		
-		inline void setModelPath(char* modelpath){mModelPath = modelpath;};
-		inline char* getModelPath(){return mModelPath;};
+		inline static void setModelPath(char* modelpath){mModelPath = modelpath;};
+		inline static char* getModelPath(){return mModelPath;};
 
 		inline unsigned int getCPTmapSize(){return mCPTmap->size();};
 
-		static tcpnet* getInstance(){
+		inline static tcpnet* getInstance(){
 			if(m_instance == NULL) tcpnet::m_instance = new tcpnet();
 			return tcpnet::m_instance;
 		};
@@ -81,5 +79,16 @@ namespace kil{
 		\param tcpon test cpon입니다.
 		*/
 		void importModel(const char* modelpath);
+	};
+
+	/**
+	\brief 가장 큰 index를 찾습니다.
+	\details 크기가 같은 index와 double 배열을 배열 인덱스에 맞추서 비교하고, double 배열에서 가장 큰 index값을 반환합니다.
+	*/
+	inline unsigned int getMaxID(unsigned int size, int* index, double* values){
+		unsigned int m = 0;
+		for(unsigned int i = 0 ; i < size ; i++)
+			if(values[m] < values[i]) m = i;
+		return index[m];
 	};
 }

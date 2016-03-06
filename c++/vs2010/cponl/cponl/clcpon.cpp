@@ -16,11 +16,12 @@ extern "C"{
 
 		void lcpon_release(){
 			delete lcpnet::getInstance();
+			//delete tcpnet::getInstance();
 		}
 
-		double lcpon_measure(kil::lcpnet* cpon, int row, int col, double** data){
+		double lcpon_measure(int row, int col, double** data, int* index){
 			double measure = 0.;
-			//lcpnet::getInstance()->measure(row, col, data);
+			lcpnet::getInstance()->measure(row, col, data, index);
 			return measure;
 		}
 	}

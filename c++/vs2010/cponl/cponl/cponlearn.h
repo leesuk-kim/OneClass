@@ -1,4 +1,5 @@
 #include "cponcommon.h"
+#include "cpontest.h"
 
 namespace kil {
 
@@ -25,9 +26,9 @@ namespace kil {
 		double mFvar;
 		std::vector<double> mFdata;
 		std::vector<double> mKdata;
-		std::vector<double> ecdf;
-		std::vector<double> mBetamap;
-		struct beta::ksresult_t m_ksr;
+		//std::vector<double> ecdf;
+		//std::vector<double> mBetamap;
+		//struct beta::ksresult_t m_ksr;
 		/**
 		- data, feature-scaled data, kernel data 저장
 		- data의 min, max, mean, var 계산
@@ -134,7 +135,7 @@ namespace kil {
 		double mVar;
 		std::vector<double> ecdf;
 		struct beta::ksresult_t m_ksr;
-		pclearn(std::string name, std::vector<double> pcptn);
+		pclearn(int index, std::vector<double> pcptn);
 		~pclearn();
 		/**
 		\brief beta function을 만듭니다.
@@ -146,9 +147,9 @@ namespace kil {
 	};
 
 
-	typedef std::map<std::string, pclearn*> cplmap;
-	typedef std::pair<std::string, pclearn*> cplmap_pair;
-	typedef std::map<std::string, pclearn*>::iterator cplmap_iter;
+	typedef std::map<int, pclearn*> cplmap;
+	typedef std::pair<int, pclearn*> cplmap_pair;
+	typedef std::map<int, pclearn*>::iterator cplmap_iter;
 	
 
 	/**
@@ -160,10 +161,10 @@ namespace kil {
 	*/
 	class lcpnet {
 	private:
-		cplmap* mCPLmap;
-		void insert(std::string key, std::vector<double> values);
-		std::string mModelPath;
-		
+		static cplmap* mCPLmap;
+		void static insert(int key, std::vector<double> values);
+		static std::string mModelPath;
+		static tcpnet* mTCPnet;
 		/**
 		\brief 
 		\details NN의 출력물(output.csv)을 읽어서 CPON을 build할 수 있는 데이터 구조로 가져옵니다.
@@ -173,6 +174,7 @@ namespace kil {
 
 		static lcpnet* m_instance;
 	public:
+		inline cplmap* getCPLmap(){return mCPLmap;};
 		/**
 		\brief lcpnet의 instance를 가져옵니다.
 		\details
@@ -182,12 +184,23 @@ namespace kil {
 			if(lcpnet::m_instance == NULL) lcpnet::m_instance = new lcpnet();
 			return lcpnet::m_instance;
 		}
+
 		/**
 		\brief CPON 모델을 출력할 경로를 설정합니다.
 		*/
-		inline void setModelPath(const char* modelpath){mModelPath = modelpath;};
-		double measure(int row, int col, double** testdata, int* index);
+		inline static void setModelPath(const char* modelpath){mModelPath = modelpath;};
+
+		/**
+		\brief 성능을 계산합니다.
+		\details
+		예시로 받은 forward netowkr의 출력을 기준으로 개발하였습니다.
+		성능 = 올바르게 인식한 패턴 갯수/전체 패턴 갯수
+
+		\author Leesuk Kim, lktime@skku.edu
+		*/
+		double measure(unsigned int row, unsigned int col, double** testdata, int* index);
 		~lcpnet();
+		
 		/**
 		\brief 주어진 datamap으로 cpn을 생성합니다.
 		\details
@@ -208,14 +221,14 @@ namespace kil {
 		- beta fitting
 		출력 포멧은 datamap*입니다.
 		*/
-		void fit(datamap* dm);
+		//void static fit(datamap* dm);
 		void fit(unsigned int row, unsigned int col, double** data);
+
 		/**
 		\brief tcpnet을 구성할 수 있는 cpon model을 출력합니다.
 		*/
-		void exportModel(const char* path);
+		void exportModel(std::string path);
 	};
 
 }
 
-//typedef kil::lcpnet lcpnet;

@@ -8,33 +8,9 @@
 #include <fstream>
 #include <sstream>
 #include "incgammabeta.h"
-#include "rapidjson\document.h"
 
 
 namespace std{
-	/**
-	\brief delete의 함수형입니다.
-	\details
-	이 함수는 단순히 typename T를 delete합니다. 하지만 delete는 예약어기때문에 function pointer로 넘겨줄 수 없습니다.
-	따라서 function pointer로 넘겨주기 위해 templete function를 추가적으로 만들었습니다.
-	사실 별 쓸모는 없고 template를 모른다고 친구가 놀려서 한 번 만들어 봤습니다...
-	*/
-	template <typename T> void del(typename T t){
-		delete t;
-	}
-
-	/**
-	\brief std::map에 대한 반복적인 작업을 처리합니다.
-	\details
-	typename T로 정의된 std::map가 있다면, std::map에 속한 각각의 element에 대한 작업을 처리할 때 사용합니다.
-	사실 별 쓸모는 없고 template를 모른다고 친구가 놀려서 한 번 만들어 봤습니다...
-	*/
-	template <typename T1, typename T2> void map_fptr_iter(std::map<typename T1, typename T2>* mappist, void(*fptr)(typename T2 t2)){
-		typename std::map<T1, T2>::iterator iter;
-		for(iter = mappist->begin(); iter!= mappist->end(); iter++){
-			(*fptr)(iter->second);
-		}
-	}
 
 	/**
 	\brief double to std::string
@@ -157,7 +133,6 @@ namespace kil{
 		\author Leesuk kim, lktime@skku.edu
 		*/
 		kernelizer(double mean, double var);
-
 		/**
 		\brief 수학적인 의미의 kernel function입니다.
 		\details
@@ -183,9 +158,9 @@ namespace kil{
 		double output(double& randomvariable);
 	};
 
-	typedef std::map<std::string, std::vector<double>> datamap;
-	typedef std::map<std::string, std::vector<double>>::iterator datamap_iter;
-	typedef std::pair<std::string, std::vector<double>> datamap_pair;
+	typedef std::map<int, std::vector<double>> datamap;
+	typedef std::map<int, std::vector<double>>::iterator datamap_iter;
+	typedef std::pair<int, std::vector<double>> datamap_pair;
 
 	/**
 	\namespace beta
@@ -246,6 +221,7 @@ namespace kil{
 			std::vector<double> ecdf, beta, xaxis;
 			struct ksresult_t ksr;
 		};
+
 		/*
 		\brief quantile k-sample
 		\details
@@ -275,7 +251,7 @@ namespace kil{
 	*/
 	class probaclass {
 	protected:
-		std::string mName;
+		int index;
 	public:
 		/**
 		\brief Constructor입니다. 
@@ -284,14 +260,18 @@ namespace kil{
 
 		\author Leesuk kim, lktime@skku.edu
 		*/
-		probaclass(std::string name);
+		inline probaclass(int idx){
+			index = idx;
+		};
 
 		/**
-		\brief 이름을 가져옵니다.b
+		\brief 이름을 가져옵니다.
 		\details GoF의 objective oriented programming design concept에 맞춘 getter입니다.
 
 		\author Leesuk kim, lktime@skku.edu
 		*/
-		std::string getName();
+		inline int getIndex(){
+			return index;
+		}
 	};
 }

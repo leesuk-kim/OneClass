@@ -158,16 +158,19 @@ kil::pattern::pattern(std::vector<double> data){
 }
 
 kil::pattern::~pattern(){
+	//mData.clear(), mFdata.clear(), mKdata.clear();
 	delete mKernelizer;
 	delete mFeaturescaler;
 }
 
 
-kil::pclearn::pclearn(std::string name, std::vector<double> pcptn): kil::probaclass(name){
+kil::pclearn::pclearn(int index, std::vector<double> pcptn): kil::probaclass(index){
 	mPattern = new kil::pattern(pcptn);
 }
 
 kil::pclearn::~pclearn(){
+	ecdf.clear(), m_betasketch.ecdf.clear();
+	mBetamap.clear();
 	delete mPattern;
 }
 
@@ -209,39 +212,62 @@ double kil::pclearn::output(double& randomvariable){
 
 kil::lcpnet::lcpnet(){
 	mCPLmap = new cplmap;
+	mTCPnet = new tcpnet;
 }
 
 kil::lcpnet::~lcpnet(){
-	std::map_fptr_iter<std::string, pclearn*>(mCPLmap, std::del<pclearn*>);
+	delete mTCPnet;
+	for(cplmap_iter cplmi = mCPLmap->begin(); cplmi != mCPLmap->end();){
+		pclearn* pcl = cplmi->second;
+		cplmi++;
+		delete pcl;
+	}
+
+	mCPLmap->clear();
 	m_instance = NULL;
 	delete mCPLmap;
 }
 
-lcpnet* lcpnet::m_instance = NULL;
-
-void kil::lcpnet::fit(kil::datamap* dm){
-	for(datamap_iter dmi = dm->begin(); dmi != dm->end(); dmi++)
-		insert(dmi->first, dmi->second);
-}
+kil::lcpnet* lcpnet::m_instance = NULL;
+kil::cplmap* lcpnet::mCPLmap = NULL;
+std::string lcpnet::mModelPath;
+kil::tcpnet* lcpnet::mTCPnet = NULL;
 
 void kil::lcpnet::fit(unsigned int row, unsigned int col, double** data){
-	datamap* dm = new datamap;
 	std::string colindex;
 
 	for(unsigned int i = 0 ; i < col; i++){
-		colindex = std::ito8s(i);
-
 		std::vector<double> coldata;
 		for(unsigned int j = 0; j < row; j++)
 			coldata.push_back(data[j][i]);
 
-		dm->insert(datamap_pair(colindex, coldata));
+		insert(i, coldata);
 	}
-	fit(dm);
+
 }
 
-void kil::lcpnet::insert(std::string key, std::vector<double> values){
+void kil::lcpnet::insert(int key, std::vector<double> values){
 	mCPLmap->insert(cplmap_pair(key, new pclearn(key, values)));
+}
+
+double kil::lcpnet::measure(unsigned int row, unsigned int col, double** testdata, int* index){
+	double m = 0.;
+	unsigned int correct = 0, total = 0;
+	double* res = (double*)calloc(col, sizeof(double));
+	int* mapkeys = (int*)malloc(col * sizeof(int));
+	unsigned int i = 0, predict;
+	for(cplmap_iter cplmi = mCPLmap->begin(); cplmi != mCPLmap->end(); cplmi++, i++)
+		mapkeys[i] = cplmi->first;
+
+	for(unsigned int i = 0 ; i < row ; i++){
+		mTCPnet->test(res, testdata[i]);
+		if((predict = getMaxID(col, mapkeys, res)) == index[i]) correct++;
+	}
+	m = ((double)correct) / ((double)i);
+	
+	free(res);
+	free(mapkeys);
+	return m;
 }
 
 void kil::lcpnet::learn(){
@@ -249,9 +275,10 @@ void kil::lcpnet::learn(){
 		cpmi->second->mapBeta();
 
 	exportModel(mModelPath.c_str());
+	mTCPnet->importModel(mModelPath.c_str());
 }
 
-void kil::lcpnet::exportModel(const char* path){
+void kil::lcpnet::exportModel(std::string path){
 	std::ofstream ofs(path, std::ios::out);
 	std::string str = "";
 	str = "name,fmin,fmax,kmean,kvar,";
@@ -262,7 +289,7 @@ void kil::lcpnet::exportModel(const char* path){
 	}
 
 	for(kil::cplmap_iter cpmi = mCPLmap->begin(); cpmi != mCPLmap->end(); cpmi++){
-		str += cpmi->first + ',';
+		str += std::ito8s(cpmi->first) + ',';
 		str += std::dtos(cpmi->second->getPattern()->getFeaturescaler()->getMin()) + ',';
 		str += std::dtos(cpmi->second->getPattern()->getFeaturescaler()->getMax()) + ',';
 		str += std::dtos(cpmi->second->getPattern()->getKernelizer()->getMean()) + ',';

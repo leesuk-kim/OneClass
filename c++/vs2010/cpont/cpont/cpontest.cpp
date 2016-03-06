@@ -1,7 +1,8 @@
 #include "cpontest.h"
 
+char* kil::tcpnet::mModelPath = "cpon/cponmodel.csv";
 
-kil::pctest::pctest(std::string name, double fmin, double fmax, double kmean, double kvar, std::vector<double> betagauge): kil::probaclass(name){
+kil::pctest::pctest(int index, double fmin, double fmax, double kmean, double kvar, std::vector<double> betagauge): kil::probaclass(index){
 	mFeaturescaler = new featurescaler(fmin, fmax);
 	mKernelizer = new kernelizer(kmean, kvar);
 	mBetagauge = betagauge;
@@ -31,7 +32,7 @@ kil::tcpnet::~tcpnet(){
 }
 
 void kil::tcpnet::insert(kil::pctest* pct){
-	mCPTmap->insert(cptmap_pair(pct->getName(), pct));
+	mCPTmap->insert(cptmap_pair(pct->getIndex(), pct));
 }
 
 void kil::tcpnet::test(double* res, double* fwoutput){
@@ -43,6 +44,7 @@ void kil::tcpnet::test(double* res, double* fwoutput){
 void kil::tcpnet::importModel(const char* modelpath){
 	std::ifstream load(modelpath, std::ios::in);
 	std::string line, cell, name;
+	int index;
 	double fmin, fmax, kmean, kvar;
 	std::getline(load, line);
 
@@ -51,6 +53,7 @@ void kil::tcpnet::importModel(const char* modelpath){
 		std::vector<double> betagauge;
 
 		std::getline(lineStream, name, ',');
+		index = std::stoi(name);
 		std::getline(lineStream, cell, ',');
 		fmin = stod(cell);
 		std::getline(lineStream, cell, ',');
@@ -61,7 +64,7 @@ void kil::tcpnet::importModel(const char* modelpath){
 		kvar = stod(cell);
 		while(std::getline(lineStream, cell, ',')) betagauge.push_back(stod(cell));
 
-		kil::pctest* pct = new kil::pctest(name, fmin, fmax, kmean, kvar, betagauge);
+		kil::pctest* pct = new kil::pctest(index, fmin, fmax, kmean, kvar, betagauge);
 		insert(pct);
 	}
 }
