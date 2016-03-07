@@ -262,6 +262,7 @@ double kil::lcpnet::measure(unsigned int row, unsigned int col, double** testdat
 	for(unsigned int i = 0 ; i < row ; i++){
 		mTCPnet->test(res, testdata[i]);
 		if((predict = getMaxID(col, mapkeys, res)) == index[i]) correct++;
+		index[i] = predict;//160307추가//분류 결과를 다시 index에 저장합니다.
 	}
 	m = ((double)correct) / ((double)i);
 	
