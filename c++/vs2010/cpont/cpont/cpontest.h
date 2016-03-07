@@ -15,7 +15,6 @@ namespace kil{
 			return mFeaturescaler;
 		};
 
-		pctest();
 		pctest(int index, double fmin, double fmax, double kmean, double kvar, std::vector<double> betagauge);
 		~pctest();
 		

@@ -24,6 +24,8 @@ kil::tcpnet::tcpnet(){
 	mCPTmap = new cptmap;
 }
 
+kil::tcpnet* kil::tcpnet::m_instance = NULL;
+
 kil::tcpnet::~tcpnet(){
 	for(cptmap_iter cpti = mCPTmap->begin(); cpti != mCPTmap->end();){
 		pctest* pct = cpti->second;

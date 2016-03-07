@@ -44,7 +44,7 @@ namespace kil{
 	private:
 		cptmap* mCPTmap;
 		static char* mModelPath;
-		//static tcpnet* m_instance;
+		static tcpnet* m_instance;
 	public:
 		tcpnet();
 		~tcpnet();
@@ -55,10 +55,10 @@ namespace kil{
 
 		inline unsigned int getCPTmapSize(){return mCPTmap->size();};
 
-		//inline static tcpnet* getInstance(){
-		//	if(m_instance == NULL) tcpnet::m_instance = new tcpnet();
-		//	return tcpnet::m_instance;
-		//};
+		inline static tcpnet* getInstance(){
+			if(m_instance == NULL) tcpnet::m_instance = new tcpnet();
+			return tcpnet::m_instance;
+		};
 		/**
 		\brief test합니다.
 		\details forward network의 output으로 test합니다. 

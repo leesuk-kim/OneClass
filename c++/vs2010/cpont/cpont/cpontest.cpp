@@ -27,7 +27,12 @@ kil::tcpnet::tcpnet(){
 kil::tcpnet* kil::tcpnet::m_instance = NULL;
 
 kil::tcpnet::~tcpnet(){
-	for(cptmap_iter cpti = mCPTmap->begin(); cpti != mCPTmap->end(); delete cpti->second, cpti++);
+	for (cptmap_iter cpti = mCPTmap->begin(); cpti != mCPTmap->end();) {
+		pctest* pct = cpti->second;
+		cpti++;
+		delete pct;
+	}
+	mCPTmap->clear();
 	delete mCPTmap;
 }
 
