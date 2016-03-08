@@ -9,14 +9,12 @@ extern "C"{
 		}
 
 		void lcpon_learn(unsigned int row, unsigned int col, double** data){
-			datamap* dm = new datamap();
 			lcpnet::getInstance()->fit(row, col, data);
 			lcpnet::getInstance()->learn();
 		}
 
 		void lcpon_release(){
 			delete lcpnet::getInstance();
-			//delete tcpnet::getInstance();
 		}
 
 		double lcpon_measure(int row, int col, double** data, int* index){

@@ -81,7 +81,7 @@ void beta::search_beta(struct beta::kstest_t& kst, struct beta::betaparam_t& bp)
 		double astep = bp.alpha / 2., bstep = bp.beta / 2.;
 		for (unsigned int j = 0; j < 100 && kst.result.pval < 0.05; j++)
 		{
-			if (bp.alpha + asign * astep < 0.)
+			if (bp.alpha + asign * astep <= 0.)
 				break;
 			bp.alpha += asign * astep;
 
@@ -94,7 +94,7 @@ void beta::search_beta(struct beta::kstest_t& kst, struct beta::betaparam_t& bp)
 
 		for (unsigned int j = 0; j < 100 && kst.result.pval < 0.05; j++)
 		{
-			if (bp.beta + bsign * bstep < 0.)
+			if (bp.beta + bsign * bstep <= 0.)
 				break;
 			bp.beta += bsign * bstep;
 
@@ -235,7 +235,7 @@ kil::tcpnet* lcpnet::mTCPnet = NULL;
 
 void kil::lcpnet::fit(unsigned int row, unsigned int col, double** data){
 	std::string colindex;
-
+	mCPLmap->clear();
 	for(unsigned int i = 0 ; i < col; i++){
 		std::vector<double> coldata;
 		for(unsigned int j = 0; j < row; j++)
